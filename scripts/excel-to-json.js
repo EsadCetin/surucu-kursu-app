@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const excelPath = path.join(__dirname, "../excel/ogrenciler.xlsx");
-const outputPath = path.join(__dirname, "../data/students.json");
+const localOutputPath = path.join(__dirname, "../data/students.json");
+const publicOutputPath = path.join(__dirname, "../docs/students.json");
 
 function cleanValue(value) {
   if (value === undefined || value === null) return "";
@@ -321,3 +322,7 @@ main().catch((error) => {
   console.error("Hata oluştu:");
   console.error(error.message);
 });
+const jsonContent = JSON.stringify(students, null, 2);
+
+fs.writeFileSync(localOutputPath, jsonContent, "utf-8");
+fs.writeFileSync(publicOutputPath, jsonContent, "utf-8");
