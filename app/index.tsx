@@ -6,7 +6,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 type Student = {
@@ -529,10 +529,6 @@ export default function Index() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <TouchableOpacity style={styles.refreshButton} onPress={reloadStudents}>
-        <Text style={styles.refreshButtonText}>Verileri Yenile</Text>
-      </TouchableOpacity>
-
       <View style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
