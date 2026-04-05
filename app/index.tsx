@@ -1,6 +1,7 @@
 import * as Linking from "expo-linking";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import students from "../data/students.json";
 
 type Student = {
   tc: string;
@@ -41,6 +41,11 @@ type StepItemProps = {
   active?: boolean;
   onPress: () => void;
 };
+
+// BURAYA KENDİ GITHUB PAGES STUDENTS.JSON LINKİNİ YAZ
+const DATA_URL =
+  "https://github.com/EsadCetin/surucu-kursu-app/blob/0ddb3b1d4fe78c4721ade46643409cd8c92d0b8c/data/students.json";
+
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
 
@@ -69,24 +74,23 @@ function isPastDate(dateStr?: string) {
 
   return examDate < today;
 }
+
 function formatPhone(phone: string) {
   if (!phone) return "-";
 
-  // sadece rakamları al
   const digits = phone.replace(/\D/g, "");
 
-  // 11 haneli TR numarasıysa (05xxxxxxxxx)
   if (digits.length === 11 && digits.startsWith("0")) {
     return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}`;
   }
 
-  // 10 haneli girilmişse (5xxxxxxxxx)
   if (digits.length === 10 && digits.startsWith("5")) {
     return `0${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
   }
 
   return phone;
 }
+
 function StepItem({ title, checked, active = false, onPress }: StepItemProps) {
   return (
     <TouchableOpacity
@@ -134,10 +138,65 @@ export default function Index() {
   const [tc, setTc] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<Student | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState("");
 
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        setLoadingStudents(true);
+
+        const response = await fetch(DATA_URL, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Öğrenci verisi alınamadı.");
+        }
+
+        const data: Student[] = await response.json();
+        setStudents(data);
+      } catch (error) {
+        Alert.alert("Hata", "Veriler yüklenemedi.");
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+
+    loadStudents();
+  }, []);
+
+  const reloadStudents = async () => {
+    try {
+      setLoadingStudents(true);
+
+      const response = await fetch(DATA_URL, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Veri alınamadı.");
+      }
+
+      const data: Student[] = await response.json();
+      setStudents(data);
+
+      if (user) {
+        const updatedUser = data.find((s) => s.tc === user.tc);
+        if (updatedUser) {
+          setUser(updatedUser);
+        }
+      }
+    } catch (error) {
+      Alert.alert("Hata", "Veriler yenilenemedi.");
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
   const handleLogin = () => {
-    const foundUser = (students as Student[]).find((s) => s.tc === tc.trim());
+    const foundUser = students.find((s) => s.tc === tc.trim());
 
     if (foundUser) {
       setUser(foundUser);
@@ -176,13 +235,7 @@ export default function Index() {
       user.esinav_sonuc !== "gecti" &&
       isPastDate(user.esinav_tarih)
     ) {
-      return {
-        text:
-          user.esinav_harc === "odendi"
-            ? "E-sınavdan başarısız oldunuz. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
-            : "E-sınavdan başarısız oldunuz.",
-        type: "error",
-      };
+      return "E-sınavdan başarısız oldunuz.";
     }
 
     if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
@@ -218,7 +271,10 @@ export default function Index() {
       isPastDate(user.esinav_tarih)
     ) {
       return {
-        text: "E-sınavdan başarısız oldunuz.",
+        text:
+          user.esinav_harc === "odendi"
+            ? "E-sınavdan başarısız oldunuz. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
+            : "E-sınavdan başarısız oldunuz.",
         type: "error",
       };
     }
@@ -346,6 +402,7 @@ export default function Index() {
 
   const showEsinavDetay = () => {
     if (!user) return;
+
     if (
       user.durum === "esinav" &&
       user.esinav_tarih &&
@@ -454,6 +511,15 @@ export default function Index() {
     }
   };
 
+  if (loadingStudents) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#c1121f" />
+        <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
+      </View>
+    );
+  }
+
   if (!loggedIn || !user) {
     return (
       <View style={styles.loginContainer}>
@@ -488,6 +554,10 @@ export default function Index() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <TouchableOpacity style={styles.refreshButton} onPress={reloadStudents}>
+        <Text style={styles.refreshButtonText}>Verileri Yenile</Text>
+      </TouchableOpacity>
+
       <View style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
@@ -513,10 +583,7 @@ export default function Index() {
       {!!highlightedExamInfo && (
         <View style={styles.heroCard}>
           <Text style={styles.heroCardLabel}>Öne Çıkan Bilgi</Text>
-          <Text style={styles.heroCardText}>
-            E-sınavdan başarısız oldunuz. Yeni sınav tarihiniz açıklandığında
-            size bilgi verilecektir.
-          </Text>
+          <Text style={styles.heroCardText}>{highlightedExamInfo}</Text>
         </View>
       )}
 
@@ -627,6 +694,18 @@ const styles = StyleSheet.create({
     paddingTop: 52,
     paddingBottom: 36,
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#0b0b0d",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#ffffff",
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: "600",
+  },
   loginContainer: {
     flex: 1,
     backgroundColor: "#0b0b0d",
@@ -695,6 +774,18 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: "#ffffff",
     fontSize: 16,
+    fontWeight: "700",
+  },
+  refreshButton: {
+    backgroundColor: "#1f1f25",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  refreshButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
     fontWeight: "700",
   },
   profileCard: {
