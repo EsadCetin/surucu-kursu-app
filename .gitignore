@@ -1,17 +1,7 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
-
-
-
-# node
-node_modules
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts# öğrenci verileri
+# öğrenci verileri
 students.json
 ogrenciler.xlsx
 
@@ -19,6 +9,13 @@ ogrenciler.xlsx
 .env
 # node
 node_modules
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
 # Native
 .kotlin/
 *.orig.*
