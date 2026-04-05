@@ -1,14 +1,12 @@
 import * as Linking from "expo-linking";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 type Student = {
@@ -41,8 +39,8 @@ type StepItemProps = {
   active?: boolean;
   onPress: () => void;
 };
-
-// BURAYA KENDİ GITHUB PAGES STUDENTS.JSON LINKİNİ YAZ
+const API_URL = "http://192.168.1.100";
+// BURAYA KENDİ GITHUB RAW STUDENTS.JSON LINKİNİ YAZ
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/0ddb3b1d4fe78c4721ade46643409cd8c92d0b8c/data/students.json";
 
@@ -138,72 +136,51 @@ export default function Index() {
   const [tc, setTc] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<Student | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loadingStudents, setLoadingStudents] = useState(true);
+
   const [selectedDetail, setSelectedDetail] = useState("");
+  const [loginError, setLoginError] = useState("");
 
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        setLoadingStudents(true);
+  const handleLogin = async () => {
+    const cleanedTc = tc.trim();
+    setLoginError("");
 
-        const response = await fetch(DATA_URL, {
-          cache: "no-store",
-        });
+    if (!cleanedTc) {
+      setLoginError("TC kimlik numarası giriniz.");
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error("Öğrenci verisi alınamadı.");
-        }
+    if (!/^\d+$/.test(cleanedTc)) {
+      setLoginError("TC kimlik numarası sadece rakamlardan oluşmalıdır.");
+      return;
+    }
 
-        const data: Student[] = await response.json();
-        setStudents(data);
-      } catch (error) {
-        Alert.alert("Hata", "Veriler yüklenemedi.");
-      } finally {
-        setLoadingStudents(false);
-      }
-    };
+    if (cleanedTc.length !== 11) {
+      setLoginError("TC kimlik numarası 11 haneli olmalıdır.");
+      return;
+    }
 
-    loadStudents();
-  }, []);
-
-  const reloadStudents = async () => {
     try {
-      setLoadingStudents(true);
-
-      const response = await fetch(DATA_URL, {
-        cache: "no-store",
+      const response = await fetch(`${API_URL}/student-login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tc: cleanedTc }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Veri alınamadı.");
+        setLoginError(data.error || "Giriş başarısız.");
+        return;
       }
 
-      const data: Student[] = await response.json();
-      setStudents(data);
-
-      if (user) {
-        const updatedUser = data.find((s) => s.tc === user.tc);
-        if (updatedUser) {
-          setUser(updatedUser);
-        }
-      }
-    } catch (error) {
-      Alert.alert("Hata", "Veriler yenilenemedi.");
-    } finally {
-      setLoadingStudents(false);
-    }
-  };
-
-  const handleLogin = () => {
-    const foundUser = students.find((s) => s.tc === tc.trim());
-
-    if (foundUser) {
-      setUser(foundUser);
+      setUser(data);
       setLoggedIn(true);
       setSelectedDetail("");
-    } else {
-      Alert.alert("Hata", "Bu TC kimlik numarasına ait öğrenci bulunamadı.");
+      setLoginError("");
+    } catch (error) {
+      setLoginError("Sunucuya bağlanılamadı.");
     }
   };
 
@@ -235,7 +212,7 @@ export default function Index() {
       user.esinav_sonuc !== "gecti" &&
       isPastDate(user.esinav_tarih)
     ) {
-      return "E-sınavdan başarısız oldunuz.";
+      return "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.";
     }
 
     if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
@@ -274,7 +251,7 @@ export default function Index() {
         text:
           user.esinav_harc === "odendi"
             ? "E-sınavdan başarısız oldunuz. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
-            : "E-sınavdan başarısız oldunuz.",
+            : "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.",
         type: "error",
       };
     }
@@ -414,7 +391,9 @@ export default function Index() {
           "Sınav harcınızı yatırdınız. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir.",
         );
       } else {
-        setSelectedDetail("E-sınavdan başarısız oldunuz.");
+        setSelectedDetail(
+          "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.",
+        );
       }
       return;
     }
@@ -507,18 +486,9 @@ export default function Index() {
     if (supported) {
       await Linking.openURL(url);
     } else {
-      Alert.alert("Hata", "Ödeme sayfası açılamadı.");
+      setSelectedDetail("Ödeme sayfası açılamadı.");
     }
   };
-
-  if (loadingStudents) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#c1121f" />
-        <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
-      </View>
-    );
-  }
 
   if (!loggedIn || !user) {
     return (
@@ -541,8 +511,13 @@ export default function Index() {
             keyboardType="numeric"
             maxLength={11}
             value={tc}
-            onChangeText={setTc}
+            onChangeText={(text) => {
+              setTc(text.replace(/[^0-9]/g, ""));
+              if (loginError) setLoginError("");
+            }}
           />
+
+          {!!loginError && <Text style={styles.errorText}>{loginError}</Text>}
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Giriş Yap</Text>
@@ -676,6 +651,7 @@ export default function Index() {
           setUser(null);
           setTc("");
           setSelectedDetail("");
+          setLoginError("");
         }}
       >
         <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
@@ -761,9 +737,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     fontSize: 16,
-    marginBottom: 14,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: "#2c2c34",
+  },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 12,
+    marginTop: 2,
   },
   loginButton: {
     backgroundColor: "#c1121f",

@@ -8,7 +8,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-
+ogrenciler.xlsx
+students.json
+.env
 # Native
 .kotlin/
 *.orig.*
