@@ -44,7 +44,7 @@ type StepItemProps = {
 
 // BURAYA KENDİ GITHUB PAGES STUDENTS.JSON LINKİNİ YAZ
 const DATA_URL =
-  "https://github.com/EsadCetin/surucu-kursu-app/blob/0ddb3b1d4fe78c4721ade46643409cd8c92d0b8c/data/students.json";
+  "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/0ddb3b1d4fe78c4721ade46643409cd8c92d0b8c/data/students.json";
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
