@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -53,6 +55,8 @@ type StepItemProps = {
   showBottomLine?: boolean;
   lineActive?: boolean;
 };
+
+type BadgeTone = "green" | "red" | "orange" | "blue" | "gray";
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
@@ -107,6 +111,80 @@ function formatPhone(phone: string) {
   return phone;
 }
 
+function normalizeValue(value?: string | null) {
+  if (!value) return "Henüz bilgi eklenmemiş";
+
+  const cleaned = String(value).trim();
+  return cleaned ? cleaned : "Henüz bilgi eklenmemiş";
+}
+
+function formatOutcome(value?: string) {
+  if (!value) return "Henüz açıklanmadı";
+  if (value === "gecti") return "Geçti";
+  if (value === "kaldi") return "Kaldı";
+  return value;
+}
+
+function formatPayment(value?: string) {
+  if (!value) return "Henüz bilgi eklenmemiş";
+  if (value === "odendi") return "Ödendi";
+  if (value === "odenmedi") return "Ödenmedi";
+  return value;
+}
+
+function getMissingDocumentsList(value?: string) {
+  if (!value || !value.trim()) return [];
+
+  return value
+    .split(/[,;\n]+/)
+    .map((item) => item.replace(/^[•\-\s]+/, "").trim())
+    .filter(Boolean);
+}
+
+function getProcessBadge(user: Student): { label: string; tone: BadgeTone } {
+  if (user.direksiyon_sonuc === "gecti") {
+    return { label: "Tamamlandı", tone: "green" };
+  }
+
+  if (user.direksiyon_sonuc === "kaldi" || user.esinav_sonuc === "kaldi") {
+    return { label: "İşlem gerekli", tone: "red" };
+  }
+
+  if (user.durum === "direksiyon") {
+    return { label: "Direksiyon aşaması", tone: "blue" };
+  }
+
+  if (user.durum === "esinav") {
+    return { label: "E-sınav aşaması", tone: "orange" };
+  }
+
+  return { label: "Kayıt süreci", tone: "gray" };
+}
+
+function getDocumentBadge(user: Student): { label: string; tone: BadgeTone } {
+  if (user.evrak_durumu === "tamam") {
+    return { label: "Evrak tam", tone: "green" };
+  }
+
+  if (user.evrak_durumu === "eksik") {
+    return { label: "Evrak eksik", tone: "orange" };
+  }
+
+  return { label: "Evrak kontrolü", tone: "gray" };
+}
+
+function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
+  if (value === "odendi") {
+    return { label: "Ödendi", tone: "green" };
+  }
+
+  if (value === "odenmedi") {
+    return { label: "Ödeme bekleniyor", tone: "red" };
+  }
+
+  return { label: "Bilgi bekleniyor", tone: "gray" };
+}
+
 function StepItem({
   title,
   checked,
@@ -133,6 +211,16 @@ function StepItem({
           />
         ) : null}
 
+        {showBottomLine ? (
+          <View
+            style={[
+              styles.stepLine,
+              styles.stepLineBottom,
+              lineActive ? styles.stepLineActive : styles.stepLinePassive,
+            ]}
+          />
+        ) : null}
+
         <View
           style={[
             styles.stepCircle,
@@ -144,16 +232,6 @@ function StepItem({
             {checked ? "✓" : active ? "•" : ""}
           </Text>
         </View>
-
-        {showBottomLine ? (
-          <View
-            style={[
-              styles.stepLine,
-              styles.stepLineBottom,
-              lineActive ? styles.stepLineActive : styles.stepLinePassive,
-            ]}
-          />
-        ) : null}
       </View>
 
       <View style={styles.stepContent}>
@@ -175,10 +253,28 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoChip}>
       <Text style={styles.infoChipLabel}>{label}</Text>
-      <Text style={styles.infoChipValue}>{value || "-"}</Text>
+      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
     </View>
   );
 }
+
+function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
+  return (
+    <View
+      style={[
+        styles.badge,
+        tone === "green" && styles.badgeGreen,
+        tone === "red" && styles.badgeRed,
+        tone === "orange" && styles.badgeOrange,
+        tone === "blue" && styles.badgeBlue,
+        tone === "gray" && styles.badgeGray,
+      ]}
+    >
+      <Text style={styles.badgeText}>{label}</Text>
+    </View>
+  );
+}
+
 function getSmartStatus(user: Student): SmartStatus {
   if (user.direksiyon_sonuc === "gecti") {
     return {
@@ -222,6 +318,7 @@ function getSmartStatus(user: Student): SmartStatus {
       actionType: "detail",
     };
   }
+
   if (user.durum === "direksiyon") {
     return {
       title: "Direksiyon aşamasındasınız",
@@ -233,6 +330,7 @@ function getSmartStatus(user: Student): SmartStatus {
       actionType: "detail",
     };
   }
+
   if (user.esinav_sonuc === "gecti") {
     return {
       title: "E-sınav aşamasını tamamladınız",
@@ -325,7 +423,7 @@ function getSmartStatus(user: Student): SmartStatus {
     return {
       title: "Evraklarınız eksik",
       description: user.eksik_evraklar?.trim()
-        ? `Eksik evraklarınızı tamamlamanız gerekiyor: ${user.eksik_evraklar}`
+        ? `Eksik evraklarınızı tamamlamanız gerekiyor.`
         : "Başvurunuz alınmış ancak eksik evraklarınız bulunuyor.",
       type: "warning",
       actionLabel: "Detayı Gör",
@@ -360,6 +458,7 @@ export default function Index() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState("");
+  const [detailVisible, setDetailVisible] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [loginFeedback, setLoginFeedback] = useState<LoginFeedback | null>(
     null,
@@ -404,6 +503,16 @@ export default function Index() {
 
   const reloadStudents = async () => {
     await loadStudents(true);
+  };
+
+  const openDetailModal = (text: string) => {
+    setSelectedDetail(text);
+    setDetailVisible(true);
+  };
+
+  const closeDetailModal = () => {
+    setDetailVisible(false);
+    setSelectedDetail("");
   };
 
   const handleTcChange = (value: string) => {
@@ -486,6 +595,7 @@ export default function Index() {
     setUser(foundUser);
     setLoggedIn(true);
     setSelectedDetail("");
+    setDetailVisible(false);
   };
 
   const handleLogout = () => {
@@ -493,11 +603,13 @@ export default function Index() {
     setUser(null);
     setTc("");
     setSelectedDetail("");
+    setDetailVisible(false);
     setLoginFeedback(null);
   };
 
   const initials = useMemo(() => {
     if (!user?.ad_soyad) return "";
+
     return user.ad_soyad
       .split(" ")
       .filter(Boolean)
@@ -583,28 +695,106 @@ export default function Index() {
     return "basvuru";
   }, [user]);
 
+  const processBadge = useMemo(() => {
+    if (!user) return { label: "", tone: "gray" as BadgeTone };
+    return getProcessBadge(user);
+  }, [user]);
+
+  const documentBadge = useMemo(() => {
+    if (!user) return { label: "", tone: "gray" as BadgeTone };
+    return getDocumentBadge(user);
+  }, [user]);
+
+  const esinavPaymentBadge = useMemo(() => {
+    if (!user) return { label: "", tone: "gray" as BadgeTone };
+    return getPaymentBadge(user.esinav_harc);
+  }, [user]);
+
+  const direksiyonPaymentBadge = useMemo(() => {
+    if (!user) return { label: "", tone: "gray" as BadgeTone };
+    return getPaymentBadge(user.direksiyon_harc);
+  }, [user]);
+
+  const missingDocuments = useMemo(() => {
+    if (!user) return [];
+    return getMissingDocumentsList(user.eksik_evraklar);
+  }, [user]);
+
+  const isEsinavStage = useMemo(() => {
+    if (!user) return false;
+    return user.durum === "esinav" && user.esinav_sonuc !== "gecti";
+  }, [user]);
+
+  const isDireksiyonStage = useMemo(() => {
+    if (!user) return false;
+    return user.durum === "direksiyon" || user.esinav_sonuc === "gecti";
+  }, [user]);
+
+  const isMissingDocumentStage = useMemo(() => {
+    if (!user) return false;
+    return user.evrak_durumu === "eksik";
+  }, [user]);
+
+  const showDocumentCard = useMemo(() => {
+    if (!user) return false;
+    return !isEsinavStage && !isDireksiyonStage;
+  }, [user, isEsinavStage, isDireksiyonStage]);
+
+  const showDocumentBadge = useMemo(() => {
+    if (!user) return false;
+    return !isEsinavStage && !isDireksiyonStage;
+  }, [user, isEsinavStage, isDireksiyonStage]);
+
+  const showEsinavInfoCard = useMemo(() => {
+    if (!user) return false;
+    return !isDireksiyonStage && !isMissingDocumentStage;
+  }, [user, isDireksiyonStage, isMissingDocumentStage]);
+
+  const showDireksiyonInfoCard = useMemo(() => {
+    if (!user) return false;
+    return !isEsinavStage && !isMissingDocumentStage;
+  }, [user, isEsinavStage, isMissingDocumentStage]);
+
+  const showOnlinePaymentButton = useMemo(() => {
+    if (!user) return false;
+    return (
+      isEsinavStage &&
+      user.esinav_harc === "odenmedi" &&
+      !isMissingDocumentStage
+    );
+  }, [user, isEsinavStage, isMissingDocumentStage]);
+
+  const showPaymentSection = useMemo(() => {
+    return showEsinavInfoCard || showDireksiyonInfoCard;
+  }, [showEsinavInfoCard, showDireksiyonInfoCard]);
+
   const showBasvuruDetay = () => {
     if (!user) return;
 
     if (user.evrak_durumu === "eksik") {
-      setSelectedDetail(
-        `Eksik evraklar:\n${user.eksik_evraklar || "- Evrak bilgisi bulunamadı"}`,
-      );
+      const items = getMissingDocumentsList(user.eksik_evraklar);
+      if (items.length) {
+        openDetailModal(
+          `Eksik evraklar:\n${items.map((item) => `• ${item}`).join("\n")}`,
+        );
+      } else {
+        openDetailModal(
+          "Eksik evrak bilginiz henüz detaylı olarak eklenmemiş.",
+        );
+      }
       return;
     }
 
-    setSelectedDetail("Kurs başvurunuz alınmıştır.");
+    openDetailModal("Kurs başvurunuz alınmıştır.");
   };
 
   const showBasvuruTamamDetay = () => {
     if (!user) return;
 
     if (user.evrak_durumu === "tamam") {
-      setSelectedDetail("Kurs başvurunuz tamamlandı. Evraklarınız tam.");
+      openDetailModal("Kurs başvurunuz tamamlandı. Evraklarınız tam.");
     } else {
-      setSelectedDetail(
-        "Evraklarınız tamamlandığında bu aşama onaylanacaktır.",
-      );
+      openDetailModal("Evraklarınız tamamlandığında bu aşama onaylanacaktır.");
     }
   };
 
@@ -618,11 +808,11 @@ export default function Index() {
       isPastDate(user.esinav_tarih)
     ) {
       if (user.esinav_harc === "odendi") {
-        setSelectedDetail(
+        openDetailModal(
           "Sınav harcınızı yatırdınız. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir.",
         );
       } else {
-        setSelectedDetail(
+        openDetailModal(
           "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.",
         );
       }
@@ -630,29 +820,31 @@ export default function Index() {
     }
 
     if (user.evrak_durumu !== "tamam") {
-      setSelectedDetail("Önce evraklarınızın tamamlanması gerekiyor.");
+      openDetailModal(
+        `Önce evraklarınızın tamamlanması gerekiyor: ${user.eksik_evraklar}`,
+      );
       return;
     }
 
     if (user.esinav_sonuc === "kaldi") {
-      setSelectedDetail("E-sınav başarısız.");
+      openDetailModal("E-sınav başarısız.");
       return;
     }
 
     if (user.esinav_harc === "odenmedi" && user.durum !== "direksiyon") {
-      setSelectedDetail(
-        "Sınav harcınızı yatırmamışsınız. Aşağıdaki butonla ödeme sayfasına gidebilirsiniz.",
+      openDetailModal(
+        "Sınav harcınızı yatırmamışsınız. Ödeme yaptıktan sonra süreç devam edecektir.",
       );
       return;
     }
 
     if (user.esinav_harc === "odendi" && !user.esinav_tarih) {
-      setSelectedDetail("Sınav harcınız yatırılmış. Sınav tarihi bekleniyor.");
+      openDetailModal("Sınav harcınız yatırılmış. Sınav tarihi bekleniyor.");
       return;
     }
 
     if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
-      setSelectedDetail(
+      openDetailModal(
         user.esinav_saati
           ? `E-sınav tarihiniz ${user.esinav_tarih} / ${user.esinav_saati}`
           : `E-sınav tarihiniz ${user.esinav_tarih}`,
@@ -661,44 +853,46 @@ export default function Index() {
     }
 
     if (user.esinav_sonuc === "gecti") {
-      setSelectedDetail("E-sınavı başarıyla geçtiniz.");
+      openDetailModal("E-sınavı başarıyla geçtiniz.");
       return;
     }
 
-    setSelectedDetail("E-sınav süreciniz devam ediyor.");
+    openDetailModal("E-sınav süreciniz devam ediyor.");
   };
 
   const showDireksiyonDetay = () => {
     if (!user) return;
 
     if (user.esinav_sonuc !== "gecti") {
-      setSelectedDetail(
+      openDetailModal(
         "Direksiyon aşamasına geçmek için önce e-sınavı geçmelisiniz.",
       );
       return;
     }
 
     if (user.direksiyon_sonuc === "gecti") {
-      setSelectedDetail("Direksiyon sınavını başarıyla geçtiniz.");
+      openDetailModal("Direksiyon sınavını başarıyla geçtiniz.");
       return;
     }
 
     if (user.direksiyon_sonuc === "kaldi") {
-      setSelectedDetail("Direksiyon sınavında başarısız oldunuz.");
+      openDetailModal("Direksiyon sınavında başarısız oldunuz.");
       return;
     }
 
     if (user.direksiyon_harc === "odenmedi") {
-      setSelectedDetail("Direksiyon harcı henüz yatırılmamış görünüyor.");
+      openDetailModal(
+        "Direksiyon harcı henüz yatırılmamış görünüyor. Ödeme için kurs ile iletişime geçebilirsiniz.",
+      );
       return;
     }
 
     if (user.direksiyon_tarih) {
-      setSelectedDetail(`Direksiyon sınav tarihiniz ${user.direksiyon_tarih}`);
+      openDetailModal(`Direksiyon sınav tarihiniz ${user.direksiyon_tarih}`);
       return;
     }
 
-    setSelectedDetail("Direksiyon süreciniz devam ediyor.");
+    openDetailModal("Direksiyon süreciniz devam ediyor.");
   };
 
   const stepItems = useMemo(
@@ -737,7 +931,7 @@ export default function Index() {
         checked: stepStates.tamamlandi,
         active: activeStep === "tamamlandi",
         onPress: () =>
-          setSelectedDetail(
+          openDetailModal(
             user?.direksiyon_sonuc === "gecti"
               ? "Tüm süreç başarıyla tamamlandı."
               : "Süreç henüz tamamlanmadı.",
@@ -853,83 +1047,224 @@ export default function Index() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.profileCard}>
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-
-          <View style={styles.profileTextArea}>
-            <Text style={styles.name}>{user.ad_soyad}</Text>
-            <Text style={styles.subName}>TC: {user.tc}</Text>
-          </View>
-        </View>
-
-        <View style={styles.chipsRow}>
-          <InfoChip label="Sınıf" value={user.sinif || "-"} />
-          <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.statusCard,
-          smartStatus.type === "success" && styles.statusSuccess,
-          smartStatus.type === "error" && styles.statusError,
-          smartStatus.type === "warning" && styles.statusWarning,
-          smartStatus.type === "info" && styles.statusInfo,
-        ]}
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Text style={styles.statusTitle}>{smartStatus.title}</Text>
-        <Text style={styles.statusDescription}>{smartStatus.description}</Text>
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
 
-        {smartStatus.actionLabel ? (
-          <TouchableOpacity
-            style={styles.paymentButton}
-            onPress={handleSmartAction}
-          >
-            <Text style={styles.paymentButtonText}>
-              {smartStatus.actionLabel}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+            <View style={styles.profileTextArea}>
+              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
+              <Text style={styles.subName}>TC: {normalizeValue(user.tc)}</Text>
+            </View>
+          </View>
 
-      <View style={styles.stepsCard}>
-        <Text style={styles.sectionTitle}>Süreç Adımları</Text>
+          <View style={styles.chipsRow}>
+            <InfoChip label="Sınıf" value={user.sinif || ""} />
+            <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
+          </View>
 
-        {stepItems.map((item, index) => {
-          const showTopLine = index !== 0;
-          const showBottomLine = index !== stepItems.length - 1;
-          const lineActive = item.checked || item.active;
-
-          return (
-            <StepItem
-              key={item.key}
-              title={item.title}
-              checked={item.checked}
-              active={item.active}
-              onPress={item.onPress}
-              showTopLine={showTopLine}
-              showBottomLine={showBottomLine}
-              lineActive={lineActive}
-            />
-          );
-        })}
-      </View>
-
-      {!!selectedDetail && (
-        <View style={styles.detailCard}>
-          <Text style={styles.sectionTitle}>Detay</Text>
-          <Text style={styles.detailText}>{selectedDetail}</Text>
+          <View style={styles.badgesRow}>
+            <StatusBadge label={processBadge.label} tone={processBadge.tone} />
+            {showDocumentBadge ? (
+              <StatusBadge
+                label={documentBadge.label}
+                tone={documentBadge.tone}
+              />
+            ) : null}
+          </View>
         </View>
-      )}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View
+          style={[
+            styles.statusCard,
+            smartStatus.type === "success" && styles.statusSuccess,
+            smartStatus.type === "error" && styles.statusError,
+            smartStatus.type === "warning" && styles.statusWarning,
+            smartStatus.type === "info" && styles.statusInfo,
+          ]}
+        >
+          <Text style={styles.statusTitle}>{smartStatus.title}</Text>
+          <Text style={styles.statusDescription}>
+            {smartStatus.description}
+          </Text>
+
+          {smartStatus.actionLabel ? (
+            <TouchableOpacity
+              style={styles.paymentButton}
+              onPress={handleSmartAction}
+            >
+              <Text style={styles.paymentButtonText}>
+                {smartStatus.actionLabel}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {showDocumentCard ? (
+          <View style={styles.infoCard}>
+            <Text style={styles.sectionTitle}>Evrak Durumu</Text>
+
+            <View style={styles.infoColumnBlock}>
+              <Text style={styles.infoLabel}>Genel Durum</Text>
+              <Text style={styles.infoValueBlock}>
+                {user.evrak_durumu === "tamam"
+                  ? "Tamamlandı"
+                  : user.evrak_durumu === "eksik"
+                    ? "Eksik"
+                    : normalizeValue(user.evrak_durumu)}
+              </Text>
+            </View>
+
+            <View style={styles.infoColumnBlockNoBorder}>
+              <Text style={styles.infoLabel}>Eksik Evraklar</Text>
+
+              {user.evrak_durumu === "eksik" ? (
+                missingDocuments.length ? (
+                  <View style={styles.missingDocsList}>
+                    {missingDocuments.map((item, index) => (
+                      <View
+                        key={`${item}-${index}`}
+                        style={styles.missingDocItem}
+                      >
+                        <Text style={styles.missingDocBullet}>•</Text>
+                        <Text style={styles.missingDocText}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.infoValueBlock}>
+                    Henüz bilgi eklenmemiş
+                  </Text>
+                )
+              ) : (
+                <Text style={styles.infoValueBlock}>
+                  Eksik evrak görünmüyor
+                </Text>
+              )}
+            </View>
+          </View>
+        ) : null}
+
+        {showPaymentSection ? (
+          <View style={styles.infoCard}>
+            <Text style={styles.sectionTitle}>Sınav ve Ödeme Bilgileri</Text>
+
+            {showEsinavInfoCard ? (
+              <View style={styles.miniCard}>
+                <View style={styles.miniCardHeader}>
+                  <Text style={styles.miniCardTitle}>E-sınav</Text>
+                  <StatusBadge
+                    label={esinavPaymentBadge.label}
+                    tone={esinavPaymentBadge.tone}
+                  />
+                </View>
+                <Text style={styles.miniCardText}>
+                  Tarih:{" "}
+                  {normalizeValue(
+                    formatExamText(user.esinav_tarih, user.esinav_saati),
+                  )}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Sonuç: {formatOutcome(user.esinav_sonuc)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Harç: {formatPayment(user.esinav_harc)}
+                </Text>
+              </View>
+            ) : null}
+
+            {showDireksiyonInfoCard ? (
+              <View style={styles.miniCard}>
+                <View style={styles.miniCardHeader}>
+                  <Text style={styles.miniCardTitle}>Direksiyon</Text>
+                  <StatusBadge
+                    label={direksiyonPaymentBadge.label}
+                    tone={direksiyonPaymentBadge.tone}
+                  />
+                </View>
+                <Text style={styles.miniCardText}>
+                  Tarih: {normalizeValue(user.direksiyon_tarih)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Sonuç: {formatOutcome(user.direksiyon_sonuc)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Harç: {formatPayment(user.direksiyon_harc)}
+                </Text>
+              </View>
+            ) : null}
+
+            {showOnlinePaymentButton ? (
+              <TouchableOpacity
+                style={styles.paymentWideButton}
+                onPress={openHarcLink}
+              >
+                <Text style={styles.paymentWideButtonText}>
+                  Online Ödeme Yap
+                </Text>
+                <Text style={styles.paymentWideButtonSubText}>
+                  İşlem güvenli şekilde tarayıcıda açılır.
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View style={styles.stepsCard}>
+          <Text style={styles.sectionTitle}>Süreç Adımları</Text>
+
+          {stepItems.map((item, index) => {
+            const showTopLine = index !== 0;
+            const showBottomLine = index !== stepItems.length - 1;
+            const lineActive = item.checked || item.active;
+
+            return (
+              <StepItem
+                key={item.key}
+                title={item.title}
+                checked={item.checked}
+                active={item.active}
+                onPress={item.onPress}
+                showTopLine={showTopLine}
+                showBottomLine={showBottomLine}
+                lineActive={lineActive}
+              />
+            );
+          })}
+        </View>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      <Modal
+        visible={detailVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDetailModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeDetailModal}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Detay</Text>
+            <Text style={styles.modalText}>{selectedDetail}</Text>
+
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={closeDetailModal}
+            >
+              <Text style={styles.modalCloseButtonText}>Kapat</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -941,19 +1276,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 28,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#0d0d10",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  loadingText: {
-    color: "#ffffff",
-    marginTop: 12,
-    fontSize: 15,
-    fontWeight: "600",
   },
   loginBox: {
     flex: 1,
@@ -1000,6 +1322,11 @@ const styles = StyleSheet.create({
   },
   loginButtonDisabled: {
     opacity: 0.55,
+  },
+  loginButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
   },
   secondaryButton: {
     backgroundColor: "#1f1f25",
@@ -1051,23 +1378,6 @@ const styles = StyleSheet.create({
   loginStatusInfo: {
     borderColor: "#2c6ca6",
   },
-  loginButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  refreshButton: {
-    backgroundColor: "#1f1f25",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  refreshButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   profileCard: {
     backgroundColor: "#151519",
     borderRadius: 24,
@@ -1111,7 +1421,7 @@ const styles = StyleSheet.create({
   chipsRow: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   infoChip: {
     flex: 1,
@@ -1133,24 +1443,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
-  heroCard: {
-    backgroundColor: "#c1121f",
-    borderRadius: 22,
-    padding: 18,
-    marginBottom: 14,
+  badgesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  heroCardLabel: {
-    color: "#ffd9dd",
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 8,
-    textTransform: "uppercase",
+  badge: {
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
   },
-  heroCardText: {
+  badgeGreen: {
+    backgroundColor: "#11301f",
+    borderColor: "#1f8f55",
+  },
+  badgeRed: {
+    backgroundColor: "#301515",
+    borderColor: "#a62d2d",
+  },
+  badgeOrange: {
+    backgroundColor: "#33250f",
+    borderColor: "#a67c1a",
+  },
+  badgeBlue: {
+    backgroundColor: "#112536",
+    borderColor: "#2c6ca6",
+  },
+  badgeGray: {
+    backgroundColor: "#1d1d23",
+    borderColor: "#34343b",
+  },
+  badgeText: {
     color: "#ffffff",
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: "800",
-    lineHeight: 26,
   },
   statusCard: {
     backgroundColor: "#151519",
@@ -1174,7 +1501,7 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     marginBottom: 8,
   },
@@ -1183,24 +1510,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
   },
-  statusText: {
-    color: "#d8d8dd",
-    fontSize: 15,
-    lineHeight: 23,
-  },
   paymentButton: {
-    backgroundColor: "#c1121f",
     marginTop: 14,
-    paddingVertical: 13,
+    backgroundColor: "#c1121f",
     borderRadius: 14,
+    paddingVertical: 14,
     alignItems: "center",
   },
   paymentButtonText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
   },
-  stepsCard: {
+  infoCard: {
     backgroundColor: "#151519",
     borderRadius: 22,
     padding: 18,
@@ -1214,44 +1536,141 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 14,
   },
-  stepRow: {
+  infoColumnBlock: {
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#232329",
+  },
+  infoColumnBlockNoBorder: {
+    paddingTop: 12,
+  },
+  infoLabel: {
+    color: "#8f8f97",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  infoValueBlock: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
+  missingDocsList: {
+    gap: 8,
+  },
+  missingDocItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  missingDocBullet: {
+    color: "#ffffff",
+    fontSize: 16,
+    lineHeight: 22,
+    marginRight: 8,
+  },
+  missingDocText: {
+    flex: 1,
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
+  miniCard: {
+    backgroundColor: "#1c1c22",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    marginBottom: 12,
+  },
+  miniCardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
+    justifyContent: "space-between",
+    marginBottom: 10,
+    gap: 8,
+  },
+  miniCardTitle: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  miniCardText: {
+    color: "#d8d8dd",
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  paymentWideButton: {
+    backgroundColor: "#1f1f25",
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#2c2c34",
+    marginTop: 2,
+  },
+  paymentWideButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  paymentWideButtonSubText: {
+    color: "#9c9ca6",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  stepsCard: {
+    backgroundColor: "#151519",
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#232329",
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    minHeight: 58,
   },
   stepIndicatorColumn: {
-    width: 28,
+    width: 26,
     alignItems: "center",
-    marginRight: 12,
-    alignSelf: "stretch",
+    position: "relative",
   },
   stepLine: {
+    position: "absolute",
     width: 2,
-    flex: 1,
-    borderRadius: 999,
+    left: 11,
+    zIndex: 0,
   },
   stepLineTop: {
-    marginBottom: 6,
+    top: 0,
+    height: 29,
   },
   stepLineBottom: {
-    marginTop: 6,
+    top: 29,
+    bottom: 0,
   },
   stepLineActive: {
     backgroundColor: "#22c55e",
   },
   stepLinePassive: {
-    backgroundColor: "#3a3a42",
+    backgroundColor: "#34343b",
   },
   stepCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#232329",
-    borderWidth: 1,
-    borderColor: "#3a3a42",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#34343b",
+    backgroundColor: "#151519",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginTop: 17,
+    zIndex: 2,
   },
   stepCircleChecked: {
     backgroundColor: "#22c55e",
@@ -1267,6 +1686,9 @@ const styles = StyleSheet.create({
   },
   stepContent: {
     flex: 1,
+    justifyContent: "center",
+    paddingLeft: 12,
+    paddingVertical: 10,
   },
   stepTitle: {
     color: "#d0d0d6",
@@ -1279,19 +1701,6 @@ const styles = StyleSheet.create({
   stepTitleActive: {
     color: "#ffffff",
   },
-  detailCard: {
-    backgroundColor: "#151519",
-    borderRadius: 22,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#232329",
-  },
-  detailText: {
-    color: "#d8d8dd",
-    fontSize: 15,
-    lineHeight: 23,
-  },
   logoutButton: {
     backgroundColor: "#26262d",
     paddingVertical: 14,
@@ -1303,38 +1712,40 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-  timelineContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 20,
-  },
-  stepContainer: {
+  modalOverlay: {
     flex: 1,
-    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  modalCard: {
+    backgroundColor: "#151519",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+  },
+  modalTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  modalText: {
+    color: "#d8d8dd",
+    fontSize: 15,
+    lineHeight: 24,
+  },
+  modalCloseButton: {
+    marginTop: 18,
+    backgroundColor: "#c1121f",
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: "center",
   },
-  circle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    zIndex: 2,
-  },
-  circleActive: {
-    backgroundColor: "#22C55E",
-  },
-  circlePassive: {
-    backgroundColor: "#374151",
-  },
-  line: {
-    flex: 1,
-    height: 3,
-    borderRadius: 2,
-  },
-  lineActive: {
-    backgroundColor: "#22C55E",
-  },
-  linePassive: {
-    backgroundColor: "#374151",
+  modalCloseButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "800",
   },
 });
