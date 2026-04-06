@@ -12,13 +12,12 @@ function cleanValue(value) {
   if (typeof value === "object") {
     if (value.text) return String(value.text).trim();
     if (value.result) return String(value.result).trim();
-    if (value.richText) {
+    if (Array.isArray(value.richText)) {
       return value.richText
-        .map((item) => item.text || "")
+        .map((x) => x.text || "")
         .join("")
         .trim();
     }
-    if (value.hyperlink && value.text) return String(value.text).trim();
   }
 
   return String(value).trim();
@@ -29,16 +28,11 @@ function normalizeName(value) {
 }
 
 function normalizeTc(value) {
-  const cleaned = cleanValue(value).replace(/\D/g, "");
-  return cleaned;
+  return cleanValue(value).replace(/\D/g, "");
 }
 
 function normalizePhone(value) {
   return cleanValue(value);
-}
-
-function normalizeText(value) {
-  return cleanValue(value).toLocaleLowerCase("tr-TR");
 }
 
 function normalizeDate(value) {
@@ -63,33 +57,24 @@ function normalizeDate(value) {
     }
   }
 
-  if (typeof value === "string") {
-    const cleaned = value.replace(/,/g, ".").trim();
-    if (!cleaned) return "";
+  const text = cleanValue(value).replace(/,/g, ".");
+  if (!text) return "";
 
-    const parts = cleaned.split(".");
-    if (parts.length === 2) {
-      const day = parts[0].padStart(2, "0");
-      const month = parts[1].padStart(2, "0");
-      const year = String(new Date().getFullYear());
-      return `${day}.${month}.${year}`;
-    }
-
-    if (parts.length === 3) {
-      const day = parts[0].padStart(2, "0");
-      const month = parts[1].padStart(2, "0");
-      const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
-      return `${day}.${month}.${year}`;
-    }
-
-    return cleaned;
+  const parts = text.split(".");
+  if (parts.length === 2) {
+    return `${parts[0].padStart(2, "0")}.${parts[1].padStart(2, "0")}.${new Date().getFullYear()}`;
   }
 
-  return cleanValue(value);
+  if (parts.length === 3) {
+    const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+    return `${parts[0].padStart(2, "0")}.${parts[1].padStart(2, "0")}.${year}`;
+  }
+
+  return text;
 }
 
 function normalizeResult(value) {
-  const text = normalizeText(value);
+  const text = cleanValue(value).toLocaleLowerCase("tr-TR");
 
   if (!text) return "";
 
@@ -130,9 +115,7 @@ function getHeaderMap(worksheet, headerRowNumber) {
 
   headerRow.eachCell((cell, colNumber) => {
     const key = cleanValue(cell.value).toLocaleUpperCase("tr-TR");
-    if (key) {
-      map[key] = colNumber;
-    }
+    if (key) map[key] = colNumber;
   });
 
   return map;
@@ -147,9 +130,7 @@ function getValueByHeader(row, headerMap, headerName) {
 function getValueByPossibleHeaders(row, headerMap, headerNames) {
   for (const headerName of headerNames) {
     const col = headerMap[headerName.toLocaleUpperCase("tr-TR")];
-    if (col) {
-      return row.getCell(col).value;
-    }
+    if (col) return row.getCell(col).value;
   }
   return "";
 }
@@ -157,7 +138,6 @@ function getValueByPossibleHeaders(row, headerMap, headerNames) {
 function getCellColor(cell) {
   const fill = cell.fill;
   if (!fill) return "";
-
   const fg = fill.fgColor?.argb || "";
   const bg = fill.bgColor?.argb || "";
   return String(fg || bg).toUpperCase();
@@ -167,9 +147,7 @@ function getHarcStatus(cell) {
   const pattern = String(cell.fill?.pattern || "").toLowerCase();
   const color = getCellColor(cell);
 
-  if (!pattern || pattern === "none") {
-    return "odenmedi";
-  }
+  if (!pattern || pattern === "none") return "odenmedi";
 
   if (
     color === "FF00B050" ||
@@ -207,13 +185,13 @@ function getEksikBelgeler(row, headerMap) {
   return eksikler;
 }
 
-function buildStudent(existing, overrides) {
+function createBaseStudent(adSoyad = "") {
   return {
     tc: "",
-    ad_soyad: "",
+    ad_soyad: adSoyad,
     sinif: "",
     telefonlar: "",
-    durum: "",
+    durum: "kayit",
     evrak_durumu: "tamam",
     eksik_evraklar: "",
     esinav_harc: "odenmedi",
@@ -223,8 +201,6 @@ function buildStudent(existing, overrides) {
     direksiyon_harc: "odenmedi",
     direksiyon_tarih: "",
     direksiyon_sonuc: "",
-    ...existing,
-    ...overrides,
   };
 }
 
@@ -236,18 +212,13 @@ async function main() {
   const esinavSheet = getSheetByTrimmedName(workbook, "E-SINAV");
   const direksiyonSheet = getSheetByTrimmedName(workbook, "DİREKSİYON");
 
-  console.log(
-    "Bulunan sayfalar:",
-    workbook.worksheets.map((w) => w.name),
-  );
-
   if (!eksikSheet || !esinavSheet || !direksiyonSheet) {
     throw new Error("Gerekli sayfalardan biri bulunamadı.");
   }
 
   const studentsMap = new Map();
 
-  // EKSİK BELGELER -> başlık 1. satır
+  // 1) EKSİK BELGELER
   const eksikHeaderMap = getHeaderMap(eksikSheet, 1);
 
   for (let rowNumber = 2; rowNumber <= eksikSheet.rowCount; rowNumber++) {
@@ -261,6 +232,9 @@ async function main() {
       ]),
     );
     if (!adSoyad) continue;
+
+    const key = normalizeName(adSoyad);
+    const existing = studentsMap.get(key) || createBaseStudent(adSoyad);
 
     const tcValue = getValueByPossibleHeaders(row, eksikHeaderMap, [
       "TC",
@@ -283,25 +257,21 @@ async function main() {
       "EHLİYET SINIFI",
     ]);
 
-    const key = normalizeName(adSoyad);
-    const existing = studentsMap.get(key);
     const eksikListesi = getEksikBelgeler(row, eksikHeaderMap);
 
-    studentsMap.set(
-      key,
-      buildStudent(existing, {
-        tc: normalizeTc(tcValue) || existing?.tc || "",
-        ad_soyad: adSoyad,
-        sinif: cleanValue(sinifValue) || existing?.sinif || "",
-        telefonlar: normalizePhone(telefonValue) || existing?.telefonlar || "",
-        durum: existing?.durum || "kayit",
-        evrak_durumu: "eksik",
-        eksik_evraklar: eksikListesi.join("\n"),
-      }),
-    );
+    studentsMap.set(key, {
+      ...existing,
+      tc: normalizeTc(tcValue) || existing.tc,
+      ad_soyad: adSoyad,
+      sinif: cleanValue(sinifValue) || existing.sinif,
+      telefonlar: normalizePhone(telefonValue) || existing.telefonlar,
+      durum: "kayit",
+      evrak_durumu: "eksik",
+      eksik_evraklar: eksikListesi.join("\n"),
+    });
   }
 
-  // E-SINAV -> başlık 2. satır
+  // 2) E-SINAV
   const esinavHeaderMap = getHeaderMap(esinavSheet, 2);
 
   for (let rowNumber = 3; rowNumber <= esinavSheet.rowCount; rowNumber++) {
@@ -316,7 +286,7 @@ async function main() {
     if (!adSoyad) continue;
 
     const key = normalizeName(adSoyad);
-    const existing = studentsMap.get(key);
+    const existing = studentsMap.get(key) || createBaseStudent(adSoyad);
 
     const tcValue = getValueByPossibleHeaders(row, esinavHeaderMap, [
       "TC",
@@ -365,27 +335,22 @@ async function main() {
 
     const esinavSonuc = normalizeResult(sonucValue);
 
-    studentsMap.set(
-      key,
-      buildStudent(existing, {
-        tc: normalizeTc(tcValue) || existing?.tc || "",
-        ad_soyad: adSoyad,
-        sinif: cleanValue(sinifValue) || existing?.sinif || "",
-        telefonlar: normalizePhone(telefonValue) || existing?.telefonlar || "",
-        durum:
-          existing?.direksiyon_tarih || existing?.direksiyon_sonuc === "gecti"
-            ? "direksiyon"
-            : "esinav",
-        evrak_durumu: existing?.evrak_durumu === "eksik" ? "eksik" : "tamam",
-        esinav_harc: getHarcStatus(harcCell),
-        esinav_tarih: normalizeDate(tarihValue),
-        esinav_saati: cleanValue(saatValue),
-        esinav_sonuc: esinavSonuc || existing?.esinav_sonuc || "",
-      }),
-    );
+    studentsMap.set(key, {
+      ...existing,
+      tc: normalizeTc(tcValue) || existing.tc,
+      ad_soyad: adSoyad,
+      sinif: cleanValue(sinifValue) || existing.sinif,
+      telefonlar: normalizePhone(telefonValue) || existing.telefonlar,
+      durum: esinavSonuc === "gecti" ? "direksiyon" : "esinav",
+      evrak_durumu: existing.evrak_durumu === "eksik" ? "eksik" : "tamam",
+      esinav_harc: getHarcStatus(harcCell),
+      esinav_tarih: normalizeDate(tarihValue),
+      esinav_saati: cleanValue(saatValue),
+      esinav_sonuc: esinavSonuc || existing.esinav_sonuc,
+    });
   }
 
-  // DİREKSİYON -> başlık 2. satır
+  // 3) DİREKSİYON
   const direksiyonHeaderMap = getHeaderMap(direksiyonSheet, 2);
 
   for (let rowNumber = 3; rowNumber <= direksiyonSheet.rowCount; rowNumber++) {
@@ -400,7 +365,7 @@ async function main() {
     if (!adSoyad) continue;
 
     const key = normalizeName(adSoyad);
-    const existing = studentsMap.get(key);
+    const existing = studentsMap.get(key) || createBaseStudent(adSoyad);
 
     const tcValue = getValueByPossibleHeaders(row, direksiyonHeaderMap, [
       "TC",
@@ -444,21 +409,19 @@ async function main() {
 
     const direksiyonSonuc = normalizeResult(sonucValue);
 
-    studentsMap.set(
-      key,
-      buildStudent(existing, {
-        tc: normalizeTc(tcValue) || existing?.tc || "",
-        ad_soyad: adSoyad,
-        sinif: cleanValue(sinifValue) || existing?.sinif || "",
-        telefonlar: normalizePhone(telefonValue) || existing?.telefonlar || "",
-        durum: direksiyonSonuc === "gecti" ? "tamam" : "direksiyon",
-        evrak_durumu: existing?.evrak_durumu === "eksik" ? "eksik" : "tamam",
-        esinav_sonuc: existing?.esinav_sonuc || "gecti",
-        direksiyon_harc: getHarcStatus(harcCell),
-        direksiyon_tarih: normalizeDate(tarihValue),
-        direksiyon_sonuc: direksiyonSonuc || existing?.direksiyon_sonuc || "",
-      }),
-    );
+    studentsMap.set(key, {
+      ...existing,
+      tc: normalizeTc(tcValue) || existing.tc,
+      ad_soyad: adSoyad,
+      sinif: cleanValue(sinifValue) || existing.sinif,
+      telefonlar: normalizePhone(telefonValue) || existing.telefonlar,
+      durum: direksiyonSonuc === "gecti" ? "tamam" : "direksiyon",
+      evrak_durumu: existing.evrak_durumu === "eksik" ? "eksik" : "tamam",
+      esinav_sonuc: existing.esinav_sonuc || "gecti",
+      direksiyon_harc: getHarcStatus(harcCell),
+      direksiyon_tarih: normalizeDate(tarihValue),
+      direksiyon_sonuc: direksiyonSonuc || existing.direksiyon_sonuc,
+    });
   }
 
   const students = Array.from(studentsMap.values())
