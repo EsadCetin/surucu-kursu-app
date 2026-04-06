@@ -41,7 +41,7 @@ type StepItemProps = {
 };
 
 const DATA_URL =
-  "https://esadcetin.github.io/surucu-kursu-app/docs/students.json";
+  "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/data/students.json";
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
