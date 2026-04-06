@@ -43,7 +43,7 @@ type StepItemProps = {
 };
 
 const DATA_URL =
-  "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/data/students.json";
+  "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
@@ -258,7 +258,9 @@ export default function Index() {
       user.esinav_sonuc !== "gecti" &&
       isPastDate(user.esinav_tarih)
     ) {
-      return "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.";
+      return user.esinav_harc === "odendi"
+        ? "Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
+        : "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.";
     }
 
     if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
@@ -559,10 +561,6 @@ export default function Index() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity style={styles.refreshButton} onPress={reloadStudents}>
-        <Text style={styles.refreshButtonText}>Verileri Yenile</Text>
-      </TouchableOpacity>
-
       <View style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
