@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
   Linking,
@@ -10,22 +11,32 @@ import {
 export default function Iletisim() {
   const openWebsite = async () => {
     const url = "https://ayassurucukursu.com";
-    const supported = await Linking.canOpenURL(url);
 
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
+    try {
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Hata", "Web sitesi açılamadı.");
+      }
+    } catch (error) {
       Alert.alert("Hata", "Web sitesi açılamadı.");
     }
   };
 
   const callPhone = async () => {
     const url = "tel:05305402914";
-    const supported = await Linking.canOpenURL(url);
 
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
+    try {
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Hata", "Telefon araması başlatılamadı.");
+      }
+    } catch (error) {
       Alert.alert("Hata", "Telefon araması başlatılamadı.");
     }
   };
@@ -40,11 +51,31 @@ export default function Iletisim() {
       Alert.alert("Hata", "Konum açılamadı.");
     }
   };
+  const openWhatsApp = async () => {
+    const whatsappPhone = "905305402914";
+    const message = encodeURIComponent(
+      "Merhaba, Yeni Ayaş Sürücü Kursu hakkında bilgi almak istiyorum.",
+    );
+    const url = `https://wa.me/${whatsappPhone}?text=${message}`;
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Hata", "WhatsApp açılamadı.");
+      }
+    } catch (error) {
+      Alert.alert("Hata", "WhatsApp açılamadı.");
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
+
         <Text style={styles.text}>Telefon: 0530 540 29 14</Text>
         <Text style={styles.text}>Web: ayassurucukursu.com</Text>
         <Text style={styles.text}>
@@ -63,6 +94,10 @@ export default function Iletisim() {
           <Text style={styles.buttonText}>Konumu Aç</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.whatsappButton} onPress={openWhatsApp}>
+        <Ionicons name="logo-whatsapp" size={50} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -74,6 +109,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
+    top: 15,
     backgroundColor: "#17171b",
     borderRadius: 16,
     padding: 18,
@@ -84,15 +120,35 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 22,
     fontWeight: "700",
-    marginBottom: 14,
+    marginBottom: 18,
+  },
+  label: {
+    color: "#8f9098",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 4,
+    marginTop: 6,
+    textTransform: "uppercase",
   },
   text: {
     color: "#d7d7dc",
     fontSize: 15,
     marginBottom: 8,
+    lineHeight: 22,
+  },
+  whatsappButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 50,
+    width: "7%",
+    alignSelf: "flex-end",
+    backgroundColor: "#1f8f55",
+    paddingVertical: 14,
+    borderRadius: 50,
+    alignItems: "center",
   },
   button: {
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: "#c1121f",
     paddingVertical: 14,
     borderRadius: 12,
