@@ -11,7 +11,7 @@ const announcements = [
   },
   {
     title: "Eksik Evrak Uyarısı",
-    text: "Eksik evrakı bulunan öğrenciler başvuru sürecinde gecikme yaşamamak için evraklarını tamamlamalıdır.",
+    text: "Eksik evrakları bulunan öğrenciler başvuru sürecinde gecikme yaşamamak için evraklarını tamamlamalıdır.",
   },
 ];
 

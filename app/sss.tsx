@@ -87,7 +87,7 @@ export default function SSSScreen() {
         <View>
           <Text style={styles.title}>Sıkça Sorulan Sorular</Text>
           <Text style={styles.subtitle}>
-            Öğrenci süreciyle ilgili en çok sorulan sorular
+            Ehliyet süreciyle ilgili en çok sorulan sorular
           </Text>
         </View>
       </View>

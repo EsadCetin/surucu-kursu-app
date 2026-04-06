@@ -38,6 +38,12 @@ type SmartStatus = {
 
 type StatusType = "success" | "error" | "warning" | "info" | "normal";
 
+type LoginFeedback = {
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+};
+
 type StepItemProps = {
   title: string;
   checked: boolean;
@@ -354,87 +360,132 @@ export default function Index() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState("");
+  const [fetchError, setFetchError] = useState("");
+  const [loginFeedback, setLoginFeedback] = useState<LoginFeedback | null>(
+    null,
+  );
 
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        setLoadingStudents(true);
-
-        const response = await fetch(DATA_URL, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("Öğrenci verisi alınamadı.");
-        }
-
-        const data: Student[] = await response.json();
-        setStudents(data);
-      } catch (error) {
-        Alert.alert("Hata", "Veriler yüklenemedi.");
-      } finally {
-        setLoadingStudents(false);
-      }
-    };
-
-    loadStudents();
-  }, []);
-
-  const reloadStudents = async () => {
+  const loadStudents = async (preserveUser = false) => {
     try {
       setLoadingStudents(true);
+      setFetchError("");
+      setLoginFeedback(null);
 
       const response = await fetch(DATA_URL, {
         cache: "no-store",
       });
 
       if (!response.ok) {
-        throw new Error("Veri alınamadı.");
+        throw new Error("Öğrenci verisi alınamadı.");
       }
 
       const data: Student[] = await response.json();
       setStudents(data);
 
-      if (user) {
+      if (preserveUser && user) {
         const updatedUser = data.find((s) => s.tc === user.tc);
         if (updatedUser) {
           setUser(updatedUser);
         }
       }
     } catch (error) {
-      Alert.alert("Hata", "Veriler yenilenemedi.");
+      setStudents([]);
+      setFetchError(
+        "Veriler sunucudan alınamadı. Lütfen daha sonra tekrar deneyin.",
+      );
     } finally {
       setLoadingStudents(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const reloadStudents = async () => {
+    await loadStudents(true);
+  };
+
+  const handleTcChange = (value: string) => {
+    setTc(value);
+
+    if (loginFeedback) {
+      setLoginFeedback(null);
     }
   };
 
   const handleLogin = () => {
     const cleanedTc = tc.trim();
 
+    if (loadingStudents) {
+      setLoginFeedback({
+        type: "info",
+        title: "Veriler yükleniyor",
+        message: "Lütfen veri yükleme tamamlandıktan sonra tekrar deneyin.",
+      });
+      return;
+    }
+
+    if (fetchError) {
+      setLoginFeedback({
+        type: "error",
+        title: "Veri yüklenemedi",
+        message: fetchError,
+      });
+      return;
+    }
+
+    if (!students.length) {
+      setLoginFeedback({
+        type: "warning",
+        title: "Öğrenci verisi bulunmuyor",
+        message: "Sistemde henüz görüntülenebilir öğrenci verisi bulunmuyor.",
+      });
+      return;
+    }
+
     if (!cleanedTc) {
-      Alert.alert("Hata", "TC kimlik numarası giriniz.");
+      setLoginFeedback({
+        type: "error",
+        title: "TC gerekli",
+        message: "TC kimlik numarası giriniz.",
+      });
       return;
     }
 
     if (!/^\d+$/.test(cleanedTc)) {
-      Alert.alert("Hata", "TC kimlik numarası sadece rakamlardan oluşmalıdır.");
+      setLoginFeedback({
+        type: "error",
+        title: "Geçersiz giriş",
+        message: "TC kimlik numarası sadece rakamlardan oluşmalıdır.",
+      });
       return;
     }
 
     if (cleanedTc.length !== 11) {
-      Alert.alert("Hata", "TC kimlik numarası 11 haneli olmalıdır.");
+      setLoginFeedback({
+        type: "error",
+        title: "Eksik veya hatalı uzunluk",
+        message: "TC kimlik numarası 11 haneli olmalıdır.",
+      });
       return;
     }
 
     const foundUser = students.find((s) => s.tc === cleanedTc);
 
-    if (foundUser) {
-      setUser(foundUser);
-      setLoggedIn(true);
-      setSelectedDetail("");
-    } else {
-      Alert.alert("Hata", "Bu TC kimlik numarasına ait öğrenci bulunamadı.");
+    if (!foundUser) {
+      setLoginFeedback({
+        type: "warning",
+        title: "Kayıt bulunamadı",
+        message: "Bu TC kimlik numarasına ait öğrenci bulunamadı.",
+      });
+      return;
     }
+
+    setLoginFeedback(null);
+    setUser(foundUser);
+    setLoggedIn(true);
+    setSelectedDetail("");
   };
 
   const handleLogout = () => {
@@ -442,6 +493,7 @@ export default function Index() {
     setUser(null);
     setTc("");
     setSelectedDetail("");
+    setLoginFeedback(null);
   };
 
   const initials = useMemo(() => {
@@ -467,6 +519,32 @@ export default function Index() {
 
     return getSmartStatus(user);
   }, [user]);
+
+  const visibleLoginFeedback = useMemo<LoginFeedback | null>(() => {
+    if (loginFeedback) {
+      return loginFeedback;
+    }
+
+    if (fetchError) {
+      return {
+        type: "error",
+        title: "Veri yüklenemedi",
+        message: fetchError,
+      };
+    }
+
+    if (!loadingStudents && !students.length) {
+      return {
+        type: "warning",
+        title: "Veri henüz hazır değil",
+        message: "Sistemde henüz görüntülenebilir öğrenci verisi bulunmuyor.",
+      };
+    }
+
+    return null;
+  }, [loginFeedback, fetchError, loadingStudents, students.length]);
+
+  const isLoginDisabled = loadingStudents || !!fetchError || !students.length;
 
   const stepStates = useMemo(() => {
     if (!user) {
@@ -692,18 +770,13 @@ export default function Index() {
     }
   };
 
-  const openHarcLink = () => {
-    Linking.openURL("https://odeme.meb.gov.tr");
+  const openHarcLink = async () => {
+    try {
+      await Linking.openURL("https://odeme.meb.gov.tr");
+    } catch (error) {
+      Alert.alert("Hata", "Ödeme sayfası açılamadı.");
+    }
   };
-
-  if (loadingStudents) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#c1121f" />
-        <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
-      </View>
-    );
-  }
 
   if (!loggedIn || !user) {
     return (
@@ -722,12 +795,58 @@ export default function Index() {
             keyboardType="numeric"
             maxLength={11}
             value={tc}
-            onChangeText={setTc}
+            onChangeText={handleTcChange}
           />
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Giriş Yap</Text>
+          {visibleLoginFeedback ? (
+            <View
+              style={[
+                styles.loginStatusCard,
+                visibleLoginFeedback.type === "success" &&
+                  styles.loginStatusSuccess,
+                visibleLoginFeedback.type === "error" &&
+                  styles.loginStatusError,
+                visibleLoginFeedback.type === "warning" &&
+                  styles.loginStatusWarning,
+                visibleLoginFeedback.type === "info" && styles.loginStatusInfo,
+              ]}
+            >
+              <View style={styles.loginStatusHeader}>
+                {visibleLoginFeedback.type === "info" && loadingStudents ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : null}
+                <Text style={styles.loginStatusTitle}>
+                  {visibleLoginFeedback.title}
+                </Text>
+              </View>
+              <Text style={styles.loginStatusText}>
+                {visibleLoginFeedback.message}
+              </Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={[
+              styles.loginButton,
+              isLoginDisabled && styles.loginButtonDisabled,
+            ]}
+            onPress={handleLogin}
+            activeOpacity={isLoginDisabled ? 1 : 0.85}
+            disabled={isLoginDisabled}
+          >
+            <Text style={styles.loginButtonText}>
+              {loadingStudents ? "Kontrol ediliyor..." : "Giriş Yap"}
+            </Text>
           </TouchableOpacity>
+
+          {(fetchError || !students.length) && !loadingStudents ? (
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={reloadStudents}
+            >
+              <Text style={styles.secondaryButtonText}>Verileri Yenile</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     );
@@ -878,6 +997,59 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
+  },
+  loginButtonDisabled: {
+    opacity: 0.55,
+  },
+  secondaryButton: {
+    backgroundColor: "#1f1f25",
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#2c2c34",
+  },
+  secondaryButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  loginStatusCard: {
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    backgroundColor: "#151519",
+    borderColor: "#232329",
+  },
+  loginStatusHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  loginStatusTitle: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  loginStatusText: {
+    color: "#d8d8dd",
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  loginStatusSuccess: {
+    borderColor: "#1f8f55",
+  },
+  loginStatusError: {
+    borderColor: "#a62d2d",
+  },
+  loginStatusWarning: {
+    borderColor: "#a67c1a",
+  },
+  loginStatusInfo: {
+    borderColor: "#2c6ca6",
   },
   loginButtonText: {
     color: "#ffffff",
