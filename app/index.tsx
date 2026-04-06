@@ -1,6 +1,8 @@
 import * as Linking from "expo-linking";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -135,52 +137,97 @@ export default function Index() {
   const [tc, setTc] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<Student | null>(null);
-
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState("");
-  const [loginError, setLoginError] = useState("");
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        setLoadingStudents(true);
+
+        const response = await fetch(DATA_URL, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Öğrenci verisi alınamadı.");
+        }
+
+        const data: Student[] = await response.json();
+        setStudents(data);
+      } catch (error) {
+        Alert.alert("Hata", "Veriler yüklenemedi.");
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+
+    loadStudents();
+  }, []);
+
+  const reloadStudents = async () => {
+    try {
+      setLoadingStudents(true);
+
+      const response = await fetch(DATA_URL, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Veri alınamadı.");
+      }
+
+      const data: Student[] = await response.json();
+      setStudents(data);
+
+      if (user) {
+        const updatedUser = data.find((s) => s.tc === user.tc);
+        if (updatedUser) {
+          setUser(updatedUser);
+        }
+      }
+    } catch (error) {
+      Alert.alert("Hata", "Veriler yenilenemedi.");
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const handleLogin = () => {
     const cleanedTc = tc.trim();
-    setLoginError("");
 
     if (!cleanedTc) {
-      setLoginError("TC kimlik numarası giriniz.");
+      Alert.alert("Hata", "TC kimlik numarası giriniz.");
       return;
     }
 
     if (!/^\d+$/.test(cleanedTc)) {
-      setLoginError("TC kimlik numarası sadece rakamlardan oluşmalıdır.");
+      Alert.alert("Hata", "TC kimlik numarası sadece rakamlardan oluşmalıdır.");
       return;
     }
 
     if (cleanedTc.length !== 11) {
-      setLoginError("TC kimlik numarası 11 haneli olmalıdır.");
+      Alert.alert("Hata", "TC kimlik numarası 11 haneli olmalıdır.");
       return;
     }
 
-    try {
-      const response = await fetch(`${DATA_URL}/student-login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ tc: cleanedTc }),
-      });
+    const foundUser = students.find((s) => s.tc === cleanedTc);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setLoginError(data.error || "Giriş başarısız.");
-        return;
-      }
-
-      setUser(data);
+    if (foundUser) {
+      setUser(foundUser);
       setLoggedIn(true);
       setSelectedDetail("");
-      setLoginError("");
-    } catch (error) {
-      setLoginError("Sunucuya bağlanılamadı.");
+    } else {
+      Alert.alert("Hata", "Bu TC kimlik numarasına ait öğrenci bulunamadı.");
     }
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setUser(null);
+    setTc("");
+    setSelectedDetail("");
   };
 
   const initials = useMemo(() => {
@@ -419,16 +466,21 @@ export default function Index() {
       return;
     }
 
-    if (user.esinav_tarih) {
+    if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
       setSelectedDetail(
         user.esinav_saati
-          ? `E-sınav tarihiniz: ${user.esinav_tarih}\nSınav saatiniz: ${user.esinav_saati}`
-          : `E-sınav tarihiniz: ${user.esinav_tarih}`,
+          ? `E-sınav tarihiniz ${user.esinav_tarih} / ${user.esinav_saati}`
+          : `E-sınav tarihiniz ${user.esinav_tarih}`,
       );
       return;
     }
 
-    setSelectedDetail("E-sınav aşamasındasınız.");
+    if (user.esinav_sonuc === "gecti") {
+      setSelectedDetail("E-sınavı başarıyla geçtiniz.");
+      return;
+    }
+
+    setSelectedDetail("E-sınav süreciniz devam ediyor.");
   };
 
   const showDireksiyonDetay = () => {
@@ -436,87 +488,66 @@ export default function Index() {
 
     if (user.esinav_sonuc !== "gecti") {
       setSelectedDetail(
-        "Direksiyon aşamasına geçmek için önce e-sınavı geçmeniz gerekiyor.",
+        "Direksiyon aşamasına geçmek için önce e-sınavı geçmelisiniz.",
       );
       return;
     }
 
     if (user.direksiyon_sonuc === "gecti") {
-      setSelectedDetail("Direksiyon sınavından başarılı oldunuz.");
+      setSelectedDetail("Direksiyon sınavını başarıyla geçtiniz.");
+      return;
+    }
+
+    if (user.direksiyon_sonuc === "kaldi") {
+      setSelectedDetail("Direksiyon sınavında başarısız oldunuz.");
       return;
     }
 
     if (user.direksiyon_harc === "odenmedi") {
-      setSelectedDetail(
-        "Sınav harcınızı yatırmadıysanız aşağıdaki hesaba ödeme yapmanız gerekiyor:\n\nTR 0800 0100 0003 5126 9999 5001\nRAVZA GÜL İLERİSOY\n2000₺ SINAV HARCI YATIRMANIZ GEREKİYOR",
-      );
+      setSelectedDetail("Direksiyon harcı henüz yatırılmamış görünüyor.");
       return;
     }
 
-    if (user.direksiyon_harc === "odendi" && user.direksiyon_tarih) {
-      setSelectedDetail(
-        `Direksiyon sınav tarihiniz: ${user.direksiyon_tarih}\nDersler için aranacaksınız.`,
-      );
+    if (user.direksiyon_tarih) {
+      setSelectedDetail(`Direksiyon sınav tarihiniz ${user.direksiyon_tarih}`);
       return;
     }
 
-    if (user.direksiyon_harc === "odendi" && !user.direksiyon_tarih) {
-      setSelectedDetail("Sınav tarihiniz ve dersler için aranacaksınız.");
-      return;
-    }
-
-    setSelectedDetail("Direksiyon sınav aşamasındasınız.");
+    setSelectedDetail("Direksiyon süreciniz devam ediyor.");
   };
 
-  const showFinalDetay = () => {
-    if (!user) return;
-
-    if (user.direksiyon_sonuc === "gecti") {
-      setSelectedDetail("Direksiyon sınavından başarılı oldunuz.");
-    } else {
-      setSelectedDetail("Bu aşama henüz tamamlanmadı.");
-    }
+  const openHarcLink = () => {
+    Linking.openURL("https://odeme.meb.gov.tr");
   };
 
-  const openEsinavPayment = async () => {
-    const url = "https://odeme.meb.gov.tr/";
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      setSelectedDetail("Ödeme sayfası açılamadı.");
-    }
-  };
+  if (loadingStudents) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#c1121f" />
+        <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
+      </View>
+    );
+  }
 
   if (!loggedIn || !user) {
     return (
-      <View style={styles.loginContainer}>
-        <View style={styles.loginTopBadge}>
-          <Text style={styles.loginTopBadgeText}>Yeni Ayaş Sürücü Kursu</Text>
-        </View>
+      <View style={styles.container}>
+        <View style={styles.loginBox}>
+          <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
+          <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
+          <Text style={styles.loginSub}>
+            TC kimlik numaranızı girerek sürecinizi görüntüleyin.
+          </Text>
 
-        <Text style={styles.appTitle}>Öğrenci Giriş</Text>
-        <Text style={styles.appSubtitle}>
-          TC kimlik numaranızı girerek sürecinizi görüntüleyin
-        </Text>
-
-        <View style={styles.loginCard}>
-          <Text style={styles.inputLabel}>TC Kimlik Numaranız</Text>
           <TextInput
             style={styles.input}
-            placeholder="11 haneli TC kimlik numarası"
-            placeholderTextColor="#8f8f95"
+            placeholder="TC Kimlik Numarası"
+            placeholderTextColor="#8f8f97"
             keyboardType="numeric"
             maxLength={11}
             value={tc}
-            onChangeText={(text) => {
-              setTc(text.replace(/[^0-9]/g, ""));
-              if (loginError) setLoginError("");
-            }}
+            onChangeText={setTc}
           />
-
-          {!!loginError && <Text style={styles.errorText}>{loginError}</Text>}
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Giriş Yap</Text>
@@ -527,7 +558,11 @@ export default function Index() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <TouchableOpacity style={styles.refreshButton} onPress={reloadStudents}>
+        <Text style={styles.refreshButtonText}>Verileri Yenile</Text>
+      </TouchableOpacity>
+
       <View style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
@@ -536,90 +571,84 @@ export default function Index() {
 
           <View style={styles.profileTextArea}>
             <Text style={styles.name}>{user.ad_soyad}</Text>
-            <Text style={styles.subName}>Öğrenci Paneli</Text>
+            <Text style={styles.subName}>TC: {user.tc}</Text>
           </View>
         </View>
 
         <View style={styles.chipsRow}>
-          <InfoChip label="TC" value={user.tc} />
           <InfoChip label="Sınıf" value={user.sinif || "-"} />
-        </View>
-
-        <View style={styles.chipsRow}>
           <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
         </View>
       </View>
 
       {!!highlightedExamInfo && (
         <View style={styles.heroCard}>
-          <Text style={styles.heroCardLabel}>Öne Çıkan Bilgi</Text>
+          <Text style={styles.heroCardLabel}>Bilgilendirme</Text>
           <Text style={styles.heroCardText}>{highlightedExamInfo}</Text>
         </View>
       )}
 
-      <View style={styles.statusCard}>
-        <Text style={styles.sectionTitle}>Genel Durum</Text>
-        <Text
-          style={[
-            styles.statusText,
-            mainStatus.type === "success" && styles.statusSuccess,
-            mainStatus.type === "error" && styles.statusError,
-            mainStatus.type === "warning" && styles.statusWarning,
-            mainStatus.type === "info" && styles.statusInfo,
-          ]}
-        >
-          {mainStatus.text}
-        </Text>
+      <View
+        style={[
+          styles.statusCard,
+          mainStatus.type === "success" && styles.statusSuccess,
+          mainStatus.type === "error" && styles.statusError,
+          mainStatus.type === "warning" && styles.statusWarning,
+          mainStatus.type === "info" && styles.statusInfo,
+        ]}
+      >
+        <Text style={styles.statusTitle}>Genel Durum</Text>
+        <Text style={styles.statusText}>{mainStatus.text}</Text>
 
-        {user.durum === "esinav" && user.esinav_harc === "odenmedi" && (
-          <TouchableOpacity
-            style={styles.paymentButton}
-            onPress={openEsinavPayment}
-          >
-            <Text style={styles.paymentButtonText}>E-Sınav Harcını Öde</Text>
+        {user.durum === "esinav" && user.esinav_harc === "odenmedi" ? (
+          <TouchableOpacity style={styles.paymentButton} onPress={openHarcLink}>
+            <Text style={styles.paymentButtonText}>Harç Ödeme Sayfası</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
-      <View style={styles.timelineCard}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Kurs Aşamaları</Text>
-          <Text style={styles.sectionSubText}>Detay için dokun</Text>
-        </View>
+      <View style={styles.stepsCard}>
+        <Text style={styles.sectionTitle}>Süreç Adımları</Text>
 
         <StepItem
-          title="Kurs Başvurusu"
+          title="Başvuru yapıldı"
           checked={stepStates.basvuruYapildi}
           active={activeStep === "basvuru"}
           onPress={showBasvuruDetay}
         />
 
         <StepItem
-          title="Kurs Başvurusu Tamamlandı"
+          title="Başvuru tamamlandı"
           checked={stepStates.basvuruTamamlandi}
-          active={activeStep === "basvuru" && user.evrak_durumu !== "tamam"}
+          active={activeStep === "basvuru" && user.evrak_durumu === "tamam"}
           onPress={showBasvuruTamamDetay}
         />
 
         <StepItem
-          title="E-Sınav Aşaması"
+          title="E-sınav aşaması"
           checked={stepStates.esinavAsamasi}
           active={activeStep === "esinav"}
           onPress={showEsinavDetay}
         />
 
         <StepItem
-          title="Direksiyon Sınav Aşaması"
+          title="Direksiyon aşaması"
           checked={stepStates.direksiyonAsamasi}
           active={activeStep === "direksiyon"}
           onPress={showDireksiyonDetay}
         />
 
         <StepItem
-          title="Başarılı"
+          title="Süreç tamamlandı"
           checked={stepStates.tamamlandi}
           active={activeStep === "tamamlandi"}
-          onPress={showFinalDetay}
+          onPress={() =>
+            setSelectedDetail(
+              user.direksiyon_sonuc === "gecti"
+                ? "Tüm süreç başarıyla tamamlandı."
+                : "Süreç henüz tamamlanmadı.",
+            )
+          }
         />
       </View>
 
@@ -627,28 +656,10 @@ export default function Index() {
         <View style={styles.detailCard}>
           <Text style={styles.sectionTitle}>Detay</Text>
           <Text style={styles.detailText}>{selectedDetail}</Text>
-
-          {selectedDetail.includes("ödeme sayfasına gidebilirsiniz") && (
-            <TouchableOpacity
-              style={styles.paymentButton}
-              onPress={openEsinavPayment}
-            >
-              <Text style={styles.paymentButtonText}>E-Sınav Harcını Öde</Text>
-            </TouchableOpacity>
-          )}
         </View>
       )}
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={() => {
-          setLoggedIn(false);
-          setUser(null);
-          setTc("");
-          setSelectedDetail("");
-          setLoginError("");
-        }}
-      >
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -656,74 +667,52 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: "#0b0b0d",
+    backgroundColor: "#0d0d10",
   },
   content: {
-    padding: 18,
-    paddingTop: 52,
-    paddingBottom: 36,
+    padding: 16,
+    paddingBottom: 28,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#0b0b0d",
+    backgroundColor: "#0d0d10",
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
   },
   loadingText: {
     color: "#ffffff",
     marginTop: 12,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
   },
-  loginContainer: {
+  loginBox: {
     flex: 1,
-    backgroundColor: "#0b0b0d",
     justifyContent: "center",
-    padding: 22,
+    paddingHorizontal: 18,
   },
-  loginTopBadge: {
-    alignSelf: "center",
-    backgroundColor: "#17171b",
-    borderWidth: 1,
-    borderColor: "#232329",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    marginBottom: 18,
+  brand: {
+    color: "#c1121f",
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 8,
+    textAlign: "center",
   },
-  loginTopBadgeText: {
-    color: "#d8d8dd",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  appTitle: {
+  loginTitle: {
     color: "#ffffff",
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "800",
     textAlign: "center",
+    marginBottom: 8,
   },
-  appSubtitle: {
-    color: "#9a9aa2",
-    fontSize: 14,
+  loginSub: {
+    color: "#a0a0a8",
+    fontSize: 15,
     textAlign: "center",
-    marginTop: 8,
     marginBottom: 24,
-    lineHeight: 20,
-  },
-  loginCard: {
-    backgroundColor: "#151519",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#232329",
-  },
-  inputLabel: {
-    color: "#d0d0d6",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 10,
+    lineHeight: 22,
   },
   input: {
     backgroundColor: "#1f1f25",
@@ -732,16 +721,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: "#2c2c34",
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 12,
-    marginTop: 2,
   },
   loginButton: {
     backgroundColor: "#c1121f",
@@ -858,13 +840,96 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#232329",
   },
-  timelineCard: {
+  statusSuccess: {
+    borderColor: "#1f8f55",
+  },
+  statusError: {
+    borderColor: "#a62d2d",
+  },
+  statusWarning: {
+    borderColor: "#a67c1a",
+  },
+  statusInfo: {
+    borderColor: "#2c6ca6",
+  },
+  statusTitle: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  statusText: {
+    color: "#d8d8dd",
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  paymentButton: {
+    backgroundColor: "#c1121f",
+    marginTop: 14,
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  paymentButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  stepsCard: {
     backgroundColor: "#151519",
     borderRadius: 22,
     padding: 18,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: "#232329",
+  },
+  sectionTitle: {
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "800",
+    marginBottom: 14,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#232329",
+    borderWidth: 1,
+    borderColor: "#3a3a42",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  stepCircleChecked: {
+    backgroundColor: "#c1121f",
+    borderColor: "#c1121f",
+  },
+  stepCircleActive: {
+    borderColor: "#c1121f",
+  },
+  stepCircleText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepTitle: {
+    color: "#d0d0d6",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  stepTitleChecked: {
+    color: "#ffffff",
+  },
+  stepTitleActive: {
+    color: "#ffffff",
   },
   detailCard: {
     backgroundColor: "#151519",
@@ -874,116 +939,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#232329",
   },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 12,
-  },
-  sectionSubText: {
-    color: "#8f8f97",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  statusText: {
-    color: "#d7d7dc",
+  detailText: {
+    color: "#d8d8dd",
     fontSize: 15,
     lineHeight: 23,
-    fontWeight: "600",
-  },
-  statusSuccess: {
-    color: "#22c55e",
-  },
-  statusError: {
-    color: "#ef4444",
-  },
-  statusWarning: {
-    color: "#f59e0b",
-  },
-  statusInfo: {
-    color: "#60a5fa",
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  stepCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: "#4c4c57",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-    backgroundColor: "transparent",
-  },
-  stepCircleChecked: {
-    backgroundColor: "#16a34a",
-    borderColor: "#16a34a",
-  },
-  stepCircleActive: {
-    backgroundColor: "#c1121f",
-    borderColor: "#c1121f",
-  },
-  stepCircleText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  stepContent: {
-    flex: 1,
-    backgroundColor: "#1b1b21",
-    borderRadius: 14,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: "#26262d",
-  },
-  stepTitle: {
-    color: "#b9b9c0",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  stepTitleChecked: {
-    color: "#ffffff",
-  },
-  stepTitleActive: {
-    color: "#ffffff",
-  },
-  detailText: {
-    color: "#d7d7dc",
-    fontSize: 15,
-    lineHeight: 24,
-  },
-  paymentButton: {
-    marginTop: 16,
-    backgroundColor: "#c1121f",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  paymentButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
   },
   logoutButton: {
-    backgroundColor: "#202028",
-    paddingVertical: 16,
-    borderRadius: 16,
+    backgroundColor: "#26262d",
+    paddingVertical: 14,
+    borderRadius: 14,
     alignItems: "center",
   },
   logoutButtonText: {
     color: "#ffffff",
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 });
