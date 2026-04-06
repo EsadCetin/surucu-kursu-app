@@ -24,6 +24,7 @@ function normalizePhone(value) {
   if (value === undefined || value === null || value === "") return "";
   return String(value).trim();
 }
+
 function getValueByPossibleHeaders(row, headerMap, headerNames) {
   for (const headerName of headerNames) {
     const col = headerMap[headerName.toLocaleUpperCase("tr-TR")];
@@ -37,116 +38,78 @@ function getValueByPossibleHeaders(row, headerMap, headerNames) {
 function normalizeDate(value) {
   if (!value) return "";
 
-  // Excel date (gerçek tarih formatı)
-  if (value instanceof Date && !isNaN(value.getTime())) {
-    const day = String(value.getDate()).padStart(2, "0");
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const year = String(value.getFullYear());
-    return `${day}.${month}.${year}`;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().split("T")[0];
   }
 
-  // "23,03" gibi manuel girilen format
-  if (typeof value === "string") {
-    const cleaned = value.replace(",", ".").trim();
+  if (typeof value === "object" && value.result) {
+    return normalizeDate(value.result);
+  }
 
-    // 23.03 şeklinde ise
-    const parts = cleaned.split(".");
-    if (parts.length === 2) {
-      const day = parts[0].padStart(2, "0");
-      const month = parts[1].padStart(2, "0");
-
-      const year = new Date().getFullYear(); // otomatik yıl
-      return `${day}.${month}.${year}`;
+  if (typeof value === "number") {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const date = new Date(excelEpoch.getTime() + value * 86400000);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString().split("T")[0];
     }
-
-    return cleaned;
   }
 
-  return String(value);
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
+  }
+
+  return cleanValue(value);
 }
 
 function getSheetByTrimmedName(workbook, targetName) {
+  const normalizedTarget = targetName.trim().toLocaleUpperCase("tr-TR");
   return workbook.worksheets.find(
     (sheet) =>
-      sheet.name.trim().toLocaleUpperCase("tr-TR") ===
-      targetName.trim().toLocaleUpperCase("tr-TR"),
+      sheet.name.trim().toLocaleUpperCase("tr-TR") === normalizedTarget,
   );
 }
 
-function getCellColor(cell) {
-  const fill = cell.fill;
-  if (!fill) return "";
-
-  const fg = fill.fgColor?.argb || "";
-  const bg = fill.bgColor?.argb || "";
-
-  return String(fg || bg).toUpperCase();
-}
-
-function getHarcStatus(cell) {
-  const pattern = String(cell.fill?.pattern || "").toLowerCase();
-  const color = getCellColor(cell);
-
-  // Dolgu yoksa ödenmedi
-  if (!pattern || pattern === "none") {
-    return "odenmedi";
-  }
-
-  // Bu dosyada tespit edilen renkler
-  if (
-    color === "FF00B050" || // yeşil
-    color === "FFFFFF00" || // sarı
-    color.includes("00B050") ||
-    color.includes("FFFF00") ||
-    color.includes("92D050")
-  ) {
-    return "odendi";
-  }
-
-  return "odenmedi";
-}
-
-function getHeaderMap(worksheet, headerRowNumber) {
+function buildHeaderMap(worksheet, headerRowNumber) {
   const headerRow = worksheet.getRow(headerRowNumber);
-  const map = {};
+  const headerMap = {};
 
   headerRow.eachCell((cell, colNumber) => {
     const key = cleanValue(cell.value).toLocaleUpperCase("tr-TR");
     if (key) {
-      map[key] = colNumber;
+      headerMap[key] = colNumber;
     }
   });
 
-  return map;
+  return headerMap;
 }
 
-function getValueByHeader(row, headerMap, headerName) {
-  const col = headerMap[headerName.toLocaleUpperCase("tr-TR")];
-  if (!col) return "";
-  return row.getCell(col).value;
-}
+function ensureStudent(studentsMap, tc, adSoyad) {
+  const key = tc || adSoyad;
+  if (!key) return null;
 
-function getEksikBelgeler(row, headerMap) {
-  const eksikler = [];
+  if (!studentsMap.has(key)) {
+    studentsMap.set(key, {
+      tc: tc || "",
+      ad_soyad: adSoyad || "",
+      sinif: "",
+      telefonlar: "",
+      durum: "",
+      evrak_durumu: "",
+      eksik_belgeler: [],
+      esinav_tarihi: "",
+      esinav_saati: "",
+      direksiyon_tarihi: "",
+      direksiyon_saati: "",
+    });
+  }
 
-  if (cleanValue(getValueByHeader(row, headerMap, "SÖZL")))
-    eksikler.push("Sözleşme");
-  if (cleanValue(getValueByHeader(row, headerMap, "İMZA")))
-    eksikler.push("İmza");
-  if (cleanValue(getValueByHeader(row, headerMap, "RESİM")))
-    eksikler.push("Resim");
-  if (cleanValue(getValueByHeader(row, headerMap, "SAĞLIK")))
-    eksikler.push("Sağlık");
-  if (cleanValue(getValueByHeader(row, headerMap, "ÖĞRENİM")))
-    eksikler.push("Öğrenim");
-  if (cleanValue(getValueByHeader(row, headerMap, "SABIKA")))
-    eksikler.push("Sabıka");
-  if (cleanValue(getValueByHeader(row, headerMap, "İKAMET")))
-    eksikler.push("İkamet");
-  if (cleanValue(getValueByHeader(row, headerMap, "WEBCAM")))
-    eksikler.push("Webcam");
+  const student = studentsMap.get(key);
 
-  return eksikler;
+  if (!student.tc && tc) student.tc = tc;
+  if (!student.ad_soyad && adSoyad) student.ad_soyad = adSoyad;
+
+  return student;
 }
 
 async function main() {
@@ -168,161 +131,195 @@ async function main() {
 
   const studentsMap = new Map();
 
-  // EKSİK BELGELER -> başlık 1. satır
-  const eksikHeaderMap = getHeaderMap(eksikSheet, 1);
+  // EKSİK BELGELER
+  const eksikHeaderMap = buildHeaderMap(eksikSheet, 2);
 
-  for (let rowNumber = 2; rowNumber <= eksikSheet.rowCount; rowNumber++) {
+  for (let rowNumber = 3; rowNumber <= eksikSheet.rowCount; rowNumber++) {
     const row = eksikSheet.getRow(rowNumber);
-    const adSoyad = cleanValue(
-      getValueByHeader(row, eksikHeaderMap, "ADI SOYADI"),
+
+    const tc = normalizeTc(
+      getValueByPossibleHeaders(row, eksikHeaderMap, [
+        "TC",
+        "T.C.",
+        "TCKN",
+        "TC KİMLİK NO",
+      ]),
     );
-    if (!adSoyad) continue;
 
-    const tcValue = getValueByPossibleHeaders(row, eksikHeaderMap, [
-      "TC",
-      "T.C.",
-      "T.C",
-      "TC NO",
-    ]);
-    const key = normalizeName(adSoyad);
-    const eksikListesi = getEksikBelgeler(row, eksikHeaderMap);
+    const adSoyad = normalizeName(
+      getValueByPossibleHeaders(row, eksikHeaderMap, [
+        "ADI SOYADI",
+        "AD SOYAD",
+        "ADI SOYAD",
+      ]),
+    );
 
-    studentsMap.set(key, {
-      tc: normalizeTc(tcValue),
-      ad_soyad: adSoyad,
-      sinif: "",
-      telefonlar: "",
-      durum: "kayit",
-      evrak_durumu: "eksik",
-      eksik_evraklar: eksikListesi.join("\n"),
-      esinav_harc: "odenmedi",
-      esinav_tarih: "",
-      esinav_saati: "",
-      esinav_sonuc: "",
-      direksiyon_harc: "odenmedi",
-      direksiyon_tarih: "",
-      direksiyon_sonuc: "",
-    });
+    const sinif = cleanValue(
+      getValueByPossibleHeaders(row, eksikHeaderMap, ["SINIFI", "SINIF"]),
+    );
+
+    const telefon = normalizePhone(
+      getValueByPossibleHeaders(row, eksikHeaderMap, [
+        "TELEFON",
+        "TELEFONU",
+        "CEP TELEFONU",
+      ]),
+    );
+
+    const durum = cleanValue(
+      getValueByPossibleHeaders(row, eksikHeaderMap, ["DURUMU", "DURUM"]),
+    );
+
+    const evrakDurumu = cleanValue(
+      getValueByPossibleHeaders(row, eksikHeaderMap, ["EVRAK DURUMU", "EVRAK"]),
+    );
+
+    const eksikBelgelerRaw = cleanValue(
+      getValueByPossibleHeaders(row, eksikHeaderMap, [
+        "EKSİK BELGELER",
+        "EKSİK BELGE",
+      ]),
+    );
+
+    if (!tc && !adSoyad) continue;
+
+    const student = ensureStudent(studentsMap, tc, adSoyad);
+    if (!student) continue;
+
+    if (!student.sinif && sinif) student.sinif = sinif;
+    if (!student.telefonlar && telefon) student.telefonlar = telefon;
+    if (!student.durum && durum) student.durum = durum;
+    if (!student.evrak_durumu && evrakDurumu)
+      student.evrak_durumu = evrakDurumu;
+
+    if (eksikBelgelerRaw) {
+      const belgeler = eksikBelgelerRaw
+        .split(/[,\n;/]+/)
+        .map((item) => cleanValue(item))
+        .filter(Boolean);
+
+      student.eksik_belgeler = [
+        ...new Set([...(student.eksik_belgeler || []), ...belgeler]),
+      ];
+    }
   }
 
-  // E-SINAV -> başlık 2. satır
-  const esinavHeaderMap = getHeaderMap(esinavSheet, 2);
+  // E-SINAV
+  const esinavHeaderMap = buildHeaderMap(esinavSheet, 2);
 
   for (let rowNumber = 3; rowNumber <= esinavSheet.rowCount; rowNumber++) {
     const row = esinavSheet.getRow(rowNumber);
-    const adSoyad = cleanValue(
-      getValueByHeader(row, esinavHeaderMap, "ADI SOYADI"),
+
+    const tc = normalizeTc(
+      getValueByPossibleHeaders(row, esinavHeaderMap, [
+        "TC",
+        "T.C.",
+        "TCKN",
+        "TC KİMLİK NO",
+      ]),
     );
-    if (!adSoyad) continue;
 
-    const key = normalizeName(adSoyad);
-    const existing = studentsMap.get(key) || {
-      tc: "",
-      ad_soyad: adSoyad,
-      sinif: "",
-      telefonlar: "",
-      durum: "",
-      evrak_durumu: "tamam",
-      eksik_evraklar: "",
-      esinav_harc: "odenmedi",
-      esinav_tarih: "",
-      esinav_saati: "",
-      esinav_sonuc: "",
-      direksiyon_harc: "odenmedi",
-      direksiyon_tarih: "",
-      direksiyon_sonuc: "",
-    };
+    const adSoyad = normalizeName(
+      getValueByPossibleHeaders(row, esinavHeaderMap, [
+        "ADI SOYADI",
+        "AD SOYAD",
+        "ADI SOYAD",
+      ]),
+    );
 
-    const harcCell = row.getCell(6); // F
+    const tarih = normalizeDate(
+      getValueByPossibleHeaders(row, esinavHeaderMap, [
+        "SINAV TARİHİ",
+        "TARİH",
+        "E-SINAV TARİHİ",
+      ]),
+    );
 
-    studentsMap.set(key, {
-      ...existing,
-      tc:
-        normalizeTc(getValueByHeader(row, esinavHeaderMap, "TC")) ||
-        existing.tc,
-      ad_soyad: adSoyad,
-      sinif:
-        cleanValue(getValueByHeader(row, esinavHeaderMap, "SINIF")) ||
-        existing.sinif,
-      telefonlar:
-        normalizePhone(getValueByHeader(row, esinavHeaderMap, "TELEFONLAR")) ||
-        existing.telefonlar,
-      durum: "esinav",
-      evrak_durumu: existing.evrak_durumu === "eksik" ? "eksik" : "tamam",
-      esinav_harc: getHarcStatus(harcCell),
-      esinav_tarih: normalizeDate(
-        getValueByHeader(row, esinavHeaderMap, "SINAV TARİHİ"),
-      ),
-      esinav_saati: cleanValue(
-        getValueByHeader(row, esinavHeaderMap, "SINAV SAATİ"),
-      ),
-    });
+    const saat = cleanValue(
+      getValueByPossibleHeaders(row, esinavHeaderMap, [
+        "SAAT",
+        "SINAV SAATİ",
+        "E-SINAV SAATİ",
+      ]),
+    );
+
+    if (!tc && !adSoyad) continue;
+
+    const student = ensureStudent(studentsMap, tc, adSoyad);
+    if (!student) continue;
+
+    if (tarih) student.esinav_tarihi = tarih;
+    if (saat) student.esinav_saati = saat;
   }
 
-  // DİREKSİYON -> başlık 2. satır
-  const direksiyonHeaderMap = getHeaderMap(direksiyonSheet, 2);
+  // DİREKSİYON
+  const direksiyonHeaderMap = buildHeaderMap(direksiyonSheet, 2);
 
   for (let rowNumber = 3; rowNumber <= direksiyonSheet.rowCount; rowNumber++) {
     const row = direksiyonSheet.getRow(rowNumber);
-    const adSoyad = cleanValue(
-      getValueByHeader(row, direksiyonHeaderMap, "ADI SOYADI"),
+
+    const tc = normalizeTc(
+      getValueByPossibleHeaders(row, direksiyonHeaderMap, [
+        "TC",
+        "T.C.",
+        "TCKN",
+        "TC KİMLİK NO",
+      ]),
     );
-    if (!adSoyad) continue;
 
-    const key = normalizeName(adSoyad);
-    const existing = studentsMap.get(key) || {
-      tc: "",
-      ad_soyad: adSoyad,
-      sinif: "",
-      telefonlar: "",
-      durum: "",
-      evrak_durumu: "tamam",
-      eksik_evraklar: "",
-      esinav_harc: "odenmedi",
-      esinav_tarih: "",
-      esinav_saati: "",
-      esinav_sonuc: "gecti",
-      direksiyon_harc: "odenmedi",
-      direksiyon_tarih: "",
-      direksiyon_sonuc: "",
-    };
+    const adSoyad = normalizeName(
+      getValueByPossibleHeaders(row, direksiyonHeaderMap, [
+        "ADI SOYADI",
+        "AD SOYAD",
+        "ADI SOYAD",
+      ]),
+    );
 
-    const harcCell = row.getCell(6); // F
+    const tarih = normalizeDate(
+      getValueByPossibleHeaders(row, direksiyonHeaderMap, [
+        "SINAV TARİHİ",
+        "TARİH",
+        "DİREKSİYON TARİHİ",
+      ]),
+    );
 
-    studentsMap.set(key, {
-      ...existing,
-      tc:
-        normalizeTc(getValueByHeader(row, direksiyonHeaderMap, "TC")) ||
-        existing.tc,
-      ad_soyad: adSoyad,
-      sinif:
-        cleanValue(getValueByHeader(row, direksiyonHeaderMap, "SINIF")) ||
-        existing.sinif,
-      durum: "direksiyon",
-      evrak_durumu: existing.evrak_durumu === "eksik" ? "eksik" : "tamam",
-      esinav_sonuc: existing.esinav_sonuc || "gecti",
-      direksiyon_harc: getHarcStatus(harcCell),
-      direksiyon_tarih: normalizeDate(
-        getValueByHeader(row, direksiyonHeaderMap, "SINAV TARİHİ"),
-      ),
-    });
+    const saat = cleanValue(
+      getValueByPossibleHeaders(row, direksiyonHeaderMap, [
+        "SAAT",
+        "SINAV SAATİ",
+        "DİREKSİYON SAATİ",
+      ]),
+    );
+
+    if (!tc && !adSoyad) continue;
+
+    const student = ensureStudent(studentsMap, tc, adSoyad);
+    if (!student) continue;
+
+    if (tarih) student.direksiyon_tarihi = tarih;
+    if (saat) student.direksiyon_saati = saat;
   }
 
   const students = Array.from(studentsMap.values())
     .filter((student) => student.ad_soyad)
     .sort((a, b) => a.ad_soyad.localeCompare(b.ad_soyad, "tr"));
 
-  fs.writeFileSync(outputPath, JSON.stringify(students, null, 2), "utf-8");
+  const jsonContent = JSON.stringify(students, null, 2);
+
+  fs.mkdirSync(path.dirname(localOutputPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicOutputPath), { recursive: true });
+
+  fs.writeFileSync(localOutputPath, jsonContent, "utf-8");
+  fs.writeFileSync(publicOutputPath, jsonContent, "utf-8");
 
   console.log("students.json oluşturuldu.");
   console.log(`Toplam öğrenci: ${students.length}`);
+  console.log(`Yerel çıktı: ${localOutputPath}`);
+  console.log(`Public çıktı: ${publicOutputPath}`);
 }
 
 main().catch((error) => {
   console.error("Hata oluştu:");
-  console.error(error.message);
+  console.error(error);
+  process.exit(1);
 });
-const jsonContent = JSON.stringify(students, null, 2);
-
-fs.writeFileSync(localOutputPath, jsonContent, "utf-8");
-fs.writeFileSync(publicOutputPath, jsonContent, "utf-8");

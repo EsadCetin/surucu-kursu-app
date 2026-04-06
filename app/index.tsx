@@ -39,10 +39,9 @@ type StepItemProps = {
   active?: boolean;
   onPress: () => void;
 };
-const API_URL = "http://192.168.1.100";
-// BURAYA KENDİ GITHUB RAW STUDENTS.JSON LINKİNİ YAZ
+
 const DATA_URL =
-  "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/0ddb3b1d4fe78c4721ade46643409cd8c92d0b8c/data/students.json";
+  "https://esadcetin.github.io/surucu-kursu-app/docs/students.json";
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
@@ -160,7 +159,7 @@ export default function Index() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/student-login`, {
+      const response = await fetch(`${DATA_URL}/student-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
