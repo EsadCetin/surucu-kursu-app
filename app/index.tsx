@@ -28,22 +28,33 @@ type Student = {
   direksiyon_sonuc: string;
 };
 
-type StatusType = "success" | "error" | "warning" | "info" | "normal";
-
-type StatusResult = {
-  text: string;
+type SmartStatus = {
+  title: string;
+  description: string;
   type: StatusType;
+  actionLabel?: string;
+  actionType?: "harc" | "detail" | "none";
 };
+
+type StatusType = "success" | "error" | "warning" | "info" | "normal";
 
 type StepItemProps = {
   title: string;
   checked: boolean;
   active?: boolean;
   onPress: () => void;
+  showTopLine?: boolean;
+  showBottomLine?: boolean;
+  lineActive?: boolean;
 };
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
+
+function formatExamText(date?: string, time?: string) {
+  if (!date) return "";
+  return time ? `${date} / ${time}` : date;
+}
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
@@ -90,23 +101,53 @@ function formatPhone(phone: string) {
   return phone;
 }
 
-function StepItem({ title, checked, active = false, onPress }: StepItemProps) {
+function StepItem({
+  title,
+  checked,
+  active = false,
+  onPress,
+  showTopLine = false,
+  showBottomLine = false,
+  lineActive = false,
+}: StepItemProps) {
   return (
     <TouchableOpacity
       style={styles.stepRow}
       onPress={onPress}
       activeOpacity={0.85}
     >
-      <View
-        style={[
-          styles.stepCircle,
-          checked && styles.stepCircleChecked,
-          active && !checked && styles.stepCircleActive,
-        ]}
-      >
-        <Text style={styles.stepCircleText}>
-          {checked ? "✓" : active ? "•" : ""}
-        </Text>
+      <View style={styles.stepIndicatorColumn}>
+        {showTopLine ? (
+          <View
+            style={[
+              styles.stepLine,
+              styles.stepLineTop,
+              lineActive ? styles.stepLineActive : styles.stepLinePassive,
+            ]}
+          />
+        ) : null}
+
+        <View
+          style={[
+            styles.stepCircle,
+            checked && styles.stepCircleChecked,
+            active && !checked && styles.stepCircleActive,
+          ]}
+        >
+          <Text style={styles.stepCircleText}>
+            {checked ? "✓" : active ? "•" : ""}
+          </Text>
+        </View>
+
+        {showBottomLine ? (
+          <View
+            style={[
+              styles.stepLine,
+              styles.stepLineBottom,
+              lineActive ? styles.stepLineActive : styles.stepLinePassive,
+            ]}
+          />
+        ) : null}
       </View>
 
       <View style={styles.stepContent}>
@@ -131,6 +172,179 @@ function InfoChip({ label, value }: { label: string; value: string }) {
       <Text style={styles.infoChipValue}>{value || "-"}</Text>
     </View>
   );
+}
+function getSmartStatus(user: Student): SmartStatus {
+  if (user.direksiyon_sonuc === "gecti") {
+    return {
+      title: "Tebrikler, süreciniz tamamlandı",
+      description:
+        "Direksiyon sınavını başarıyla geçtiniz. Kurs süreciniz tamamlanmış görünüyor.",
+      type: "success",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.direksiyon_sonuc === "kaldi") {
+    return {
+      title: "Direksiyon sınavında başarısız oldunuz",
+      description:
+        "Yeni direksiyon süreci için kurs tarafından yapılacak bilgilendirmeyi bekleyin.",
+      type: "error",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.esinav_sonuc === "gecti" && user.direksiyon_tarih) {
+    return {
+      title: "Direksiyon sınav tarihiniz belli oldu",
+      description: `Direksiyon sınav tarihiniz: ${user.direksiyon_tarih}`,
+      type: "info",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.esinav_sonuc === "gecti" && user.direksiyon_harc === "odenmedi") {
+    return {
+      title: "Direksiyon aşamasına geçtiniz",
+      description:
+        "Direksiyon süreciniz başladı ancak harç durumu kontrol edilmelidir.",
+      type: "warning",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+  if (user.durum === "direksiyon") {
+    return {
+      title: "Direksiyon aşamasındasınız",
+      description: user.direksiyon_tarih
+        ? `Direksiyon sınav tarihiniz: ${user.direksiyon_tarih}`
+        : "Direksiyon dersleri ve sınav süreciniz devam ediyor.",
+      type: "info",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+  if (user.esinav_sonuc === "gecti") {
+    return {
+      title: "E-sınav aşamasını tamamladınız",
+      description:
+        "Direksiyon süreciniz başlamıştır. Ders ve sınav bilgileri panelde görüntülenecektir.",
+      type: "success",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (
+    user.durum === "esinav" &&
+    user.esinav_tarih &&
+    user.esinav_sonuc !== "gecti" &&
+    isPastDate(user.esinav_tarih)
+  ) {
+    if (user.esinav_harc === "odendi") {
+      return {
+        title: "E-sınav sonrası yeni tarih bekleniyor",
+        description:
+          "Sınav süreciniz devam ediyor. Yeni sınav tarihi açıklandığında panelde görünecektir.",
+        type: "info",
+        actionLabel: "Detayı Gör",
+        actionType: "detail",
+      };
+    }
+
+    return {
+      title: "E-sınav harcı yeniden yatırılmalı",
+      description:
+        "Sınavda başarısız oldunuz, tekrar harç ödemeniz gerekiyor. Harç ödemesi yaparak süreci devam ettirebilirsiniz.",
+      type: "warning",
+      actionLabel: "Harç Öde",
+      actionType: "harc",
+    };
+  }
+
+  if (user.esinav_sonuc === "kaldi") {
+    return {
+      title: "E-sınavda başarısız oldunuz",
+      description:
+        "Tekrar sınava girmek için harç ve yeni tarih sürecini takip etmeniz gerekir.",
+      type: "error",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
+    return {
+      title: "E-sınav tarihiniz belli oldu",
+      description: `E-sınav bilginiz: ${formatExamText(
+        user.esinav_tarih,
+        user.esinav_saati,
+      )}`,
+      type: "info",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.durum === "esinav" && user.esinav_harc === "odenmedi") {
+    return {
+      title: "E-sınav harcı bekleniyor",
+      description:
+        "Sınav sürecinizin ilerlemesi için e-sınav harcını ödemeniz gerekiyor.",
+      type: "warning",
+      actionLabel: "Harç Öde",
+      actionType: "harc",
+    };
+  }
+
+  if (
+    user.durum === "esinav" &&
+    user.esinav_harc === "odendi" &&
+    !user.esinav_tarih
+  ) {
+    return {
+      title: "E-sınav tarihi bekleniyor",
+      description:
+        "Harç ödemeniz alınmış görünüyor. Sınav tarihi açıklandığında burada görüntülenecek.",
+      type: "info",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.evrak_durumu === "eksik") {
+    return {
+      title: "Evraklarınız eksik",
+      description: user.eksik_evraklar?.trim()
+        ? `Eksik evraklarınızı tamamlamanız gerekiyor: ${user.eksik_evraklar}`
+        : "Başvurunuz alınmış ancak eksik evraklarınız bulunuyor.",
+      type: "warning",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  if (user.evrak_durumu === "tamam") {
+    return {
+      title: "Başvurunuz tamamlandı",
+      description:
+        "Evraklarınız onaylanmış görünüyor. Sınav süreciniz sıradaki aşamaya göre devam edecektir.",
+      type: "normal",
+      actionLabel: "Detayı Gör",
+      actionType: "detail",
+    };
+  }
+
+  return {
+    title: "Süreç devam ediyor",
+    description: "Bilgileriniz güncellendikçe bu ekranda gösterilecektir.",
+    type: "normal",
+    actionLabel: "Detayı Gör",
+    actionType: "detail",
+  };
 }
 
 export default function Index() {
@@ -241,126 +455,17 @@ export default function Index() {
       .toUpperCase();
   }, [user]);
 
-  const highlightedExamInfo = useMemo(() => {
-    if (!user) return "";
-
-    if (user.direksiyon_sonuc === "gecti") {
-      return "Direksiyon sınavını başarıyla geçtiniz.";
-    }
-
-    if (user.direksiyon_tarih && user.direksiyon_sonuc !== "gecti") {
-      return `Direksiyon sınav tarihi: ${user.direksiyon_tarih}`;
-    }
-
-    if (
-      user.durum === "esinav" &&
-      user.esinav_tarih &&
-      user.esinav_sonuc !== "gecti" &&
-      isPastDate(user.esinav_tarih)
-    ) {
-      return user.esinav_harc === "odendi"
-        ? "Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
-        : "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.";
-    }
-
-    if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
-      return user.esinav_saati
-        ? `E-sınav: ${user.esinav_tarih} / ${user.esinav_saati}`
-        : `E-sınav tarihi: ${user.esinav_tarih}`;
-    }
-
-    return "";
-  }, [user]);
-
-  const mainStatus: StatusResult = useMemo(() => {
-    if (!user) return { text: "", type: "normal" };
-
-    if (user.direksiyon_sonuc === "gecti") {
+  const smartStatus = useMemo(() => {
+    if (!user) {
       return {
-        text: "Tebrikler, direksiyon sınavından başarılı oldunuz.",
-        type: "success",
+        title: "",
+        description: "",
+        type: "normal" as StatusType,
+        actionType: "none" as const,
       };
     }
 
-    if (user.esinav_sonuc === "kaldi") {
-      return {
-        text: "E-sınav başarısız.",
-        type: "error",
-      };
-    }
-
-    if (
-      user.durum === "esinav" &&
-      user.esinav_tarih &&
-      user.esinav_sonuc !== "gecti" &&
-      isPastDate(user.esinav_tarih)
-    ) {
-      return {
-        text:
-          user.esinav_harc === "odendi"
-            ? "E-sınavdan başarısız oldunuz. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir."
-            : "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.",
-        type: "error",
-      };
-    }
-
-    if (user.direksiyon_tarih && user.direksiyon_sonuc !== "gecti") {
-      return {
-        text: "Direksiyon sınav tarihiniz açıklandı.",
-        type: "info",
-      };
-    }
-
-    if (user.evrak_durumu === "eksik") {
-      return {
-        text: "Kurs başvurunuz alındı. Evraklarınız eksik.",
-        type: "warning",
-      };
-    }
-
-    if (user.durum === "esinav" && user.esinav_harc === "odenmedi") {
-      return {
-        text: "E-sınav harcınızı yatırmadınız. Aşağıdaki bağlantıdan ödeme yapabilirsiniz.",
-        type: "warning",
-      };
-    }
-
-    if (
-      user.durum === "esinav" &&
-      user.esinav_harc === "odendi" &&
-      !user.esinav_tarih
-    ) {
-      return {
-        text: "E-sınav harcını yatırdınız. Sınav tarihinin açıklanmasını bekleyin.",
-        type: "info",
-      };
-    }
-
-    if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
-      return {
-        text: "E-sınav tarihiniz açıklandı.",
-        type: "info",
-      };
-    }
-
-    if (user.evrak_durumu === "tamam" && user.esinav_sonuc !== "gecti") {
-      return {
-        text: "Başvurunuz tamamlandı. E-sınav süreciniz devam ediyor.",
-        type: "normal",
-      };
-    }
-
-    if (user.esinav_sonuc === "gecti" && user.direksiyon_sonuc !== "gecti") {
-      return {
-        text: "E-sınavı başarıyla geçtiniz. Direksiyon aşamasına geçildi.",
-        type: "normal",
-      };
-    }
-
-    return {
-      text: "Süreç devam ediyor.",
-      type: "normal",
-    };
+    return getSmartStatus(user);
   }, [user]);
 
   const stepStates = useMemo(() => {
@@ -456,7 +561,7 @@ export default function Index() {
       return;
     }
 
-    if (user.esinav_harc === "odenmedi") {
+    if (user.esinav_harc === "odenmedi" && user.durum !== "direksiyon") {
       setSelectedDetail(
         "Sınav harcınızı yatırmamışsınız. Aşağıdaki butonla ödeme sayfasına gidebilirsiniz.",
       );
@@ -516,6 +621,75 @@ export default function Index() {
     }
 
     setSelectedDetail("Direksiyon süreciniz devam ediyor.");
+  };
+
+  const stepItems = useMemo(
+    () => [
+      {
+        key: "basvuru",
+        title: "Başvuru yapıldı",
+        checked: stepStates.basvuruYapildi,
+        active: activeStep === "basvuru",
+        onPress: showBasvuruDetay,
+      },
+      {
+        key: "basvuruTamam",
+        title: "Başvuru tamamlandı",
+        checked: stepStates.basvuruTamamlandi,
+        active: activeStep === "basvuru" && user?.evrak_durumu === "tamam",
+        onPress: showBasvuruTamamDetay,
+      },
+      {
+        key: "esinav",
+        title: "E-sınav aşaması",
+        checked: stepStates.esinavAsamasi,
+        active: activeStep === "esinav",
+        onPress: showEsinavDetay,
+      },
+      {
+        key: "direksiyon",
+        title: "Direksiyon aşaması",
+        checked: stepStates.direksiyonAsamasi,
+        active: activeStep === "direksiyon",
+        onPress: showDireksiyonDetay,
+      },
+      {
+        key: "tamamlandi",
+        title: "Süreç tamamlandı",
+        checked: stepStates.tamamlandi,
+        active: activeStep === "tamamlandi",
+        onPress: () =>
+          setSelectedDetail(
+            user?.direksiyon_sonuc === "gecti"
+              ? "Tüm süreç başarıyla tamamlandı."
+              : "Süreç henüz tamamlanmadı.",
+          ),
+      },
+    ],
+    [activeStep, stepStates, user],
+  );
+
+  const handleSmartAction = () => {
+    if (!user) return;
+
+    if (smartStatus.actionType === "harc") {
+      openHarcLink();
+      return;
+    }
+
+    if (smartStatus.actionType === "detail") {
+      if (user.direksiyon_sonuc === "gecti" || user.esinav_sonuc === "gecti") {
+        showDireksiyonDetay();
+        return;
+      }
+
+      if (user.durum === "esinav" || user.esinav_tarih || user.esinav_harc) {
+        showEsinavDetay();
+        return;
+      }
+
+      showBasvuruDetay();
+    }
   };
 
   const openHarcLink = () => {
@@ -579,28 +753,26 @@ export default function Index() {
         </View>
       </View>
 
-      {!!highlightedExamInfo && (
-        <View style={styles.heroCard}>
-          <Text style={styles.heroCardLabel}>Bilgilendirme</Text>
-          <Text style={styles.heroCardText}>{highlightedExamInfo}</Text>
-        </View>
-      )}
-
       <View
         style={[
           styles.statusCard,
-          mainStatus.type === "success" && styles.statusSuccess,
-          mainStatus.type === "error" && styles.statusError,
-          mainStatus.type === "warning" && styles.statusWarning,
-          mainStatus.type === "info" && styles.statusInfo,
+          smartStatus.type === "success" && styles.statusSuccess,
+          smartStatus.type === "error" && styles.statusError,
+          smartStatus.type === "warning" && styles.statusWarning,
+          smartStatus.type === "info" && styles.statusInfo,
         ]}
       >
-        <Text style={styles.statusTitle}>Genel Durum</Text>
-        <Text style={styles.statusText}>{mainStatus.text}</Text>
+        <Text style={styles.statusTitle}>{smartStatus.title}</Text>
+        <Text style={styles.statusDescription}>{smartStatus.description}</Text>
 
-        {user.durum === "esinav" && user.esinav_harc === "odenmedi" ? (
-          <TouchableOpacity style={styles.paymentButton} onPress={openHarcLink}>
-            <Text style={styles.paymentButtonText}>Harç Ödeme Sayfası</Text>
+        {smartStatus.actionLabel ? (
+          <TouchableOpacity
+            style={styles.paymentButton}
+            onPress={handleSmartAction}
+          >
+            <Text style={styles.paymentButtonText}>
+              {smartStatus.actionLabel}
+            </Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -608,46 +780,24 @@ export default function Index() {
       <View style={styles.stepsCard}>
         <Text style={styles.sectionTitle}>Süreç Adımları</Text>
 
-        <StepItem
-          title="Başvuru yapıldı"
-          checked={stepStates.basvuruYapildi}
-          active={activeStep === "basvuru"}
-          onPress={showBasvuruDetay}
-        />
+        {stepItems.map((item, index) => {
+          const showTopLine = index !== 0;
+          const showBottomLine = index !== stepItems.length - 1;
+          const lineActive = item.checked || item.active;
 
-        <StepItem
-          title="Başvuru tamamlandı"
-          checked={stepStates.basvuruTamamlandi}
-          active={activeStep === "basvuru" && user.evrak_durumu === "tamam"}
-          onPress={showBasvuruTamamDetay}
-        />
-
-        <StepItem
-          title="E-sınav aşaması"
-          checked={stepStates.esinavAsamasi}
-          active={activeStep === "esinav"}
-          onPress={showEsinavDetay}
-        />
-
-        <StepItem
-          title="Direksiyon aşaması"
-          checked={stepStates.direksiyonAsamasi}
-          active={activeStep === "direksiyon"}
-          onPress={showDireksiyonDetay}
-        />
-
-        <StepItem
-          title="Süreç tamamlandı"
-          checked={stepStates.tamamlandi}
-          active={activeStep === "tamamlandi"}
-          onPress={() =>
-            setSelectedDetail(
-              user.direksiyon_sonuc === "gecti"
-                ? "Tüm süreç başarıyla tamamlandı."
-                : "Süreç henüz tamamlanmadı.",
-            )
-          }
-        />
+          return (
+            <StepItem
+              key={item.key}
+              title={item.title}
+              checked={item.checked}
+              active={item.active}
+              onPress={item.onPress}
+              showTopLine={showTopLine}
+              showBottomLine={showBottomLine}
+              lineActive={lineActive}
+            />
+          );
+        })}
       </View>
 
       {!!selectedDetail && (
@@ -856,6 +1006,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 8,
   },
+  statusDescription: {
+    color: "#d8d8dd",
+    fontSize: 15,
+    lineHeight: 23,
+  },
   statusText: {
     color: "#d8d8dd",
     fontSize: 15,
@@ -892,6 +1047,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
   },
+  stepIndicatorColumn: {
+    width: 28,
+    alignItems: "center",
+    marginRight: 12,
+    alignSelf: "stretch",
+  },
+  stepLine: {
+    width: 2,
+    flex: 1,
+    borderRadius: 999,
+  },
+  stepLineTop: {
+    marginBottom: 6,
+  },
+  stepLineBottom: {
+    marginTop: 6,
+  },
+  stepLineActive: {
+    backgroundColor: "#22c55e",
+  },
+  stepLinePassive: {
+    backgroundColor: "#3a3a42",
+  },
   stepCircle: {
     width: 28,
     height: 28,
@@ -904,11 +1082,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   stepCircleChecked: {
-    backgroundColor: "#c1121f",
-    borderColor: "#c1121f",
+    backgroundColor: "#22c55e",
+    borderColor: "#22c55e",
   },
   stepCircleActive: {
-    borderColor: "#c1121f",
+    borderColor: "#22c55e",
   },
   stepCircleText: {
     color: "#ffffff",
@@ -952,5 +1130,39 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "700",
+  },
+  timelineContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 20,
+  },
+  stepContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  circle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    zIndex: 2,
+  },
+  circleActive: {
+    backgroundColor: "#22C55E",
+  },
+  circlePassive: {
+    backgroundColor: "#374151",
+  },
+  line: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+  },
+  lineActive: {
+    backgroundColor: "#22C55E",
+  },
+  linePassive: {
+    backgroundColor: "#374151",
   },
 });

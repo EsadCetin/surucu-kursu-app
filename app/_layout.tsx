@@ -46,6 +46,15 @@ export default function Layout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="sss"
+        options={{
+          title: "SSS",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="help" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

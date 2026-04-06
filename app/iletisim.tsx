@@ -1,10 +1,10 @@
 import {
-    Alert,
-    Linking,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Iletisim() {
@@ -29,6 +29,17 @@ export default function Iletisim() {
       Alert.alert("Hata", "Telefon araması başlatılamadı.");
     }
   };
+  const openMap = async () => {
+    const url = "https://maps.app.goo.gl/cf1G2JGZWjw9zLWeA";
+
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Hata", "Konum açılamadı.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -36,7 +47,10 @@ export default function Iletisim() {
         <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
         <Text style={styles.text}>Telefon: 0530 540 29 14</Text>
         <Text style={styles.text}>Web: ayassurucukursu.com</Text>
-        <Text style={styles.text}>Adres: Hacıveli Mah. Ankara Cad.</Text>
+        <Text style={styles.text}>
+          Adres: Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı)
+          Ayaş/Ankara
+        </Text>
 
         <TouchableOpacity style={styles.button} onPress={callPhone}>
           <Text style={styles.buttonText}>Ara</Text>
@@ -44,6 +58,9 @@ export default function Iletisim() {
 
         <TouchableOpacity style={styles.buttonSecondary} onPress={openWebsite}>
           <Text style={styles.buttonText}>Web Sitesine Git</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonSecondary} onPress={openMap}>
+          <Text style={styles.buttonText}>Konumu Aç</Text>
         </TouchableOpacity>
       </View>
     </View>
