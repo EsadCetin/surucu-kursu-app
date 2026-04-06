@@ -26,7 +26,7 @@ export default function Iletisim() {
   };
 
   const callPhone = async () => {
-    const url = "tel:05305402914";
+    const url = "tel:05375046984";
 
     try {
       const supported = await Linking.canOpenURL(url);
@@ -52,7 +52,7 @@ export default function Iletisim() {
     }
   };
   const openWhatsApp = async () => {
-    const whatsappPhone = "905305402914";
+    const whatsappPhone = "905375046984";
     const message = encodeURIComponent(
       "Merhaba, Yeni Ayaş Sürücü Kursu hakkında bilgi almak istiyorum.",
     );
@@ -76,7 +76,7 @@ export default function Iletisim() {
       <View style={styles.card}>
         <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
 
-        <Text style={styles.text}>Telefon: 0530 540 29 14</Text>
+        <Text style={styles.text}>Telefon: 0537 504 69 84</Text>
         <Text style={styles.text}>Web: ayassurucukursu.com</Text>
         <Text style={styles.text}>
           Adres: Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı)
