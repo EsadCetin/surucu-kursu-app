@@ -1,14 +1,13 @@
 /**
  * scripts/excel-to-json.js
  *
- * Kesin düzeltme:
- * - Saat için xlsx'in hücrede görünen "w" değeri kullanılır
- * - Renk için ExcelJS kullanılır
- * - 14,04 / 14.04 gibi yıl içermeyen tarihler ZORUNLU olarak 2026'ya çevrilir
- * - Excel serial date içinden yıl 1900 gelirse 2026'ya sabitlenir
- *
- * Kullanım:
- *   node scripts/excel-to-json.js
+ * Düzeltme:
+ * - Direksiyon harcı için önceki mantık herkesi "odenmedi" yapıyordu
+ * - Artık ALACAK RAPORU'nda direksiyon harç borcu YOKSA ve öğrenci direksiyon aşamasındaysa
+ *   direksiyon_harc = "odendi" yapılır
+ * - E-sınav harcı için renk okuma korunur
+ * - Saat için xlsx'in görünen "w" değeri kullanılır
+ * - Tarihler yıl içermiyorsa 2026'ya çevrilir
  */
 
 const fs = require("fs");
@@ -56,8 +55,6 @@ function asDateText(day, month, year = DEFAULT_YEAR) {
 function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   if (v == null || v === "") return "";
 
-  // ExcelJS bazen saat/tarih hücresini Date'e çeviriyor ama yılı 1900 verebiliyor.
-  // Bu projede yıl içermeyen tarihler için daima 2026 istiyoruz.
   if (v instanceof Date && !isNaN(v.getTime())) {
     const d = v.getDate();
     const m = v.getMonth() + 1;
@@ -222,10 +219,6 @@ function syncDerivedFields(student) {
     student.esinav_harc = "odenmedi";
   }
 
-  if (!student.direksiyon_harc && student.direksiyon_harc_borcu) {
-    student.direksiyon_harc = "odenmedi";
-  }
-
   if (!student.esinav_son_odeme && student.esinav_borc_son_odeme) {
     student.esinav_son_odeme = student.esinav_borc_son_odeme;
   }
@@ -248,6 +241,23 @@ function syncDerivedFields(student) {
     ) {
       student.durum = "esinav";
     }
+  }
+
+  // KRİTİK DÜZELTME:
+  // Direksiyon aşamasındaki öğrenci ALACAK RAPORU'nda direksiyon harç borcu taşımıyorsa
+  // harcı ödenmiş kabul et.
+  if (
+    (student.durum === "direksiyon" ||
+      student.direksiyon_tarih ||
+      student.direksiyon_saati) &&
+    !student.direksiyon_harc_borcu
+  ) {
+    student.direksiyon_harc = "odendi";
+  }
+
+  // Borç varsa kesin ödenmedi olmalı
+  if (student.direksiyon_harc_borcu) {
+    student.direksiyon_harc = "odenmedi";
   }
 
   if (!Array.isArray(student.direksiyon_dersleri)) {
@@ -519,7 +529,6 @@ async function main() {
     if (examDate) student.direksiyon_tarih = examDate;
     if (examTime) student.direksiyon_saati = examTime;
 
-    if (!student.direksiyon_harc) student.direksiyon_harc = "odenmedi";
     if (!student.evrak_durumu) student.evrak_durumu = "tamam";
   }
 
