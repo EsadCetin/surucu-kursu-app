@@ -97,6 +97,15 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
     return asDateText(Number(d), Number(m), yy);
   }
 
+  const parsedDate = new Date(raw);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    const y =
+      parsedDate.getFullYear() <= 1901
+        ? fallbackYear
+        : parsedDate.getFullYear();
+    return asDateText(parsedDate.getDate(), parsedDate.getMonth() + 1, y);
+  }
+
   return raw;
 }
 

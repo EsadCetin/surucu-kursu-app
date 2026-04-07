@@ -75,7 +75,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "10.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "14038775274",
@@ -195,7 +195,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -203,7 +203,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -309,7 +309,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "3.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "10009120968",
@@ -325,7 +325,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 01 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "01.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -333,7 +333,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 01 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "01.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -351,7 +351,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -359,7 +359,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -413,7 +413,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "5.000 TL",
-    "taksit_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "10.04.2026"
   },
   {
     "tc": "15505896638",
@@ -429,7 +429,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "08.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -437,9 +437,9 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "08.04.2026",
     "taksit_borcu": "7.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "24808561532",
@@ -491,7 +491,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "5.000 TL",
-    "taksit_son_odeme": "Tue Apr 07 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "07.04.2026"
   },
   {
     "tc": "33668101604",
@@ -569,7 +569,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "10.000 TL",
-    "taksit_son_odeme": "Tue Apr 07 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "07.04.2026"
   },
   {
     "tc": "12961026456",
@@ -715,7 +715,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "06.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -723,7 +723,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "06.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -767,7 +767,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -775,7 +775,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "4.500 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -923,7 +923,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -931,7 +931,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -985,7 +985,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "7.000 TL",
-    "taksit_son_odeme": "Tue Apr 07 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "07.04.2026"
   },
   {
     "tc": "10717552334",
@@ -1053,7 +1053,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1061,7 +1061,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1105,7 +1105,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "08.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1113,7 +1113,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "08.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1141,7 +1141,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "6.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "10042247202",
@@ -1323,7 +1323,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "10.000 TL",
-    "taksit_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "10.04.2026"
   },
   {
     "tc": "10039248120",
@@ -1339,7 +1339,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1347,7 +1347,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1479,7 +1479,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "3.000 TL",
-    "taksit_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "10.04.2026"
   },
   {
     "tc": "",
@@ -1599,7 +1599,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1607,7 +1607,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1677,7 +1677,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1685,7 +1685,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1703,7 +1703,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1711,7 +1711,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1739,7 +1739,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "7.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "",
@@ -1755,7 +1755,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1763,7 +1763,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1859,7 +1859,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1867,7 +1867,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1937,7 +1937,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -1945,7 +1945,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -1973,7 +1973,7 @@
     "direksiyon_harc_borcu": "",
     "direksiyon_borc_son_odeme": "",
     "taksit_borcu": "3.000 TL",
-    "taksit_son_odeme": "Mon Apr 06 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)"
+    "taksit_son_odeme": "06.04.2026"
   },
   {
     "tc": "38486042184",
@@ -2171,7 +2171,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2179,7 +2179,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2275,7 +2275,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2283,7 +2283,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2457,7 +2457,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "08.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2465,7 +2465,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "08.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2509,7 +2509,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 01 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "01.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2517,7 +2517,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 01 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "01.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2847,7 +2847,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "08.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2855,7 +2855,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Wed Apr 08 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "08.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2873,7 +2873,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Sun Apr 05 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "05.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2881,7 +2881,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
-    "direksiyon_borc_son_odeme": "Sun Apr 05 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "05.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },
@@ -2951,7 +2951,7 @@
     "esinav_saati": "",
     "esinav_sonuc": "",
     "direksiyon_harc": "odenmedi",
-    "direksiyon_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_son_odeme": "10.04.2026",
     "direksiyon_tarih": "",
     "direksiyon_saati": "",
     "direksiyon_sonuc": "",
@@ -2959,7 +2959,7 @@
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
-    "direksiyon_borc_son_odeme": "Fri Apr 10 2026 03:00:00 GMT+0300 (Türkiye Standart Saati)",
+    "direksiyon_borc_son_odeme": "10.04.2026",
     "taksit_borcu": "",
     "taksit_son_odeme": ""
   },

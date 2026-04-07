@@ -553,7 +553,12 @@ function getSmartStatus(user: Student): SmartStatus {
     };
   }
 
-  if (user.durum === "direksiyon") {
+  if (
+    user.durum === "direksiyon" ||
+    user.esinav_sonuc === "gecti" ||
+    !!user.direksiyon_tarih ||
+    !!user.direksiyon_saati
+  ) {
     return {
       title: "Direksiyon aşamasındasınız",
       description: user.direksiyon_tarih
@@ -946,7 +951,14 @@ export default function Index() {
   const activeStep = useMemo(() => {
     if (!user) return "";
     if (user.direksiyon_sonuc === "gecti") return "tamamlandi";
-    if (user.esinav_sonuc === "gecti") return "direksiyon";
+    if (
+      user.durum === "direksiyon" ||
+      user.esinav_sonuc === "gecti" ||
+      !!user.direksiyon_tarih ||
+      !!user.direksiyon_saati
+    ) {
+      return "direksiyon";
+    }
     if (user.evrak_durumu === "tamam") return "esinav";
     return "basvuru";
   }, [user]);
@@ -1185,13 +1197,18 @@ export default function Index() {
         return;
       }
 
-      if (user.durum === "esinav") {
-        showEsinavDetay();
+      if (
+        user.durum === "direksiyon" ||
+        user.esinav_sonuc === "gecti" ||
+        !!user.direksiyon_tarih ||
+        !!user.direksiyon_saati
+      ) {
+        showDireksiyonDetay();
         return;
       }
 
-      if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
-        showDireksiyonDetay();
+      if (user.durum === "esinav") {
+        showEsinavDetay();
         return;
       }
 
@@ -1306,17 +1323,8 @@ export default function Index() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
-            </View>
-
-            <View style={styles.profileTextArea}>
-              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-              <Text style={styles.subName}>Öğrenci Paneli</Text>
-            </View>
-          </View>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Anasayfa</Text>
           {canOpenCalendar ? (
             <TouchableOpacity
               style={styles.topCalendarButton}
@@ -1329,6 +1337,20 @@ export default function Index() {
               <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
             </View>
           )}
+        </View>
+
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+            </View>
+
+            <View style={styles.profileTextArea}>
+              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
+              <Text style={styles.subName}>Öğrenci Paneli</Text>
+            </View>
+          </View>
+
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} />
             <InfoChip label="Sınıf" value={user.sinif || "-"} />
@@ -1853,11 +1875,8 @@ const styles = StyleSheet.create({
   },
   topBarTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   topCalendarButton: {
-    position: "absolute",
-    top: 18,
-    right: 18,
-    width: 55,
-    height: 55,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -1876,7 +1895,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     opacity: 0.4,
   },
-  topCalendarIcon: { fontSize: 30 },
+  topCalendarIcon: { fontSize: 20 },
   topCalendarIconDisabled: { fontSize: 20 },
   profileCard: {
     backgroundColor: "#151519",
