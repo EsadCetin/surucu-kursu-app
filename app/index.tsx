@@ -1390,9 +1390,6 @@ export default function Index() {
                 <Text style={styles.miniCardText}>
                   Harç: {formatPayment(user.esinav_harc)}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Son ödeme: {normalizeValue(user.esinav_son_odeme)}
-                </Text>
 
                 {user.esinav_harc === "odenmedi" ? (
                   <TouchableOpacity
@@ -1426,9 +1423,6 @@ export default function Index() {
                 </Text>
                 <Text style={styles.miniCardText}>
                   Ücret: {formatPayment(user.direksiyon_harc)}
-                </Text>
-                <Text style={styles.miniCardText}>
-                  Son ödeme: {normalizeValue(user.direksiyon_son_odeme)}
                 </Text>
 
                 {user.direksiyon_harc === "odenmedi" ? (
