@@ -1,23 +1,12 @@
 /**
  * scripts/excel-to-json.js
  *
- * Bu sürüm ExcelJS kullanır.
- * Neden:
- * - Repo'da zaten exceljs bağımlılığı var
- * - Hücre dolgu rengini xlsx'e göre daha güvenilir okuyabiliyor
+ * ExcelJS tabanlı sürüm.
  *
- * Ne yapar:
- * - ogrenciler.xlsx içindeki 4 sayfayı okur:
- *   - E-SINAV
- *   - DİREKSİYON
- *   - EKSİK BELGELER
- *   - ALACAK RAPORU
- * - Aynı öğrenciyi TC ile, TC yoksa ad soyad ile birleştirir
- * - E-SINAV harç hücresinin rengine göre ödeme durumunu belirler:
- *   - yeşil / sarı => odendi
- *   - beyaz / boş => odenmedi
- * - 14,04 gibi tarihleri 14.04.2026 formatına çevirir
- * - docs/students.json üretir
+ * Düzeltme:
+ * - Saatler artık Date objesinden üretilmiyor
+ * - Hücrede ekranda ne görünüyorsa önce onu okuyor
+ * - Böylece SINAV SAATİ sütununda ne yazıyorsa o saat alınır
  *
  * Kullanım:
  *   node scripts/excel-to-json.js
@@ -73,7 +62,7 @@ function formatDate(v, fallbackYear = 2026) {
     return excelDateToText(v);
   }
 
-  if (typeof v === "object" && v.text) {
+  if (typeof v === "object" && v && v.text) {
     return formatDate(v.text, fallbackYear);
   }
 
@@ -100,22 +89,14 @@ function formatDate(v, fallbackYear = 2026) {
   return raw;
 }
 
-function formatTime(v) {
-  if (v == null || v === "") return "";
-
-  if (v instanceof Date && !isNaN(v.getTime())) {
-    const hh = String(v.getHours()).padStart(2, "0");
-    const mm = String(v.getMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
-  }
-
-  if (typeof v === "object" && v.text) {
-    return formatTime(v.text);
-  }
-
-  const raw = t(v);
+function formatTimeFromRaw(rawValue) {
+  const raw = t(rawValue);
   if (!raw) return "";
-  if (/^\d{2}:\d{2}$/.test(raw)) return raw;
+
+  if (/^\d{1,2}:\d{2}$/.test(raw)) {
+    const [h, m] = raw.split(":");
+    return `${String(Number(h)).padStart(2, "0")}:${m}`;
+  }
 
   const match = raw.match(/(\d{1,2})[:.](\d{2})/);
   if (match) {
@@ -123,6 +104,33 @@ function formatTime(v) {
   }
 
   return raw;
+}
+
+function formatTimeFromCell(cell) {
+  if (!cell) return "";
+
+  // 1) Excel'de ekranda görünen metin neyse önce onu kullan
+  const displayText = t(cell.text);
+  const parsedDisplay = formatTimeFromRaw(displayText);
+  if (parsedDisplay && /^\d{2}:\d{2}$/.test(parsedDisplay)) {
+    return parsedDisplay;
+  }
+
+  // 2) Hücre değeri string ise onu kullan
+  if (typeof cell.value === "string") {
+    const parsed = formatTimeFromRaw(cell.value);
+    if (parsed) return parsed;
+  }
+
+  // 3) Zorunlu fallback: sayı ise Excel time fraction olabilir
+  if (typeof cell.value === "number" && !Number.isNaN(cell.value)) {
+    const totalMinutes = Math.round(cell.value * 24 * 60);
+    const hh = String(Math.floor(totalMinutes / 60) % 24).padStart(2, "0");
+    const mm = String(totalMinutes % 60).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+
+  return "";
 }
 
 function money(v) {
@@ -138,20 +146,17 @@ function createStudent(tcValue = "", nameValue = "") {
     durum: "",
     evrak_durumu: "",
     eksik_evraklar: "",
-
     esinav_harc: "",
     esinav_son_odeme: "",
     esinav_tarih: "",
     esinav_saati: "",
     esinav_sonuc: "",
-
     direksiyon_harc: "",
     direksiyon_son_odeme: "",
     direksiyon_tarih: "",
     direksiyon_saati: "",
     direksiyon_sonuc: "",
     direksiyon_dersleri: [],
-
     esinav_harc_borcu: "",
     esinav_borc_son_odeme: "",
     direksiyon_harc_borcu: "",
@@ -171,19 +176,14 @@ function setIfEmpty(obj, key, value) {
 }
 
 function buildStore() {
-  return {
-    byTc: new Map(),
-    byName: new Map(),
-  };
+  return { byTc: new Map(), byName: new Map() };
 }
 
 function getOrCreate(store, tcValue, nameValue) {
   const cleanTc = tc(tcValue);
   const cleanName = t(nameValue);
 
-  if (cleanTc && store.byTc.has(cleanTc)) {
-    return store.byTc.get(cleanTc);
-  }
+  if (cleanTc && store.byTc.has(cleanTc)) return store.byTc.get(cleanTc);
 
   const normName = nameKey(cleanName);
   if (normName && store.byName.has(normName)) {
@@ -279,9 +279,7 @@ function buildHeaderMap(ws, headerRowNumber) {
 
   headerRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
     const header = normalizeHeader(cell.text || cell.value);
-    if (header) {
-      map.set(header, colNumber);
-    }
+    if (header) map.set(header, colNumber);
   });
 
   return map;
@@ -290,9 +288,7 @@ function buildHeaderMap(ws, headerRowNumber) {
 function getCellByHeader(row, headerMap, alternatives) {
   for (const alt of alternatives) {
     const col = headerMap.get(normalizeHeader(alt));
-    if (col) {
-      return row.getCell(col);
-    }
+    if (col) return row.getCell(col);
   }
   return null;
 }
@@ -349,10 +345,6 @@ function detectEsinavHarcStatus(cell) {
     return "odendi";
   }
 
-  if (["beyaz", "odenmedi", "ödenmedi", ""].includes(rawText)) {
-    return "odenmedi";
-  }
-
   return "odenmedi";
 }
 
@@ -375,7 +367,6 @@ async function main() {
     throw new Error("Gerekli sayfalardan biri eksik.");
   }
 
-  // E-SINAV
   const eHeaderRowNo = 2;
   const eHeaderMap = buildHeaderMap(eSinavSheet, eHeaderRowNo);
   let eCount = 0;
@@ -407,7 +398,7 @@ async function main() {
     const harcCell = getCellByHeader(row, eHeaderMap, ["HARÇ", "HARC"]);
 
     const examDate = formatDate(examDateCell?.value);
-    const examTime = formatTime(examTimeCell?.value);
+    const examTime = formatTimeFromCell(examTimeCell);
     const harcStatus = detectEsinavHarcStatus(harcCell);
 
     if (examDate) student.esinav_tarih = examDate;
@@ -417,7 +408,6 @@ async function main() {
     if (!student.evrak_durumu) student.evrak_durumu = "tamam";
   }
 
-  // DİREKSİYON
   const dHeaderRowNo = 2;
   const dHeaderMap = buildHeaderMap(direksiyonSheet, dHeaderRowNo);
   let dCount = 0;
@@ -446,14 +436,13 @@ async function main() {
         "__EMPTY_7",
       ]),
     );
-
     student.durum = "direksiyon";
 
     const examDate = formatDate(
       getCellByHeader(row, dHeaderMap, ["SINAV TARİHİ", "__EMPTY_8"])?.value,
     );
-    const examTime = formatTime(
-      getCellByHeader(row, dHeaderMap, ["SINAV SAATİ", "__EMPTY_9"])?.value,
+    const examTime = formatTimeFromCell(
+      getCellByHeader(row, dHeaderMap, ["SINAV SAATİ", "__EMPTY_9"]),
     );
 
     if (examDate) student.direksiyon_tarih = examDate;
@@ -463,7 +452,6 @@ async function main() {
     if (!student.evrak_durumu) student.evrak_durumu = "tamam";
   }
 
-  // EKSİK BELGELER
   const xHeaderRowNo = 1;
   const xHeaderMap = buildHeaderMap(eksikSheet, xHeaderRowNo);
   let xCount = 0;
@@ -523,7 +511,6 @@ async function main() {
     }
   }
 
-  // ALACAK RAPORU
   const aHeaderRowNo = 3;
   const aHeaderMap = buildHeaderMap(alacakSheet, aHeaderRowNo);
   let aCount = 0;
