@@ -27,19 +27,16 @@ type Student = {
   durum: string;
   evrak_durumu: string;
   eksik_evraklar?: string;
-
   esinav_harc: string;
   esinav_son_odeme?: string;
   esinav_tarih?: string;
   esinav_saati?: string;
   esinav_sonuc: string;
-
   direksiyon_harc: string;
   direksiyon_son_odeme?: string;
   direksiyon_tarih?: string;
   direksiyon_saati?: string;
   direksiyon_sonuc: string;
-
   direksiyon_dersleri?: LessonItem[] | string;
 };
 
@@ -120,7 +117,6 @@ const DAY_NAMES = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pa"];
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
-
   const normalized = dateStr.trim();
   const parts = normalized.split(".");
   if (parts.length !== 3) return null;
@@ -131,7 +127,6 @@ function parseAppDate(dateStr?: string) {
 
   const date = new Date(year, month, day);
   if (isNaN(date.getTime())) return null;
-
   date.setHours(0, 0, 0, 0);
   return date;
 }
@@ -151,7 +146,6 @@ function getTodayDate() {
 function getDaysDiffFromToday(dateStr?: string) {
   const target = parseAppDate(dateStr);
   if (!target) return null;
-
   const diff = target.getTime() - getTodayDate().getTime();
   return Math.round(diff / (1000 * 60 * 60 * 24));
 }
@@ -179,7 +173,6 @@ function normalizeValue(value?: string | null) {
 
 function formatPhone(phone: string) {
   if (!phone) return "-";
-
   const digits = phone.replace(/\D/g, "");
 
   if (digits.length === 11 && digits.startsWith("0")) {
@@ -222,7 +215,6 @@ function getMissingDocumentsList(value?: string) {
 
 function parseLessonText(value?: string): LessonItem[] {
   if (!value || !value.trim()) return [];
-
   return value
     .split(/\n+/)
     .map((line) => line.trim())
@@ -231,7 +223,6 @@ function parseLessonText(value?: string): LessonItem[] {
       const clean = line.replace(/^[•\-\s]+/, "").trim();
       const dateMatch = clean.match(/\b\d{2}\.\d{2}\.\d{4}\b/);
       const timeMatch = clean.match(/\b\d{2}:\d{2}\b/);
-
       return {
         tarih: dateMatch?.[0],
         saat: timeMatch?.[0],
@@ -261,34 +252,23 @@ function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
 }
 
 function getProcessBadge(user: Student): { label: string; tone: BadgeTone } {
-  if (user.direksiyon_sonuc === "gecti") {
+  if (user.direksiyon_sonuc === "gecti")
     return { label: "Tamamlandı", tone: "green" };
-  }
-
   if (user.direksiyon_sonuc === "kaldi" || user.esinav_sonuc === "kaldi") {
     return { label: "İşlem gerekli", tone: "red" };
   }
-
-  if (user.durum === "direksiyon") {
+  if (user.durum === "direksiyon")
     return { label: "Direksiyon aşaması", tone: "blue" };
-  }
-
-  if (user.durum === "esinav") {
+  if (user.durum === "esinav")
     return { label: "E-sınav aşaması", tone: "orange" };
-  }
-
   return { label: "Kayıt süreci", tone: "gray" };
 }
 
 function getDocumentBadge(user: Student): { label: string; tone: BadgeTone } {
-  if (user.evrak_durumu === "tamam") {
+  if (user.evrak_durumu === "tamam")
     return { label: "Evrak tam", tone: "green" };
-  }
-
-  if (user.evrak_durumu === "eksik") {
+  if (user.evrak_durumu === "eksik")
     return { label: "Evrak eksik", tone: "orange" };
-  }
-
   return { label: "Evrak kontrolü", tone: "gray" };
 }
 
@@ -302,9 +282,7 @@ function getCalendarBadgeTone(type: CalendarEventType): BadgeTone {
 function buildCalendarEvents(user: Student): CalendarEvent[] {
   const events: CalendarEvent[] = [];
 
-  if (user.evrak_durumu === "eksik") {
-    return events;
-  }
+  if (user.evrak_durumu === "eksik") return events;
 
   if (user.durum === "esinav") {
     if (user.esinav_son_odeme) {
@@ -323,17 +301,17 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
       });
     }
 
-    if (user.esinav_tarih) {
+    if (user.esinav_tarih && !isPastDate(user.esinav_tarih)) {
       events.push({
         key: `esinav-${user.esinav_tarih}-${user.esinav_saati || ""}`,
         date: user.esinav_tarih,
         time: user.esinav_saati,
         title: "E-sınav",
         description: user.esinav_saati
-          ? `Sınav saati ${user.esinav_saati}`
+          ? `Sınav saati: ${user.esinav_saati}`
           : "Sınav saati henüz eklenmemiş.",
         type: "exam-esinav",
-        isPast: isPastDate(user.esinav_tarih),
+        isPast: false,
         isToday: isTodayDate(user.esinav_tarih),
         isUpcoming: isUpcomingDate(user.esinav_tarih),
       });
@@ -359,7 +337,6 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
 
     getLessons(user).forEach((lesson, index) => {
       if (!lesson.tarih && !lesson.saat && !lesson.not) return;
-
       events.push({
         key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
         date: lesson.tarih || "",
@@ -382,7 +359,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         time: user.direksiyon_saati,
         title: "Direksiyon sınavı",
         description: user.direksiyon_saati
-          ? `Sınav saati ${user.direksiyon_saati}`
+          ? `Sınav saati: ${user.direksiyon_saati}`
           : "Sınav saati henüz eklenmemiş.",
         type: "exam-direksiyon",
         isPast: isPastDate(user.direksiyon_tarih),
@@ -415,11 +392,9 @@ function buildMonthCells(
 ): CalendarCell[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
-
   const firstDay = new Date(year, month, 1);
   const startOffset = (firstDay.getDay() + 6) % 7;
   const gridStart = new Date(year, month, 1 - startOffset);
-
   const cells: CalendarCell[] = [];
 
   for (let i = 0; i < 42; i += 1) {
@@ -443,21 +418,21 @@ function buildMonthCells(
       events: events.filter((event) => event.date === fullDate),
     });
   }
-
   return cells;
 }
 
-function getSmartStatus(user: Student): SmartStatus {
-  const calendarEvents = buildCalendarEvents(user);
-  const nextEvent = calendarEvents.find((event) => !event.isPast);
+function hasFutureExamDate(user: Student) {
+  return !!user.esinav_tarih && !isPastDate(user.esinav_tarih);
+}
 
+function getSmartStatus(user: Student): SmartStatus {
   if (user.direksiyon_sonuc === "gecti") {
     return {
       title: "Tebrikler, süreciniz tamamlandı",
       description:
         "Direksiyon sınavını başarıyla geçtiniz. Kurs süreciniz tamamlandı.",
       type: "success",
-      actionLabel: "Takvimi Aç",
+      actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
@@ -485,12 +460,17 @@ function getSmartStatus(user: Student): SmartStatus {
     };
   }
 
-  if (nextEvent?.isToday) {
+  if (
+    user.durum === "esinav" &&
+    user.esinav_harc === "odendi" &&
+    !hasFutureExamDate(user)
+  ) {
     return {
-      title: "Bugün planlı bir işleminiz var",
-      description: `${nextEvent.title} için bugünkü bilgilerinizi kontrol edin.`,
-      type: "warning",
-      actionLabel: "Takvimi Aç",
+      title: "Yeni sınav tarihi bekleniyor",
+      description:
+        "Yeni harç ödemeniz alındı. Yeni e-sınav tarihi açıklandığında burada gösterilecek.",
+      type: "info",
+      actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
@@ -508,29 +488,14 @@ function getSmartStatus(user: Student): SmartStatus {
 
   if (
     user.durum === "esinav" &&
-    user.esinav_harc === "odendi" &&
-    !user.esinav_tarih
-  ) {
-    return {
-      title: "E-sınav tarihi bekleniyor",
-      description:
-        "Harç ödemeniz alınmış görünüyor. Sınav tarihi açıklandığında burada gösterilecek.",
-      type: "info",
-      actionLabel: "Detayı Gör",
-      actionType: "detail",
-    };
-  }
-
-  if (
-    user.esinav_tarih &&
-    user.esinav_sonuc !== "gecti" &&
-    user.durum === "esinav"
+    hasFutureExamDate(user) &&
+    user.esinav_sonuc !== "gecti"
   ) {
     return {
       title: "E-sınav tarihiniz belli oldu",
-      description: `E-sınav bilginiz: ${formatExamText(user.esinav_tarih, user.esinav_saati)}`,
+      description: "Detayı görüntüleyerek sınav tarihini görebilirsiniz.",
       type: "info",
-      actionLabel: "Takvimi Aç",
+      actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
@@ -553,7 +518,7 @@ function getSmartStatus(user: Student): SmartStatus {
         ? `Direksiyon sınav tarihiniz: ${formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}`
         : "Direksiyon dersleri ve sınav süreciniz devam ediyor.",
       type: "info",
-      actionLabel: "Takvimi Aç",
+      actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
@@ -674,6 +639,8 @@ export default function Index() {
   const [selectedDetail, setSelectedDetail] = useState("");
   const [detailVisible, setDetailVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
+  const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
   const [monthOffset, setMonthOffset] = useState(0);
@@ -698,17 +665,14 @@ export default function Index() {
       setFetchError("");
       setLoginFeedback(null);
 
-      const response = await fetch(DATA_URL, {
-        cache: "no-store",
-      });
-
+      const response = await fetch(DATA_URL, { cache: "no-store" });
       if (!response.ok) {
         throw new Error("Öğrenci verisi alınamadı.");
       }
 
       const data: Student[] = await response.json();
       setStudents(data);
-    } catch (error) {
+    } catch {
       setStudents([]);
       setFetchError(
         "Veriler sunucudan alınamadı. Lütfen daha sonra tekrar deneyin.",
@@ -735,17 +699,29 @@ export default function Index() {
   const openCalendarModal = () => {
     setCalendarVisible(true);
     setMonthOffset(0);
+    setCalendarDetailVisible(false);
+    setCalendarSelectedDetail("");
   };
 
   const closeCalendarModal = () => {
     setCalendarVisible(false);
+    setCalendarDetailVisible(false);
+    setCalendarSelectedDetail("");
+  };
+
+  const openCalendarDetailModal = (text: string) => {
+    setCalendarSelectedDetail(text);
+    setCalendarDetailVisible(true);
+  };
+
+  const closeCalendarDetailModal = () => {
+    setCalendarDetailVisible(false);
+    setCalendarSelectedDetail("");
   };
 
   const handleTcChange = (value: string) => {
     setTc(value);
-    if (loginFeedback) {
-      setLoginFeedback(null);
-    }
+    if (loginFeedback) setLoginFeedback(null);
   };
 
   const handleLogin = () => {
@@ -806,7 +782,6 @@ export default function Index() {
     }
 
     const foundUser = students.find((s) => s.tc === cleanedTc);
-
     if (!foundUser) {
       setLoginFeedback({
         type: "warning",
@@ -822,6 +797,7 @@ export default function Index() {
     setSelectedDetail("");
     setDetailVisible(false);
     setCalendarVisible(false);
+    setCalendarDetailVisible(false);
   };
 
   const handleLogout = () => {
@@ -831,6 +807,7 @@ export default function Index() {
     setSelectedDetail("");
     setDetailVisible(false);
     setCalendarVisible(false);
+    setCalendarDetailVisible(false);
     setLoginFeedback(null);
   };
 
@@ -866,7 +843,6 @@ export default function Index() {
         actionType: "none" as const,
       };
     }
-
     return getSmartStatus(user);
   }, [user]);
 
@@ -991,14 +967,13 @@ export default function Index() {
 
     try {
       await Linking.openURL("https://odeme.meb.gov.tr");
-    } catch (error) {
+    } catch {
       Alert.alert("Hata", "Ödeme sayfası açılamadı.");
     }
   };
 
   const showBasvuruDetay = () => {
     if (!user) return;
-
     if (user.evrak_durumu === "eksik") {
       openDetailModal(
         missingDocs.length
@@ -1007,13 +982,11 @@ export default function Index() {
       );
       return;
     }
-
     openDetailModal("Kurs başvurunuz alınmıştır.");
   };
 
   const showBasvuruTamamDetay = () => {
     if (!user) return;
-
     if (user.evrak_durumu === "tamam") {
       openDetailModal("Kurs başvurunuz tamamlandı. Evraklarınız tam.");
     } else {
@@ -1038,24 +1011,19 @@ export default function Index() {
       return;
     }
 
-    if (user.esinav_sonuc === "kaldi") {
-      openDetailModal("E-sınavda başarılı olamadınız.");
-      return;
-    }
-
     if (user.esinav_harc === "odenmedi") {
       openDetailModal("E-sınav harcınız henüz ödenmemiş görünüyor.");
       return;
     }
 
-    if (user.esinav_harc === "odendi" && !user.esinav_tarih) {
-      openDetailModal("E-sınav harcı ödendi. Sınav tarihi bekleniyor.");
+    if (user.esinav_harc === "odendi" && !hasFutureExamDate(user)) {
+      openDetailModal("Yeni sınav tarihi bekleniyor.");
       return;
     }
 
-    if (user.esinav_tarih) {
+    if (hasFutureExamDate(user)) {
       openDetailModal(
-        `E-sınav bilginiz:\n${formatExamText(user.esinav_tarih, user.esinav_saati)}`,
+        `E-sınav tarihiniz:\n${formatExamText(user.esinav_tarih, user.esinav_saati)}`,
       );
       return;
     }
@@ -1070,7 +1038,6 @@ export default function Index() {
 
   const showDireksiyonDetay = () => {
     if (!user) return;
-
     const lessons = getLessons(user);
 
     if (user.esinav_sonuc !== "gecti" && user.durum !== "direksiyon") {
@@ -1178,18 +1145,13 @@ export default function Index() {
     }
 
     if (smartStatus.actionType === "detail") {
-      if (
-        canOpenCalendar &&
-        (user.durum === "esinav" ||
-          user.durum === "direksiyon" ||
-          user.esinav_sonuc === "gecti")
-      ) {
-        openCalendarModal();
+      if (user.evrak_durumu === "eksik") {
+        showBasvuruDetay();
         return;
       }
 
-      if (user.evrak_durumu === "eksik") {
-        showBasvuruDetay();
+      if (user.durum === "esinav") {
+        showEsinavDetay();
         return;
       }
 
@@ -1198,7 +1160,7 @@ export default function Index() {
         return;
       }
 
-      showEsinavDetay();
+      showBasvuruDetay();
     }
   };
 
@@ -1214,7 +1176,7 @@ export default function Index() {
       })
       .join("\n\n");
 
-    openDetailModal(detail);
+    openCalendarDetailModal(detail);
   };
 
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
@@ -1292,18 +1254,8 @@ export default function Index() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
-            </View>
-
-            <View style={styles.profileTextArea}>
-              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-
-              <Text style={styles.subName}>Öğrenci Paneli</Text>
-            </View>
-          </View>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Anasayfa</Text>
           {canOpenCalendar ? (
             <TouchableOpacity
               style={styles.topCalendarButton}
@@ -1316,6 +1268,20 @@ export default function Index() {
               <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
             </View>
           )}
+        </View>
+
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+            </View>
+
+            <View style={styles.profileTextArea}>
+              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
+              <Text style={styles.subName}>Öğrenci Paneli</Text>
+            </View>
+          </View>
+
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} />
             <InfoChip label="Sınıf" value={user.sinif || "-"} />
@@ -1413,7 +1379,10 @@ export default function Index() {
                 </View>
 
                 <Text style={styles.miniCardText}>
-                  Tarih: {formatExamText(user.esinav_tarih, user.esinav_saati)}
+                  Tarih:{" "}
+                  {hasFutureExamDate(user)
+                    ? formatExamText(user.esinav_tarih, user.esinav_saati)
+                    : "Yeni sınav tarihi bekleniyor"}
                 </Text>
                 <Text style={styles.miniCardText}>
                   Sonuç: {formatOutcome(user.esinav_sonuc)}
@@ -1515,7 +1484,6 @@ export default function Index() {
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>Detay</Text>
             <Text style={styles.modalText}>{selectedDetail}</Text>
-
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={closeDetailModal}
@@ -1535,7 +1503,6 @@ export default function Index() {
         <View style={styles.fullScreenCalendar}>
           <View style={styles.calendarHeader}>
             <Text style={styles.calendarHeaderTitle}>Takvim</Text>
-
             <TouchableOpacity
               style={styles.calendarHeaderClose}
               onPress={closeCalendarModal}
@@ -1589,17 +1556,14 @@ export default function Index() {
               <View style={[styles.legendDot, styles.eventDotRed]} />
               <Text style={styles.legendText}>Ödeme</Text>
             </View>
-
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotBlue]} />
               <Text style={styles.legendText}>E-sınav</Text>
             </View>
-
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotOrange]} />
               <Text style={styles.legendText}>Direksiyon sınavı</Text>
             </View>
-
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotGreen]} />
               <Text style={styles.legendText}>Ders</Text>
@@ -1647,6 +1611,16 @@ export default function Index() {
                     ),
                   ),
                 );
+                const previewText = hasEvents
+                  ? cell.events
+                      .slice(0, 2)
+                      .map((event) =>
+                        event.time
+                          ? `${event.title} ${event.time}`
+                          : event.title,
+                      )
+                      .join("\n")
+                  : "";
 
                 return (
                   <TouchableOpacity
@@ -1706,22 +1680,36 @@ export default function Index() {
                       ]}
                       numberOfLines={2}
                     >
-                      {hasEvents
-                        ? cell.events
-                            .slice(0, 2)
-                            .map((event) =>
-                              event.time
-                                ? `${event.title} ${event.time}`
-                                : event.title,
-                            )
-                            .join("\n")
-                        : ""}
+                      {previewText}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
           </ScrollView>
+
+          <Modal
+            visible={calendarDetailVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={closeCalendarDetailModal}
+          >
+            <Pressable
+              style={styles.modalOverlay}
+              onPress={closeCalendarDetailModal}
+            >
+              <Pressable style={styles.modalCard} onPress={() => {}}>
+                <Text style={styles.modalTitle}>Takvim Detayı</Text>
+                <Text style={styles.modalText}>{calendarSelectedDetail}</Text>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={closeCalendarDetailModal}
+                >
+                  <Text style={styles.modalCloseButtonText}>Kapat</Text>
+                </TouchableOpacity>
+              </Pressable>
+            </Pressable>
+          </Modal>
         </View>
       </Modal>
     </>
@@ -1729,14 +1717,8 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0d0d10",
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 28,
-  },
+  container: { flex: 1, backgroundColor: "#0d0d10" },
+  content: { padding: 16, paddingBottom: 28 },
   loadingContainer: {
     flex: 1,
     backgroundColor: "#0d0d10",
@@ -1750,11 +1732,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
-  loginBox: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 18,
-  },
+  loginBox: { flex: 1, justifyContent: "center", paddingHorizontal: 18 },
   brand: {
     color: "#c1121f",
     fontSize: 16,
@@ -1793,14 +1771,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
   },
-  loginButtonDisabled: {
-    opacity: 0.55,
-  },
-  loginButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  loginButtonDisabled: { opacity: 0.55 },
+  loginButtonText: { color: "#ffffff", fontSize: 16, fontWeight: "700" },
   loginStatusCard: {
     borderRadius: 18,
     padding: 14,
@@ -1815,39 +1787,21 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 8,
   },
-  loginStatusText: {
-    color: "#d8d8dd",
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  loginStatusSuccess: {
-    borderColor: "#1f8f55",
-  },
-  loginStatusError: {
-    borderColor: "#a62d2d",
-  },
-  loginStatusWarning: {
-    borderColor: "#a67c1a",
-  },
-  loginStatusInfo: {
-    borderColor: "#2c6ca6",
-  },
+  loginStatusText: { color: "#d8d8dd", fontSize: 14, lineHeight: 22 },
+  loginStatusSuccess: { borderColor: "#1f8f55" },
+  loginStatusError: { borderColor: "#a62d2d" },
+  loginStatusWarning: { borderColor: "#a67c1a" },
+  loginStatusInfo: { borderColor: "#2c6ca6" },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 14,
   },
-  topBarTitle: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "800",
-  },
+  topBarTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   topCalendarButton: {
-    position: "fixed",
-    right: 35,
-    width: 55,
-    height: 55,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -1866,12 +1820,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     opacity: 0.4,
   },
-  topCalendarIcon: {
-    fontSize: 30,
-  },
-  topCalendarIconDisabled: {
-    fontSize: 20,
-  },
+  topCalendarIcon: { fontSize: 20 },
+  topCalendarIconDisabled: { fontSize: 20 },
   profileCard: {
     backgroundColor: "#151519",
     borderRadius: 24,
@@ -1885,9 +1835,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  profileTextArea: {
-    flex: 1,
-  },
+  profileTextArea: { flex: 1 },
   avatar: {
     width: 72,
     height: 72,
@@ -1897,26 +1845,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 14,
   },
-  avatarText: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  name: {
-    color: "#ffffff",
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  subName: {
-    color: "#8f8f97",
-    fontSize: 14,
-    marginTop: 4,
-  },
-  chipsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 12,
-  },
+  avatarText: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
+  name: { color: "#ffffff", fontSize: 22, fontWeight: "800" },
+  subName: { color: "#8f8f97", fontSize: 14, marginTop: 4 },
+  chipsRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
   infoChip: {
     flex: 1,
     backgroundColor: "#1d1d23",
@@ -1932,47 +1864,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: "600",
   },
-  infoChipValue: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  badgesRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  infoChipValue: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
+  badgesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   badge: {
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderWidth: 1,
   },
-  badgeGreen: {
-    backgroundColor: "#11301f",
-    borderColor: "#1f8f55",
-  },
-  badgeRed: {
-    backgroundColor: "#301515",
-    borderColor: "#a62d2d",
-  },
-  badgeOrange: {
-    backgroundColor: "#33250f",
-    borderColor: "#a67c1a",
-  },
-  badgeBlue: {
-    backgroundColor: "#112536",
-    borderColor: "#2c6ca6",
-  },
-  badgeGray: {
-    backgroundColor: "#1d1d23",
-    borderColor: "#34343b",
-  },
-  badgeText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
+  badgeGreen: { backgroundColor: "#11301f", borderColor: "#1f8f55" },
+  badgeRed: { backgroundColor: "#301515", borderColor: "#a62d2d" },
+  badgeOrange: { backgroundColor: "#33250f", borderColor: "#a67c1a" },
+  badgeBlue: { backgroundColor: "#112536", borderColor: "#2c6ca6" },
+  badgeGray: { backgroundColor: "#1d1d23", borderColor: "#34343b" },
+  badgeText: { color: "#ffffff", fontSize: 12, fontWeight: "800" },
   statusCard: {
     backgroundColor: "#151519",
     borderRadius: 22,
@@ -1981,29 +1886,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#232329",
   },
-  statusSuccess: {
-    borderColor: "#1f8f55",
-  },
-  statusError: {
-    borderColor: "#a62d2d",
-  },
-  statusWarning: {
-    borderColor: "#a67c1a",
-  },
-  statusInfo: {
-    borderColor: "#2c6ca6",
-  },
+  statusSuccess: { borderColor: "#1f8f55" },
+  statusError: { borderColor: "#a62d2d" },
+  statusWarning: { borderColor: "#a67c1a" },
+  statusInfo: { borderColor: "#2c6ca6" },
   statusTitle: {
     color: "#ffffff",
     fontSize: 18,
     fontWeight: "800",
     marginBottom: 8,
   },
-  statusDescription: {
-    color: "#d8d8dd",
-    fontSize: 15,
-    lineHeight: 23,
-  },
+  statusDescription: { color: "#d8d8dd", fontSize: 15, lineHeight: 23 },
   mainActionButton: {
     marginTop: 14,
     backgroundColor: "#c1121f",
@@ -2011,11 +1904,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
-  mainActionButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
+  mainActionButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
   infoCard: {
     backgroundColor: "#151519",
     borderRadius: 22,
@@ -2046,27 +1935,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-  infoLabel: {
-    color: "#a6a6af",
-    fontSize: 14,
-    fontWeight: "600",
-    flex: 1,
-  },
-  infoValue: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-    flex: 1,
-  },
-  infoValueRight: {
-    textAlign: "right",
-    lineHeight: 22,
-  },
-  missingDocsList: {
-    flex: 1,
-    alignItems: "flex-end",
-    gap: 4,
-  },
+  infoLabel: { color: "#a6a6af", fontSize: 14, fontWeight: "600", flex: 1 },
+  infoValue: { color: "#ffffff", fontSize: 14, fontWeight: "700", flex: 1 },
+  infoValueRight: { textAlign: "right", lineHeight: 22 },
+  missingDocsList: { flex: 1, alignItems: "flex-end", gap: 4 },
   missingDocItem: {
     color: "#ffffff",
     fontSize: 14,
@@ -2088,11 +1960,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  miniCardTitle: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
+  miniCardTitle: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
   miniCardText: {
     color: "#d8d8dd",
     fontSize: 14,
@@ -2106,11 +1974,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
   },
-  inlinePayButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "800",
-  },
+  inlinePayButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "800" },
   stepsCard: {
     backgroundColor: "#151519",
     borderRadius: 22,
@@ -2119,36 +1983,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#232329",
   },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    minHeight: 58,
-  },
+  stepRow: { flexDirection: "row", alignItems: "stretch", minHeight: 58 },
   stepIndicatorColumn: {
     width: 26,
     alignItems: "center",
     position: "relative",
   },
-  stepLine: {
-    position: "absolute",
-    width: 2,
-    left: 11,
-    zIndex: 0,
-  },
-  stepLineTop: {
-    top: 0,
-    height: 29,
-  },
-  stepLineBottom: {
-    top: 29,
-    bottom: 0,
-  },
-  stepLineActive: {
-    backgroundColor: "#22c55e",
-  },
-  stepLinePassive: {
-    backgroundColor: "#34343b",
-  },
+  stepLine: { position: "absolute", width: 2, left: 11, zIndex: 0 },
+  stepLineTop: { top: 0, height: 29 },
+  stepLineBottom: { top: 29, bottom: 0 },
+  stepLineActive: { backgroundColor: "#22c55e" },
+  stepLinePassive: { backgroundColor: "#34343b" },
   stepCircle: {
     width: 24,
     height: 24,
@@ -2161,46 +2006,25 @@ const styles = StyleSheet.create({
     marginTop: 17,
     zIndex: 2,
   },
-  stepCircleChecked: {
-    backgroundColor: "#22c55e",
-    borderColor: "#22c55e",
-  },
-  stepCircleActive: {
-    borderColor: "#22c55e",
-  },
-  stepCircleText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "800",
-  },
+  stepCircleChecked: { backgroundColor: "#22c55e", borderColor: "#22c55e" },
+  stepCircleActive: { borderColor: "#22c55e" },
+  stepCircleText: { color: "#ffffff", fontSize: 14, fontWeight: "800" },
   stepContent: {
     flex: 1,
     justifyContent: "center",
     paddingLeft: 12,
     paddingVertical: 10,
   },
-  stepTitle: {
-    color: "#d0d0d6",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  stepTitleChecked: {
-    color: "#ffffff",
-  },
-  stepTitleActive: {
-    color: "#ffffff",
-  },
+  stepTitle: { color: "#d0d0d6", fontSize: 15, fontWeight: "600" },
+  stepTitleChecked: { color: "#ffffff" },
+  stepTitleActive: { color: "#ffffff" },
   logoutButton: {
     backgroundColor: "#26262d",
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
   },
-  logoutButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  logoutButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.55)",
@@ -2220,11 +2044,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 12,
   },
-  modalText: {
-    color: "#d8d8dd",
-    fontSize: 15,
-    lineHeight: 24,
-  },
+  modalText: { color: "#d8d8dd", fontSize: 15, lineHeight: 24 },
   modalCloseButton: {
     marginTop: 16,
     backgroundColor: "#c1121f",
@@ -2232,16 +2052,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
-  modalCloseButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  fullScreenCalendar: {
-    flex: 1,
-    backgroundColor: "#0d0d10",
-    paddingTop: 56,
-  },
+  modalCloseButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
+  fullScreenCalendar: { flex: 1, backgroundColor: "#0d0d10", paddingTop: 56 },
   calendarHeader: {
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -2249,11 +2061,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 18,
   },
-  calendarHeaderTitle: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "800",
-  },
+  calendarHeaderTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   calendarHeaderClose: {
     backgroundColor: "#1d1d23",
     borderWidth: 1,
@@ -2274,15 +2082,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  monthNavigatorTitle: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  monthNavButtons: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  monthNavigatorTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
+  monthNavButtons: { flexDirection: "row", gap: 10 },
   monthNavButton: {
     width: 36,
     height: 36,
@@ -2293,14 +2094,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  monthNavButtonDisabled: {
-    opacity: 0.35,
-  },
-  monthNavButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "900",
-  },
+  monthNavButtonDisabled: { opacity: 0.35 },
+  monthNavButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "900" },
   calendarRangeText: {
     color: "#a0a0a8",
     fontSize: 13,
@@ -2308,11 +2103,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 14,
   },
-  dayNamesRow: {
-    flexDirection: "row",
-    paddingHorizontal: 8,
-    marginBottom: 10,
-  },
+  dayNamesRow: { flexDirection: "row", paddingHorizontal: 8, marginBottom: 10 },
   dayNameText: {
     flex: 1,
     textAlign: "center",
@@ -2327,21 +2118,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 16,
   },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    color: "#cfd0d6",
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendDot: { width: 12, height: 12, borderRadius: 6 },
+  legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
   monthPickerRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -2357,40 +2136,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
-  monthPillActive: {
-    backgroundColor: "#686868",
-    borderColor: "#686868",
-  },
-  monthPillText: {
-    color: "#d8d8dd",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  monthPillTextActive: {
-    color: "#ffffff",
-  },
-  calendarPageScroll: {
-    flex: 1,
-  },
-  calendarPageContent: {
-    paddingHorizontal: 8,
-    paddingBottom: 32,
-  },
-  monthGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  calendarCell: {
-    width: "14.2857%",
-    aspectRatio: 0.82,
-    padding: 4,
-  },
-  calendarCellMuted: {
-    opacity: 0.38,
-  },
-  calendarCellToday: {
-    opacity: 1,
-  },
+  monthPillActive: { backgroundColor: "#686868", borderColor: "#686868" },
+  monthPillText: { color: "#d8d8dd", fontSize: 12, fontWeight: "700" },
+  monthPillTextActive: { color: "#ffffff" },
+  calendarPageScroll: { flex: 1 },
+  calendarPageContent: { paddingHorizontal: 8, paddingBottom: 32 },
+  monthGrid: { flexDirection: "row", flexWrap: "wrap" },
+  calendarCell: { width: "14.2857%", aspectRatio: 0.82, padding: 4 },
+  calendarCellMuted: { opacity: 0.38 },
+  calendarCellToday: { opacity: 1 },
   calendarCellDayBadge: {
     width: 38,
     height: 38,
@@ -2400,53 +2154,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 4,
   },
-  calendarCellDayBadgeToday: {
-    backgroundColor: "#686868",
-  },
-  calendarCellDayText: {
-    color: "#ffffff",
-    fontSize: 22,
-    fontWeight: "500",
-  },
-  calendarCellDayTextMuted: {
-    color: "#8a8a90",
-  },
-  calendarCellDayTextToday: {
-    color: "#ffffff",
-    fontWeight: "800",
-  },
+  calendarCellDayBadgeToday: { backgroundColor: "#686868" },
+  calendarCellDayText: { color: "#ffffff", fontSize: 22, fontWeight: "500" },
+  calendarCellDayTextMuted: { color: "#8a8a90" },
+  calendarCellDayTextToday: { color: "#ffffff", fontWeight: "800" },
   cellDotsRow: {
-    minHeight: 10,
+    minHeight: 14,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 3,
-    marginBottom: 3,
+    gap: 4,
+    marginBottom: 4,
   },
-  cellDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-  },
-  eventDotRed: {
-    backgroundColor: "#c1121f",
-  },
-  eventDotBlue: {
-    backgroundColor: "#2c6ca6",
-  },
-  eventDotOrange: {
-    backgroundColor: "#c98819",
-  },
-  eventDotGreen: {
-    backgroundColor: "#1f8f55",
-  },
+  cellDot: { marginTop: 5, width: 16, height: 16, borderRadius: 10 },
+  eventDotRed: { backgroundColor: "#c1121f" },
+  eventDotBlue: { backgroundColor: "#2c6ca6" },
+  eventDotOrange: { backgroundColor: "#c98819" },
+  eventDotGreen: { backgroundColor: "#1f8f55" },
   calendarCellPreview: {
-    color: "#d8d8dd",
-    fontSize: 9,
-    lineHeight: 11,
+    color: "#f2f2f5",
+    fontSize: 15,
+    lineHeight: 42,
     textAlign: "center",
     paddingHorizontal: 1,
+    fontWeight: "700",
   },
-  calendarCellPreviewMuted: {
-    color: "#707078",
-  },
+  calendarCellPreviewMuted: { color: "#707078" },
 });
