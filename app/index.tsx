@@ -13,6 +13,12 @@ import {
   View,
 } from "react-native";
 
+type LessonItem = {
+  tarih?: string;
+  saat?: string;
+  not?: string;
+};
+
 type Student = {
   tc: string;
   ad_soyad: string;
@@ -21,13 +27,29 @@ type Student = {
   durum: string;
   evrak_durumu: string;
   eksik_evraklar?: string;
+
   esinav_harc: string;
+  esinav_son_odeme?: string;
   esinav_tarih?: string;
   esinav_saati?: string;
   esinav_sonuc: string;
+
   direksiyon_harc: string;
+  direksiyon_son_odeme?: string;
   direksiyon_tarih?: string;
+  direksiyon_saati?: string;
   direksiyon_sonuc: string;
+
+  direksiyon_dersleri?: LessonItem[] | string;
+};
+
+type StatusType = "success" | "error" | "warning" | "info" | "normal";
+type BadgeTone = "green" | "red" | "orange" | "blue" | "gray";
+
+type LoginFeedback = {
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
 };
 
 type SmartStatus = {
@@ -36,14 +58,6 @@ type SmartStatus = {
   type: StatusType;
   actionLabel?: string;
   actionType?: "harc" | "detail" | "none";
-};
-
-type StatusType = "success" | "error" | "warning" | "info" | "normal";
-
-type LoginFeedback = {
-  type: "success" | "error" | "warning" | "info";
-  title: string;
-  message: string;
 };
 
 type StepItemProps = {
@@ -56,22 +70,59 @@ type StepItemProps = {
   lineActive?: boolean;
 };
 
-type BadgeTone = "green" | "red" | "orange" | "blue" | "gray";
+type CalendarEventType =
+  | "payment-esinav"
+  | "payment-direksiyon"
+  | "exam-esinav"
+  | "exam-direksiyon"
+  | "lesson";
+
+type CalendarEvent = {
+  key: string;
+  date: string;
+  time?: string;
+  title: string;
+  description?: string;
+  type: CalendarEventType;
+  isPast: boolean;
+  isToday: boolean;
+  isUpcoming: boolean;
+};
+
+type CalendarCell = {
+  key: string;
+  fullDate: string;
+  dayNumber: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  events: CalendarEvent[];
+};
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
 
-function formatExamText(date?: string, time?: string) {
-  if (!date) return "";
-  return time ? `${date} / ${time}` : date;
-}
+const MONTH_NAMES = [
+  "Ocak",
+  "Şubat",
+  "Mart",
+  "Nisan",
+  "Mayıs",
+  "Haziran",
+  "Temmuz",
+  "Ağustos",
+  "Eylül",
+  "Ekim",
+  "Kasım",
+  "Aralık",
+];
+
+const DAY_NAMES = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pa"];
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
 
   const normalized = dateStr.trim();
   const parts = normalized.split(".");
-
   if (parts.length !== 3) return null;
 
   const day = Number(parts[0]);
@@ -85,14 +136,45 @@ function parseAppDate(dateStr?: string) {
   return date;
 }
 
-function isPastDate(dateStr?: string) {
-  const examDate = parseAppDate(dateStr);
-  if (!examDate) return false;
+function formatDateFromParts(day: number, month: number, year: number) {
+  const dd = String(day).padStart(2, "0");
+  const mm = String(month).padStart(2, "0");
+  return `${dd}.${mm}.${year}`;
+}
 
+function getTodayDate() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  return today;
+}
 
-  return examDate < today;
+function getDaysDiffFromToday(dateStr?: string) {
+  const target = parseAppDate(dateStr);
+  if (!target) return null;
+
+  const diff = target.getTime() - getTodayDate().getTime();
+  return Math.round(diff / (1000 * 60 * 60 * 24));
+}
+
+function isPastDate(dateStr?: string) {
+  const diff = getDaysDiffFromToday(dateStr);
+  return diff !== null ? diff < 0 : false;
+}
+
+function isTodayDate(dateStr?: string) {
+  const diff = getDaysDiffFromToday(dateStr);
+  return diff !== null ? diff === 0 : false;
+}
+
+function isUpcomingDate(dateStr?: string, limit = 3) {
+  const diff = getDaysDiffFromToday(dateStr);
+  return diff !== null ? diff >= 0 && diff <= limit : false;
+}
+
+function normalizeValue(value?: string | null) {
+  if (!value) return "Henüz bilgi eklenmemiş";
+  const cleaned = String(value).trim();
+  return cleaned ? cleaned : "Henüz bilgi eklenmemiş";
 }
 
 function formatPhone(phone: string) {
@@ -111,11 +193,9 @@ function formatPhone(phone: string) {
   return phone;
 }
 
-function normalizeValue(value?: string | null) {
-  if (!value) return "Henüz bilgi eklenmemiş";
-
-  const cleaned = String(value).trim();
-  return cleaned ? cleaned : "Henüz bilgi eklenmemiş";
+function formatExamText(date?: string, time?: string) {
+  if (!date) return "Henüz bilgi eklenmemiş";
+  return time ? `${date} / ${time}` : date;
 }
 
 function formatOutcome(value?: string) {
@@ -134,11 +214,50 @@ function formatPayment(value?: string) {
 
 function getMissingDocumentsList(value?: string) {
   if (!value || !value.trim()) return [];
-
   return value
     .split(/[,;\n]+/)
     .map((item) => item.replace(/^[•\-\s]+/, "").trim())
     .filter(Boolean);
+}
+
+function parseLessonText(value?: string): LessonItem[] {
+  if (!value || !value.trim()) return [];
+
+  return value
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const clean = line.replace(/^[•\-\s]+/, "").trim();
+      const dateMatch = clean.match(/\b\d{2}\.\d{2}\.\d{4}\b/);
+      const timeMatch = clean.match(/\b\d{2}:\d{2}\b/);
+
+      return {
+        tarih: dateMatch?.[0],
+        saat: timeMatch?.[0],
+        not: clean || `Direksiyon dersi ${index + 1}`,
+      };
+    });
+}
+
+function getLessons(user: Student) {
+  if (Array.isArray(user.direksiyon_dersleri)) {
+    return user.direksiyon_dersleri.filter(
+      (item) => item && (item.tarih || item.saat || item.not),
+    );
+  }
+
+  if (typeof user.direksiyon_dersleri === "string") {
+    return parseLessonText(user.direksiyon_dersleri);
+  }
+
+  return [];
+}
+
+function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
+  if (value === "odendi") return { label: "Ödendi", tone: "green" };
+  if (value === "odenmedi") return { label: "Ödeme bekleniyor", tone: "red" };
+  return { label: "Bilgi bekleniyor", tone: "gray" };
 }
 
 function getProcessBadge(user: Student): { label: string; tone: BadgeTone } {
@@ -173,116 +292,172 @@ function getDocumentBadge(user: Student): { label: string; tone: BadgeTone } {
   return { label: "Evrak kontrolü", tone: "gray" };
 }
 
-function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
-  if (value === "odendi") {
-    return { label: "Ödendi", tone: "green" };
+function getCalendarBadgeTone(type: CalendarEventType): BadgeTone {
+  if (type === "payment-esinav" || type === "payment-direksiyon") return "red";
+  if (type === "exam-esinav") return "blue";
+  if (type === "exam-direksiyon") return "orange";
+  return "green";
+}
+
+function buildCalendarEvents(user: Student): CalendarEvent[] {
+  const events: CalendarEvent[] = [];
+
+  if (user.evrak_durumu === "eksik") {
+    return events;
   }
 
-  if (value === "odenmedi") {
-    return { label: "Ödeme bekleniyor", tone: "red" };
+  if (user.durum === "esinav") {
+    if (user.esinav_son_odeme) {
+      events.push({
+        key: `esinav-odeme-${user.esinav_son_odeme}`,
+        date: user.esinav_son_odeme,
+        title: "E-sınav harcı son ödeme günü",
+        description:
+          user.esinav_harc === "odendi"
+            ? "E-sınav harcı ödendi."
+            : "E-sınav harcını bu tarihe kadar yatırın.",
+        type: "payment-esinav",
+        isPast: isPastDate(user.esinav_son_odeme),
+        isToday: isTodayDate(user.esinav_son_odeme),
+        isUpcoming: isUpcomingDate(user.esinav_son_odeme),
+      });
+    }
+
+    if (user.esinav_tarih) {
+      events.push({
+        key: `esinav-${user.esinav_tarih}-${user.esinav_saati || ""}`,
+        date: user.esinav_tarih,
+        time: user.esinav_saati,
+        title: "E-sınav",
+        description: user.esinav_saati
+          ? `Sınav saati ${user.esinav_saati}`
+          : "Sınav saati henüz eklenmemiş.",
+        type: "exam-esinav",
+        isPast: isPastDate(user.esinav_tarih),
+        isToday: isTodayDate(user.esinav_tarih),
+        isUpcoming: isUpcomingDate(user.esinav_tarih),
+      });
+    }
   }
 
-  return { label: "Bilgi bekleniyor", tone: "gray" };
+  if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
+    if (user.direksiyon_son_odeme) {
+      events.push({
+        key: `direksiyon-odeme-${user.direksiyon_son_odeme}`,
+        date: user.direksiyon_son_odeme,
+        title: "Direksiyon ücreti son ödeme günü",
+        description:
+          user.direksiyon_harc === "odendi"
+            ? "Direksiyon ücreti ödendi."
+            : "Direksiyon ücretini bu tarihe kadar yatırın.",
+        type: "payment-direksiyon",
+        isPast: isPastDate(user.direksiyon_son_odeme),
+        isToday: isTodayDate(user.direksiyon_son_odeme),
+        isUpcoming: isUpcomingDate(user.direksiyon_son_odeme),
+      });
+    }
+
+    getLessons(user).forEach((lesson, index) => {
+      if (!lesson.tarih && !lesson.saat && !lesson.not) return;
+
+      events.push({
+        key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
+        date: lesson.tarih || "",
+        time: lesson.saat,
+        title: lesson.not?.trim() || `Direksiyon dersi ${index + 1}`,
+        description: lesson.saat
+          ? `Ders saati ${lesson.saat}`
+          : "Ders saati henüz eklenmemiş.",
+        type: "lesson",
+        isPast: isPastDate(lesson.tarih),
+        isToday: isTodayDate(lesson.tarih),
+        isUpcoming: isUpcomingDate(lesson.tarih),
+      });
+    });
+
+    if (user.direksiyon_tarih) {
+      events.push({
+        key: `direksiyon-sinav-${user.direksiyon_tarih}-${user.direksiyon_saati || ""}`,
+        date: user.direksiyon_tarih,
+        time: user.direksiyon_saati,
+        title: "Direksiyon sınavı",
+        description: user.direksiyon_saati
+          ? `Sınav saati ${user.direksiyon_saati}`
+          : "Sınav saati henüz eklenmemiş.",
+        type: "exam-direksiyon",
+        isPast: isPastDate(user.direksiyon_tarih),
+        isToday: isTodayDate(user.direksiyon_tarih),
+        isUpcoming: isUpcomingDate(user.direksiyon_tarih),
+      });
+    }
+  }
+
+  return events
+    .filter((event) => !!event.date)
+    .sort((a, b) => {
+      const first = parseAppDate(a.date)?.getTime() || 0;
+      const second = parseAppDate(b.date)?.getTime() || 0;
+      return first - second;
+    });
 }
 
-function StepItem({
-  title,
-  checked,
-  active = false,
-  onPress,
-  showTopLine = false,
-  showBottomLine = false,
-  lineActive = false,
-}: StepItemProps) {
-  return (
-    <TouchableOpacity
-      style={styles.stepRow}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      <View style={styles.stepIndicatorColumn}>
-        {showTopLine ? (
-          <View
-            style={[
-              styles.stepLine,
-              styles.stepLineTop,
-              lineActive ? styles.stepLineActive : styles.stepLinePassive,
-            ]}
-          />
-        ) : null}
-
-        {showBottomLine ? (
-          <View
-            style={[
-              styles.stepLine,
-              styles.stepLineBottom,
-              lineActive ? styles.stepLineActive : styles.stepLinePassive,
-            ]}
-          />
-        ) : null}
-
-        <View
-          style={[
-            styles.stepCircle,
-            checked && styles.stepCircleChecked,
-            active && !checked && styles.stepCircleActive,
-          ]}
-        >
-          <Text style={styles.stepCircleText}>
-            {checked ? "✓" : active ? "•" : ""}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.stepContent}>
-        <Text
-          style={[
-            styles.stepTitle,
-            checked && styles.stepTitleChecked,
-            active && !checked && styles.stepTitleActive,
-          ]}
-        >
-          {title}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+function addMonthsSafe(base: Date, amount: number) {
+  return new Date(base.getFullYear(), base.getMonth() + amount, 1);
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.infoChip}>
-      <Text style={styles.infoChipLabel}>{label}</Text>
-      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
-    </View>
-  );
+function areSameMonthYear(a: Date, b: Date) {
+  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
 }
 
-function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
-  return (
-    <View
-      style={[
-        styles.badge,
-        tone === "green" && styles.badgeGreen,
-        tone === "red" && styles.badgeRed,
-        tone === "orange" && styles.badgeOrange,
-        tone === "blue" && styles.badgeBlue,
-        tone === "gray" && styles.badgeGray,
-      ]}
-    >
-      <Text style={styles.badgeText}>{label}</Text>
-    </View>
-  );
+function buildMonthCells(
+  monthDate: Date,
+  events: CalendarEvent[],
+): CalendarCell[] {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const gridStart = new Date(year, month, 1 - startOffset);
+
+  const cells: CalendarCell[] = [];
+
+  for (let i = 0; i < 42; i += 1) {
+    const current = new Date(
+      gridStart.getFullYear(),
+      gridStart.getMonth(),
+      gridStart.getDate() + i,
+    );
+    const fullDate = formatDateFromParts(
+      current.getDate(),
+      current.getMonth() + 1,
+      current.getFullYear(),
+    );
+
+    cells.push({
+      key: `${fullDate}-${i}`,
+      fullDate,
+      dayNumber: current.getDate(),
+      isCurrentMonth: current.getMonth() === month,
+      isToday: isTodayDate(fullDate),
+      events: events.filter((event) => event.date === fullDate),
+    });
+  }
+
+  return cells;
 }
 
 function getSmartStatus(user: Student): SmartStatus {
+  const calendarEvents = buildCalendarEvents(user);
+  const nextEvent = calendarEvents.find((event) => !event.isPast);
+
   if (user.direksiyon_sonuc === "gecti") {
     return {
       title: "Tebrikler, süreciniz tamamlandı",
       description:
-        "Direksiyon sınavını başarıyla geçtiniz. Kurs süreciniz tamamlanmış görünüyor.",
+        "Direksiyon sınavını başarıyla geçtiniz. Kurs süreciniz tamamlandı.",
       type: "success",
-      actionLabel: "Detayı Gör",
+      actionLabel: "Takvimi Aç",
       actionType: "detail",
     };
   }
@@ -291,104 +466,31 @@ function getSmartStatus(user: Student): SmartStatus {
     return {
       title: "Direksiyon sınavında başarısız oldunuz",
       description:
-        "Yeni direksiyon süreci için kurs tarafından yapılacak bilgilendirmeyi bekleyin.",
+        "Yeni sınav süreci için kurs tarafından yapılacak bilgilendirmeyi bekleyin.",
       type: "error",
       actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
 
-  if (user.esinav_sonuc === "gecti" && user.direksiyon_tarih) {
+  if (user.evrak_durumu === "eksik") {
     return {
-      title: "Direksiyon sınav tarihiniz belli oldu",
-      description: `Direksiyon sınav tarihiniz: ${user.direksiyon_tarih}`,
-      type: "info",
-      actionLabel: "Detayı Gör",
-      actionType: "detail",
-    };
-  }
-
-  if (user.esinav_sonuc === "gecti" && user.direksiyon_harc === "odenmedi") {
-    return {
-      title: "Direksiyon aşamasına geçtiniz",
-      description:
-        "Direksiyon süreciniz başladı ancak harç durumu kontrol edilmelidir.",
+      title: "Evraklarınız eksik",
+      description: user.eksik_evraklar?.trim()
+        ? `Eksik evraklarınızı tamamlamanız gerekiyor: ${user.eksik_evraklar}`
+        : "Başvurunuz alınmış ancak eksik evraklarınız bulunuyor.",
       type: "warning",
       actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
 
-  if (user.durum === "direksiyon") {
+  if (nextEvent?.isToday) {
     return {
-      title: "Direksiyon aşamasındasınız",
-      description: user.direksiyon_tarih
-        ? `Direksiyon sınav tarihiniz: ${user.direksiyon_tarih}`
-        : "Direksiyon dersleri ve sınav süreciniz devam ediyor.",
-      type: "info",
-      actionLabel: "Detayı Gör",
-      actionType: "detail",
-    };
-  }
-
-  if (user.esinav_sonuc === "gecti") {
-    return {
-      title: "E-sınav aşamasını tamamladınız",
-      description:
-        "Direksiyon süreciniz başlamıştır. Ders ve sınav bilgileri panelde görüntülenecektir.",
-      type: "success",
-      actionLabel: "Detayı Gör",
-      actionType: "detail",
-    };
-  }
-
-  if (
-    user.durum === "esinav" &&
-    user.esinav_tarih &&
-    user.esinav_sonuc !== "gecti" &&
-    isPastDate(user.esinav_tarih)
-  ) {
-    if (user.esinav_harc === "odendi") {
-      return {
-        title: "E-sınav sonrası yeni tarih bekleniyor",
-        description:
-          "Sınav süreciniz devam ediyor. Yeni sınav tarihi açıklandığında panelde görünecektir.",
-        type: "info",
-        actionLabel: "Detayı Gör",
-        actionType: "detail",
-      };
-    }
-
-    return {
-      title: "E-sınav harcı yeniden yatırılmalı",
-      description:
-        "Sınavda başarısız oldunuz, tekrar harç ödemeniz gerekiyor. Harç ödemesi yaparak süreci devam ettirebilirsiniz.",
+      title: "Bugün planlı bir işleminiz var",
+      description: `${nextEvent.title} için bugünkü bilgilerinizi kontrol edin.`,
       type: "warning",
-      actionLabel: "Harç Öde",
-      actionType: "harc",
-    };
-  }
-
-  if (user.esinav_sonuc === "kaldi") {
-    return {
-      title: "E-sınavda başarısız oldunuz",
-      description:
-        "Tekrar sınava girmek için harç ve yeni tarih sürecini takip etmeniz gerekir.",
-      type: "error",
-      actionLabel: "Detayı Gör",
-      actionType: "detail",
-    };
-  }
-
-  if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
-    return {
-      title: "E-sınav tarihiniz belli oldu",
-      description: `E-sınav bilginiz: ${formatExamText(
-        user.esinav_tarih,
-        user.esinav_saati,
-      )}`,
-      type: "info",
-      actionLabel: "Detayı Gör",
+      actionLabel: "Takvimi Aç",
       actionType: "detail",
     };
   }
@@ -412,32 +514,46 @@ function getSmartStatus(user: Student): SmartStatus {
     return {
       title: "E-sınav tarihi bekleniyor",
       description:
-        "Harç ödemeniz alınmış görünüyor. Sınav tarihi açıklandığında burada görüntülenecek.",
+        "Harç ödemeniz alınmış görünüyor. Sınav tarihi açıklandığında burada gösterilecek.",
       type: "info",
       actionLabel: "Detayı Gör",
       actionType: "detail",
     };
   }
 
-  if (user.evrak_durumu === "eksik") {
+  if (
+    user.esinav_tarih &&
+    user.esinav_sonuc !== "gecti" &&
+    user.durum === "esinav"
+  ) {
     return {
-      title: "Evraklarınız eksik",
-      description: user.eksik_evraklar?.trim()
-        ? `Eksik evraklarınızı tamamlamanız gerekiyor.`
-        : "Başvurunuz alınmış ancak eksik evraklarınız bulunuyor.",
-      type: "warning",
-      actionLabel: "Detayı Gör",
+      title: "E-sınav tarihiniz belli oldu",
+      description: `E-sınav bilginiz: ${formatExamText(user.esinav_tarih, user.esinav_saati)}`,
+      type: "info",
+      actionLabel: "Takvimi Aç",
       actionType: "detail",
     };
   }
 
-  if (user.evrak_durumu === "tamam") {
+  if (user.esinav_sonuc === "gecti" && user.direksiyon_harc === "odenmedi") {
     return {
-      title: "Başvurunuz tamamlandı",
+      title: "Direksiyon aşamasına geçtiniz",
       description:
-        "Evraklarınız onaylanmış görünüyor. Sınav süreciniz sıradaki aşamaya göre devam edecektir.",
-      type: "normal",
-      actionLabel: "Detayı Gör",
+        "Direksiyon ödeme bilgisi için kurs tarafından gönderilen SMS'i kontrol edin.",
+      type: "warning",
+      actionLabel: "Ödeme Bilgisi",
+      actionType: "harc",
+    };
+  }
+
+  if (user.durum === "direksiyon") {
+    return {
+      title: "Direksiyon aşamasındasınız",
+      description: user.direksiyon_tarih
+        ? `Direksiyon sınav tarihiniz: ${formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}`
+        : "Direksiyon dersleri ve sınav süreciniz devam ediyor.",
+      type: "info",
+      actionLabel: "Takvimi Aç",
       actionType: "detail",
     };
   }
@@ -451,20 +567,132 @@ function getSmartStatus(user: Student): SmartStatus {
   };
 }
 
+function StepItem({
+  title,
+  checked,
+  active = false,
+  onPress,
+  showTopLine = false,
+  showBottomLine = false,
+  lineActive = false,
+}: StepItemProps) {
+  return (
+    <TouchableOpacity
+      style={styles.stepRow}
+      onPress={onPress}
+      activeOpacity={0.88}
+    >
+      <View style={styles.stepIndicatorColumn}>
+        {showTopLine ? (
+          <View
+            style={[
+              styles.stepLine,
+              styles.stepLineTop,
+              lineActive ? styles.stepLineActive : styles.stepLinePassive,
+            ]}
+          />
+        ) : null}
+
+        <View
+          style={[
+            styles.stepCircle,
+            checked ? styles.stepCircleChecked : null,
+            !checked && active ? styles.stepCircleActive : null,
+          ]}
+        >
+          <Text style={styles.stepCircleText}>
+            {checked ? "✓" : active ? "•" : ""}
+          </Text>
+        </View>
+
+        {showBottomLine ? (
+          <View
+            style={[
+              styles.stepLine,
+              styles.stepLineBottom,
+              lineActive ? styles.stepLineActive : styles.stepLinePassive,
+            ]}
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.stepContent}>
+        <Text
+          style={[
+            styles.stepTitle,
+            checked ? styles.stepTitleChecked : null,
+            !checked && active ? styles.stepTitleActive : null,
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function InfoChip({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoChip}>
+      <Text style={styles.infoChipLabel}>{label}</Text>
+      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
+    </View>
+  );
+}
+
+function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
+  return (
+    <View
+      style={[
+        styles.badge,
+        tone === "green"
+          ? styles.badgeGreen
+          : tone === "red"
+            ? styles.badgeRed
+            : tone === "orange"
+              ? styles.badgeOrange
+              : tone === "blue"
+                ? styles.badgeBlue
+                : styles.badgeGray,
+      ]}
+    >
+      <Text style={styles.badgeText}>{label}</Text>
+    </View>
+  );
+}
+
 export default function Index() {
   const [tc, setTc] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<Student | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
-  const [selectedDetail, setSelectedDetail] = useState("");
-  const [detailVisible, setDetailVisible] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [loginFeedback, setLoginFeedback] = useState<LoginFeedback | null>(
     null,
   );
+  const [selectedDetail, setSelectedDetail] = useState("");
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
-  const loadStudents = async (preserveUser = false) => {
+  const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  const monthOptions = useMemo(
+    () =>
+      [-3, -2, -1, 0, 1, 2].map((offset) => addMonthsSafe(baseMonth, offset)),
+    [baseMonth],
+  );
+
+  const visibleMonth = useMemo(
+    () => addMonthsSafe(baseMonth, monthOffset),
+    [baseMonth, monthOffset],
+  );
+
+  const canGoPrev = monthOffset > -3;
+  const canGoNext = monthOffset < 2;
+
+  const loadStudents = async () => {
     try {
       setLoadingStudents(true);
       setFetchError("");
@@ -480,13 +708,6 @@ export default function Index() {
 
       const data: Student[] = await response.json();
       setStudents(data);
-
-      if (preserveUser && user) {
-        const updatedUser = data.find((s) => s.tc === user.tc);
-        if (updatedUser) {
-          setUser(updatedUser);
-        }
-      }
     } catch (error) {
       setStudents([]);
       setFetchError(
@@ -501,10 +722,6 @@ export default function Index() {
     loadStudents();
   }, []);
 
-  const reloadStudents = async () => {
-    await loadStudents(true);
-  };
-
   const openDetailModal = (text: string) => {
     setSelectedDetail(text);
     setDetailVisible(true);
@@ -515,9 +732,17 @@ export default function Index() {
     setSelectedDetail("");
   };
 
+  const openCalendarModal = () => {
+    setCalendarVisible(true);
+    setMonthOffset(0);
+  };
+
+  const closeCalendarModal = () => {
+    setCalendarVisible(false);
+  };
+
   const handleTcChange = (value: string) => {
     setTc(value);
-
     if (loginFeedback) {
       setLoginFeedback(null);
     }
@@ -591,11 +816,12 @@ export default function Index() {
       return;
     }
 
-    setLoginFeedback(null);
     setUser(foundUser);
     setLoggedIn(true);
+    setLoginFeedback(null);
     setSelectedDetail("");
     setDetailVisible(false);
+    setCalendarVisible(false);
   };
 
   const handleLogout = () => {
@@ -604,12 +830,12 @@ export default function Index() {
     setTc("");
     setSelectedDetail("");
     setDetailVisible(false);
+    setCalendarVisible(false);
     setLoginFeedback(null);
   };
 
   const initials = useMemo(() => {
     if (!user?.ad_soyad) return "";
-
     return user.ad_soyad
       .split(" ")
       .filter(Boolean)
@@ -618,6 +844,18 @@ export default function Index() {
       .slice(0, 2)
       .toUpperCase();
   }, [user]);
+
+  const processBadge = useMemo(
+    () =>
+      user ? getProcessBadge(user) : { label: "-", tone: "gray" as BadgeTone },
+    [user],
+  );
+
+  const documentBadge = useMemo(
+    () =>
+      user ? getDocumentBadge(user) : { label: "-", tone: "gray" as BadgeTone },
+    [user],
+  );
 
   const smartStatus = useMemo(() => {
     if (!user) {
@@ -633,9 +871,7 @@ export default function Index() {
   }, [user]);
 
   const visibleLoginFeedback = useMemo<LoginFeedback | null>(() => {
-    if (loginFeedback) {
-      return loginFeedback;
-    }
+    if (loginFeedback) return loginFeedback;
 
     if (fetchError) {
       return {
@@ -680,6 +916,7 @@ export default function Index() {
       direksiyonAsamasi:
         user.esinav_sonuc === "gecti" ||
         !!user.direksiyon_tarih ||
+        getLessons(user).length > 0 ||
         user.direksiyon_sonuc === "gecti" ||
         user.direksiyon_sonuc === "kaldi",
       tamamlandi: user.direksiyon_sonuc === "gecti",
@@ -688,100 +925,86 @@ export default function Index() {
 
   const activeStep = useMemo(() => {
     if (!user) return "";
-
     if (user.direksiyon_sonuc === "gecti") return "tamamlandi";
     if (user.esinav_sonuc === "gecti") return "direksiyon";
     if (user.evrak_durumu === "tamam") return "esinav";
     return "basvuru";
   }, [user]);
 
-  const processBadge = useMemo(() => {
-    if (!user) return { label: "", tone: "gray" as BadgeTone };
-    return getProcessBadge(user);
-  }, [user]);
-
-  const documentBadge = useMemo(() => {
-    if (!user) return { label: "", tone: "gray" as BadgeTone };
-    return getDocumentBadge(user);
-  }, [user]);
-
-  const esinavPaymentBadge = useMemo(() => {
-    if (!user) return { label: "", tone: "gray" as BadgeTone };
-    return getPaymentBadge(user.esinav_harc);
-  }, [user]);
-
-  const direksiyonPaymentBadge = useMemo(() => {
-    if (!user) return { label: "", tone: "gray" as BadgeTone };
-    return getPaymentBadge(user.direksiyon_harc);
-  }, [user]);
-
-  const missingDocuments = useMemo(() => {
+  const calendarEvents = useMemo(() => {
     if (!user) return [];
-    return getMissingDocumentsList(user.eksik_evraklar);
+    return buildCalendarEvents(user);
   }, [user]);
 
-  const isEsinavStage = useMemo(() => {
+  const visibleMonthCells = useMemo(
+    () => buildMonthCells(visibleMonth, calendarEvents),
+    [visibleMonth, calendarEvents],
+  );
+
+  const missingDocs = useMemo(
+    () => getMissingDocumentsList(user?.eksik_evraklar),
+    [user],
+  );
+
+  const showEsinavPaymentCard = useMemo(() => {
     if (!user) return false;
-    return user.durum === "esinav" && user.esinav_sonuc !== "gecti";
+    if (user.evrak_durumu === "eksik") return false;
+    return user.durum === "esinav";
   }, [user]);
 
-  const isDireksiyonStage = useMemo(() => {
+  const showDireksiyonPaymentCard = useMemo(() => {
     if (!user) return false;
+    if (user.evrak_durumu === "eksik") return false;
     return user.durum === "direksiyon" || user.esinav_sonuc === "gecti";
   }, [user]);
 
-  const isMissingDocumentStage = useMemo(() => {
+  const canOpenCalendar = useMemo(() => {
     if (!user) return false;
-    return user.evrak_durumu === "eksik";
+    if (user.evrak_durumu === "eksik") return false;
+    return true;
   }, [user]);
 
-  const showDocumentCard = useMemo(() => {
-    if (!user) return false;
-    return !isEsinavStage && !isDireksiyonStage;
-  }, [user, isEsinavStage, isDireksiyonStage]);
+  const openHarcLink = async () => {
+    const isEsinavPhase = user?.durum === "esinav";
+    const isDireksiyonPhase =
+      !!user && (user.durum === "direksiyon" || user.esinav_sonuc === "gecti");
 
-  const showDocumentBadge = useMemo(() => {
-    if (!user) return false;
-    return !isEsinavStage && !isDireksiyonStage;
-  }, [user, isEsinavStage, isDireksiyonStage]);
+    if (!user || user.evrak_durumu === "eksik") {
+      Alert.alert(
+        "Bilgi",
+        "Eksik evrak bulunan öğrenciler için ödeme ekranı gösterilmez.",
+      );
+      return;
+    }
 
-  const showEsinavInfoCard = useMemo(() => {
-    if (!user) return false;
-    return !isDireksiyonStage && !isMissingDocumentStage;
-  }, [user, isDireksiyonStage, isMissingDocumentStage]);
+    if (isDireksiyonPhase) {
+      openDetailModal(
+        "Ödeme için kurs tarafından gönderilen SMS'i kontrol edin.",
+      );
+      return;
+    }
 
-  const showDireksiyonInfoCard = useMemo(() => {
-    if (!user) return false;
-    return !isEsinavStage && !isMissingDocumentStage;
-  }, [user, isEsinavStage, isMissingDocumentStage]);
+    if (!isEsinavPhase) {
+      Alert.alert("Bilgi", "Şu an için gösterilecek uygun ödeme bulunmuyor.");
+      return;
+    }
 
-  const showOnlinePaymentButton = useMemo(() => {
-    if (!user) return false;
-    return (
-      isEsinavStage &&
-      user.esinav_harc === "odenmedi" &&
-      !isMissingDocumentStage
-    );
-  }, [user, isEsinavStage, isMissingDocumentStage]);
-
-  const showPaymentSection = useMemo(() => {
-    return showEsinavInfoCard || showDireksiyonInfoCard;
-  }, [showEsinavInfoCard, showDireksiyonInfoCard]);
+    try {
+      await Linking.openURL("https://odeme.meb.gov.tr");
+    } catch (error) {
+      Alert.alert("Hata", "Ödeme sayfası açılamadı.");
+    }
+  };
 
   const showBasvuruDetay = () => {
     if (!user) return;
 
     if (user.evrak_durumu === "eksik") {
-      const items = getMissingDocumentsList(user.eksik_evraklar);
-      if (items.length) {
-        openDetailModal(
-          `Eksik evraklar:\n${items.map((item) => `• ${item}`).join("\n")}`,
-        );
-      } else {
-        openDetailModal(
-          "Eksik evrak bilginiz henüz detaylı olarak eklenmemiş.",
-        );
-      }
+      openDetailModal(
+        missingDocs.length
+          ? `Eksik evraklar:\n• ${missingDocs.join("\n• ")}`
+          : "Eksik evrak bilgisi henüz eklenmemiş.",
+      );
       return;
     }
 
@@ -801,53 +1024,38 @@ export default function Index() {
   const showEsinavDetay = () => {
     if (!user) return;
 
-    if (
-      user.durum === "esinav" &&
-      user.esinav_tarih &&
-      user.esinav_sonuc !== "gecti" &&
-      isPastDate(user.esinav_tarih)
-    ) {
-      if (user.esinav_harc === "odendi") {
-        openDetailModal(
-          "Sınav harcınızı yatırdınız. Yeni sınav tarihiniz açıklandığında size bilgi verilecektir.",
-        );
-      } else {
-        openDetailModal(
-          "E-sınavdan başarısız oldunuz. Tekrar harç yatırarak sınava girebilirsiniz.",
-        );
-      }
+    if (user.evrak_durumu !== "tamam") {
+      openDetailModal("Önce evraklarınızın tamamlanması gerekiyor.");
       return;
     }
 
-    if (user.evrak_durumu !== "tamam") {
-      openDetailModal(
-        `Önce evraklarınızın tamamlanması gerekiyor: ${user.eksik_evraklar}`,
-      );
+    if (
+      user.durum !== "esinav" &&
+      user.esinav_sonuc !== "gecti" &&
+      user.esinav_sonuc !== "kaldi"
+    ) {
+      openDetailModal("Bu öğrenci şu an e-sınav aşamasında görünmüyor.");
       return;
     }
 
     if (user.esinav_sonuc === "kaldi") {
-      openDetailModal("E-sınav başarısız.");
+      openDetailModal("E-sınavda başarılı olamadınız.");
       return;
     }
 
-    if (user.esinav_harc === "odenmedi" && user.durum !== "direksiyon") {
-      openDetailModal(
-        "Sınav harcınızı yatırmamışsınız. Ödeme yaptıktan sonra süreç devam edecektir.",
-      );
+    if (user.esinav_harc === "odenmedi") {
+      openDetailModal("E-sınav harcınız henüz ödenmemiş görünüyor.");
       return;
     }
 
     if (user.esinav_harc === "odendi" && !user.esinav_tarih) {
-      openDetailModal("Sınav harcınız yatırılmış. Sınav tarihi bekleniyor.");
+      openDetailModal("E-sınav harcı ödendi. Sınav tarihi bekleniyor.");
       return;
     }
 
-    if (user.esinav_tarih && user.esinav_sonuc !== "gecti") {
+    if (user.esinav_tarih) {
       openDetailModal(
-        user.esinav_saati
-          ? `E-sınav tarihiniz ${user.esinav_tarih} / ${user.esinav_saati}`
-          : `E-sınav tarihiniz ${user.esinav_tarih}`,
+        `E-sınav bilginiz:\n${formatExamText(user.esinav_tarih, user.esinav_saati)}`,
       );
       return;
     }
@@ -863,7 +1071,9 @@ export default function Index() {
   const showDireksiyonDetay = () => {
     if (!user) return;
 
-    if (user.esinav_sonuc !== "gecti") {
+    const lessons = getLessons(user);
+
+    if (user.esinav_sonuc !== "gecti" && user.durum !== "direksiyon") {
       openDetailModal(
         "Direksiyon aşamasına geçmek için önce e-sınavı geçmelisiniz.",
       );
@@ -876,19 +1086,37 @@ export default function Index() {
     }
 
     if (user.direksiyon_sonuc === "kaldi") {
-      openDetailModal("Direksiyon sınavında başarısız oldunuz.");
+      openDetailModal(
+        "Direksiyon sınavında başarılı olamadınız. Yeni sınav süreci için kursun bilgilendirmesini bekleyin.",
+      );
+      return;
+    }
+
+    if (lessons.length) {
+      const text = lessons
+        .map((lesson, index) => {
+          const title = lesson.not?.trim() || `Direksiyon dersi ${index + 1}`;
+          const dateText = lesson.tarih || "Tarih bekleniyor";
+          const timeText = lesson.saat ? ` / ${lesson.saat}` : "";
+          return `• ${title}: ${dateText}${timeText}`;
+        })
+        .join("\n");
+
+      openDetailModal(`Direksiyon ders planınız:\n${text}`);
+      return;
+    }
+
+    if (user.direksiyon_tarih) {
+      openDetailModal(
+        `Direksiyon sınav bilginiz:\n${formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}`,
+      );
       return;
     }
 
     if (user.direksiyon_harc === "odenmedi") {
       openDetailModal(
-        "Direksiyon harcı henüz yatırılmamış görünüyor. Ödeme için kurs ile iletişime geçebilirsiniz.",
+        "Ödeme için kurs tarafından gönderilen SMS'i kontrol edin.",
       );
-      return;
-    }
-
-    if (user.direksiyon_tarih) {
-      openDetailModal(`Direksiyon sınav tarihiniz ${user.direksiyon_tarih}`);
       return;
     }
 
@@ -938,7 +1166,7 @@ export default function Index() {
           ),
       },
     ],
-    [activeStep, stepStates, user],
+    [activeStep, stepStates, user, missingDocs],
   );
 
   const handleSmartAction = () => {
@@ -950,27 +1178,55 @@ export default function Index() {
     }
 
     if (smartStatus.actionType === "detail") {
-      if (user.direksiyon_sonuc === "gecti" || user.esinav_sonuc === "gecti") {
+      if (
+        canOpenCalendar &&
+        (user.durum === "esinav" ||
+          user.durum === "direksiyon" ||
+          user.esinav_sonuc === "gecti")
+      ) {
+        openCalendarModal();
+        return;
+      }
+
+      if (user.evrak_durumu === "eksik") {
+        showBasvuruDetay();
+        return;
+      }
+
+      if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
         showDireksiyonDetay();
         return;
       }
 
-      if (user.durum === "esinav" || user.esinav_tarih || user.esinav_harc) {
-        showEsinavDetay();
-        return;
-      }
-
-      showBasvuruDetay();
+      showEsinavDetay();
     }
   };
 
-  const openHarcLink = async () => {
-    try {
-      await Linking.openURL("https://odeme.meb.gov.tr");
-    } catch (error) {
-      Alert.alert("Hata", "Ödeme sayfası açılamadı.");
-    }
+  const handleCalendarCellPress = (cell: CalendarCell) => {
+    if (!cell.events.length) return;
+
+    const detail = cell.events
+      .map((event) => {
+        const datetime = event.time
+          ? `${event.date} / ${event.time}`
+          : event.date;
+        return `• ${event.title}\n${datetime}${event.description ? `\n${event.description}` : ""}`;
+      })
+      .join("\n\n");
+
+    openDetailModal(detail);
   };
+
+  const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
+
+  if (loadingStudents && !loggedIn) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#c1121f" />
+        <Text style={styles.loadingText}>Öğrenci bilgileri yükleniyor...</Text>
+      </View>
+    );
+  }
 
   if (!loggedIn || !user) {
     return (
@@ -979,68 +1235,52 @@ export default function Index() {
           <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
           <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
           <Text style={styles.loginSub}>
-            TC kimlik numaranızı girerek sürecinizi görüntüleyin.
+            TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
+            görüntüleyebilirsiniz.
           </Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="TC Kimlik Numarası"
-            placeholderTextColor="#8f8f97"
-            keyboardType="numeric"
-            maxLength={11}
-            value={tc}
-            onChangeText={handleTcChange}
-          />
 
           {visibleLoginFeedback ? (
             <View
               style={[
                 styles.loginStatusCard,
-                visibleLoginFeedback.type === "success" &&
-                  styles.loginStatusSuccess,
-                visibleLoginFeedback.type === "error" &&
-                  styles.loginStatusError,
-                visibleLoginFeedback.type === "warning" &&
-                  styles.loginStatusWarning,
-                visibleLoginFeedback.type === "info" && styles.loginStatusInfo,
+                visibleLoginFeedback.type === "success"
+                  ? styles.loginStatusSuccess
+                  : visibleLoginFeedback.type === "error"
+                    ? styles.loginStatusError
+                    : visibleLoginFeedback.type === "warning"
+                      ? styles.loginStatusWarning
+                      : styles.loginStatusInfo,
               ]}
             >
-              <View style={styles.loginStatusHeader}>
-                {visibleLoginFeedback.type === "info" && loadingStudents ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : null}
-                <Text style={styles.loginStatusTitle}>
-                  {visibleLoginFeedback.title}
-                </Text>
-              </View>
+              <Text style={styles.loginStatusTitle}>
+                {visibleLoginFeedback.title}
+              </Text>
               <Text style={styles.loginStatusText}>
                 {visibleLoginFeedback.message}
               </Text>
             </View>
           ) : null}
 
+          <TextInput
+            placeholder="TC kimlik numaranız"
+            placeholderTextColor="#7f7f88"
+            keyboardType="number-pad"
+            maxLength={11}
+            value={tc}
+            onChangeText={handleTcChange}
+            style={styles.input}
+          />
+
           <TouchableOpacity
             style={[
               styles.loginButton,
-              isLoginDisabled && styles.loginButtonDisabled,
+              isLoginDisabled ? styles.loginButtonDisabled : null,
             ]}
             onPress={handleLogin}
-            activeOpacity={isLoginDisabled ? 1 : 0.85}
             disabled={isLoginDisabled}
           >
-            <Text style={styles.loginButtonText}>
-              {loadingStudents ? "Kontrol ediliyor..." : "Giriş Yap"}
-            </Text>
+            <Text style={styles.loginButtonText}>Giriş Yap</Text>
           </TouchableOpacity>
-
-          {(fetchError || !students.length) && !loadingStudents ? (
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={reloadStudents}
-            >
-              <Text style={styles.secondaryButtonText}>Verileri Yenile</Text>
-            </TouchableOpacity>
-          ) : null}
         </View>
       </View>
     );
@@ -1055,38 +1295,57 @@ export default function Index() {
         <View style={styles.profileCard}>
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
+              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
             </View>
 
             <View style={styles.profileTextArea}>
               <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-              <Text style={styles.subName}>TC: {normalizeValue(user.tc)}</Text>
+
+              <Text style={styles.subName}>Öğrenci Paneli</Text>
             </View>
+          </View>
+          {canOpenCalendar ? (
+            <TouchableOpacity
+              style={styles.topCalendarButton}
+              onPress={openCalendarModal}
+            >
+              <Text style={styles.topCalendarIcon}>🗓️</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.topCalendarButtonDisabled}>
+              <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
+            </View>
+          )}
+          <View style={styles.chipsRow}>
+            <InfoChip label="TC" value={user.tc} />
+            <InfoChip label="Sınıf" value={user.sinif || "-"} />
           </View>
 
           <View style={styles.chipsRow}>
-            <InfoChip label="Sınıf" value={user.sinif || ""} />
             <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
           </View>
 
           <View style={styles.badgesRow}>
             <StatusBadge label={processBadge.label} tone={processBadge.tone} />
-            {showDocumentBadge ? (
-              <StatusBadge
-                label={documentBadge.label}
-                tone={documentBadge.tone}
-              />
-            ) : null}
+            <StatusBadge
+              label={documentBadge.label}
+              tone={documentBadge.tone}
+            />
           </View>
         </View>
 
         <View
           style={[
             styles.statusCard,
-            smartStatus.type === "success" && styles.statusSuccess,
-            smartStatus.type === "error" && styles.statusError,
-            smartStatus.type === "warning" && styles.statusWarning,
-            smartStatus.type === "info" && styles.statusInfo,
+            smartStatus.type === "success"
+              ? styles.statusSuccess
+              : smartStatus.type === "error"
+                ? styles.statusError
+                : smartStatus.type === "warning"
+                  ? styles.statusWarning
+                  : smartStatus.type === "info"
+                    ? styles.statusInfo
+                    : null,
           ]}
         >
           <Text style={styles.statusTitle}>{smartStatus.title}</Text>
@@ -1094,81 +1353,67 @@ export default function Index() {
             {smartStatus.description}
           </Text>
 
-          {smartStatus.actionLabel ? (
+          {smartStatus.actionType && smartStatus.actionType !== "none" ? (
             <TouchableOpacity
-              style={styles.paymentButton}
+              style={styles.mainActionButton}
               onPress={handleSmartAction}
             >
-              <Text style={styles.paymentButtonText}>
-                {smartStatus.actionLabel}
+              <Text style={styles.mainActionButtonText}>
+                {smartStatus.actionLabel || "Detayı Gör"}
               </Text>
             </TouchableOpacity>
           ) : null}
         </View>
 
-        {showDocumentCard ? (
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Evrak Durumu</Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.sectionTitle}>Evrak Durumu</Text>
 
-            <View style={styles.infoColumnBlock}>
-              <Text style={styles.infoLabel}>Genel Durum</Text>
-              <Text style={styles.infoValueBlock}>
-                {user.evrak_durumu === "tamam"
-                  ? "Tamamlandı"
-                  : user.evrak_durumu === "eksik"
-                    ? "Eksik"
-                    : normalizeValue(user.evrak_durumu)}
-              </Text>
-            </View>
-
-            <View style={styles.infoColumnBlockNoBorder}>
-              <Text style={styles.infoLabel}>Eksik Evraklar</Text>
-
-              {user.evrak_durumu === "eksik" ? (
-                missingDocuments.length ? (
-                  <View style={styles.missingDocsList}>
-                    {missingDocuments.map((item, index) => (
-                      <View
-                        key={`${item}-${index}`}
-                        style={styles.missingDocItem}
-                      >
-                        <Text style={styles.missingDocBullet}>•</Text>
-                        <Text style={styles.missingDocText}>{item}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text style={styles.infoValueBlock}>
-                    Henüz bilgi eklenmemiş
-                  </Text>
-                )
-              ) : (
-                <Text style={styles.infoValueBlock}>
-                  Eksik evrak görünmüyor
-                </Text>
-              )}
-            </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Durum</Text>
+            <Text style={[styles.infoValue, styles.infoValueRight]}>
+              {user.evrak_durumu === "tamam"
+                ? "Tamamlandı"
+                : user.evrak_durumu === "eksik"
+                  ? "Eksik"
+                  : normalizeValue(user.evrak_durumu)}
+            </Text>
           </View>
-        ) : null}
 
-        {showPaymentSection ? (
+          <View style={styles.infoRowNoBorder}>
+            <Text style={styles.infoLabel}>Eksik Evraklar</Text>
+
+            {user.evrak_durumu === "eksik" && missingDocs.length ? (
+              <View style={styles.missingDocsList}>
+                {missingDocs.map((item, index) => (
+                  <Text key={`${item}-${index}`} style={styles.missingDocItem}>
+                    • {item}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.infoValue, styles.infoValueRight]}>
+                Eksik evrak görünmüyor
+              </Text>
+            )}
+          </View>
+        </View>
+
+        {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
           <View style={styles.infoCard}>
             <Text style={styles.sectionTitle}>Sınav ve Ödeme Bilgileri</Text>
 
-            {showEsinavInfoCard ? (
+            {showEsinavPaymentCard ? (
               <View style={styles.miniCard}>
                 <View style={styles.miniCardHeader}>
                   <Text style={styles.miniCardTitle}>E-sınav</Text>
                   <StatusBadge
-                    label={esinavPaymentBadge.label}
-                    tone={esinavPaymentBadge.tone}
+                    label={getPaymentBadge(user.esinav_harc).label}
+                    tone={getPaymentBadge(user.esinav_harc).tone}
                   />
                 </View>
+
                 <Text style={styles.miniCardText}>
-                  Tarih:{" "}
-                  {normalizeValue(
-                    formatExamText(user.esinav_tarih, user.esinav_saati),
-                  )}
+                  Tarih: {formatExamText(user.esinav_tarih, user.esinav_saati)}
                 </Text>
                 <Text style={styles.miniCardText}>
                   Sonuç: {formatOutcome(user.esinav_sonuc)}
@@ -1176,42 +1421,58 @@ export default function Index() {
                 <Text style={styles.miniCardText}>
                   Harç: {formatPayment(user.esinav_harc)}
                 </Text>
+                <Text style={styles.miniCardText}>
+                  Son ödeme: {normalizeValue(user.esinav_son_odeme)}
+                </Text>
+
+                {user.esinav_harc === "odenmedi" ? (
+                  <TouchableOpacity
+                    style={styles.inlinePayButton}
+                    onPress={openHarcLink}
+                  >
+                    <Text style={styles.inlinePayButtonText}>
+                      E-sınav Harcını Öde
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             ) : null}
 
-            {showDireksiyonInfoCard ? (
+            {showDireksiyonPaymentCard ? (
               <View style={styles.miniCard}>
                 <View style={styles.miniCardHeader}>
                   <Text style={styles.miniCardTitle}>Direksiyon</Text>
                   <StatusBadge
-                    label={direksiyonPaymentBadge.label}
-                    tone={direksiyonPaymentBadge.tone}
+                    label={getPaymentBadge(user.direksiyon_harc).label}
+                    tone={getPaymentBadge(user.direksiyon_harc).tone}
                   />
                 </View>
+
                 <Text style={styles.miniCardText}>
-                  Tarih: {normalizeValue(user.direksiyon_tarih)}
+                  Sınav tarihi:{" "}
+                  {formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}
                 </Text>
                 <Text style={styles.miniCardText}>
                   Sonuç: {formatOutcome(user.direksiyon_sonuc)}
                 </Text>
                 <Text style={styles.miniCardText}>
-                  Harç: {formatPayment(user.direksiyon_harc)}
+                  Ücret: {formatPayment(user.direksiyon_harc)}
                 </Text>
-              </View>
-            ) : null}
+                <Text style={styles.miniCardText}>
+                  Son ödeme: {normalizeValue(user.direksiyon_son_odeme)}
+                </Text>
 
-            {showOnlinePaymentButton ? (
-              <TouchableOpacity
-                style={styles.paymentWideButton}
-                onPress={openHarcLink}
-              >
-                <Text style={styles.paymentWideButtonText}>
-                  Online Ödeme Yap
-                </Text>
-                <Text style={styles.paymentWideButtonSubText}>
-                  İşlem güvenli şekilde tarayıcıda açılır.
-                </Text>
-              </TouchableOpacity>
+                {user.direksiyon_harc === "odenmedi" ? (
+                  <TouchableOpacity
+                    style={styles.inlinePayButton}
+                    onPress={openHarcLink}
+                  >
+                    <Text style={styles.inlinePayButtonText}>
+                      Ödeme Bilgisi
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             ) : null}
           </View>
         ) : null}
@@ -1264,6 +1525,205 @@ export default function Index() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={calendarVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeCalendarModal}
+      >
+        <View style={styles.fullScreenCalendar}>
+          <View style={styles.calendarHeader}>
+            <Text style={styles.calendarHeaderTitle}>Takvim</Text>
+
+            <TouchableOpacity
+              style={styles.calendarHeaderClose}
+              onPress={closeCalendarModal}
+            >
+              <Text style={styles.calendarHeaderCloseText}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.monthNavigator}>
+            <Text style={styles.monthNavigatorTitle}>{visibleMonthLabel}</Text>
+
+            <View style={styles.monthNavButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.monthNavButton,
+                  !canGoPrev ? styles.monthNavButtonDisabled : null,
+                ]}
+                onPress={() => canGoPrev && setMonthOffset(monthOffset - 1)}
+                disabled={!canGoPrev}
+              >
+                <Text style={styles.monthNavButtonText}>▲</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.monthNavButton,
+                  !canGoNext ? styles.monthNavButtonDisabled : null,
+                ]}
+                onPress={() => canGoNext && setMonthOffset(monthOffset + 1)}
+                disabled={!canGoNext}
+              >
+                <Text style={styles.monthNavButtonText}>▼</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={styles.calendarRangeText}>
+            Geçmiş 3 ay ve gelecek 2 ay arasında geçiş yapabilirsiniz.
+          </Text>
+
+          <View style={styles.dayNamesRow}>
+            {DAY_NAMES.map((dayName) => (
+              <Text key={dayName} style={styles.dayNameText}>
+                {dayName}
+              </Text>
+            ))}
+          </View>
+
+          <View style={styles.calendarLegendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.eventDotRed]} />
+              <Text style={styles.legendText}>Ödeme</Text>
+            </View>
+
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.eventDotBlue]} />
+              <Text style={styles.legendText}>E-sınav</Text>
+            </View>
+
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.eventDotOrange]} />
+              <Text style={styles.legendText}>Direksiyon sınavı</Text>
+            </View>
+
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.eventDotGreen]} />
+              <Text style={styles.legendText}>Ders</Text>
+            </View>
+          </View>
+
+          <View style={styles.monthPickerRow}>
+            {monthOptions.map((monthItem, index) => {
+              const monthText = `${MONTH_NAMES[monthItem.getMonth()].slice(0, 3)} ${monthItem.getFullYear()}`;
+              const active = areSameMonthYear(monthItem, visibleMonth);
+
+              return (
+                <TouchableOpacity
+                  key={`${monthItem.getMonth()}-${monthItem.getFullYear()}`}
+                  style={[
+                    styles.monthPill,
+                    active ? styles.monthPillActive : null,
+                  ]}
+                  onPress={() => setMonthOffset(index - 3)}
+                >
+                  <Text
+                    style={[
+                      styles.monthPillText,
+                      active ? styles.monthPillTextActive : null,
+                    ]}
+                  >
+                    {monthText}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <ScrollView
+            style={styles.calendarPageScroll}
+            contentContainerStyle={styles.calendarPageContent}
+          >
+            <View style={styles.monthGrid}>
+              {visibleMonthCells.map((cell) => {
+                const hasEvents = cell.events.length > 0;
+                const eventTones = Array.from(
+                  new Set(
+                    cell.events.map((event) =>
+                      getCalendarBadgeTone(event.type),
+                    ),
+                  ),
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={cell.key}
+                    style={[
+                      styles.calendarCell,
+                      !cell.isCurrentMonth ? styles.calendarCellMuted : null,
+                      cell.isToday ? styles.calendarCellToday : null,
+                    ]}
+                    activeOpacity={hasEvents ? 0.85 : 1}
+                    onPress={() => handleCalendarCellPress(cell)}
+                    disabled={!hasEvents}
+                  >
+                    <View
+                      style={[
+                        styles.calendarCellDayBadge,
+                        cell.isToday ? styles.calendarCellDayBadgeToday : null,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.calendarCellDayText,
+                          !cell.isCurrentMonth
+                            ? styles.calendarCellDayTextMuted
+                            : null,
+                          cell.isToday ? styles.calendarCellDayTextToday : null,
+                        ]}
+                      >
+                        {cell.dayNumber}
+                      </Text>
+                    </View>
+
+                    <View style={styles.cellDotsRow}>
+                      {eventTones.slice(0, 3).map((tone, idx) => (
+                        <View
+                          key={`${cell.key}-${tone}-${idx}`}
+                          style={[
+                            styles.cellDot,
+                            tone === "red"
+                              ? styles.eventDotRed
+                              : tone === "blue"
+                                ? styles.eventDotBlue
+                                : tone === "orange"
+                                  ? styles.eventDotOrange
+                                  : styles.eventDotGreen,
+                          ]}
+                        />
+                      ))}
+                    </View>
+
+                    <Text
+                      style={[
+                        styles.calendarCellPreview,
+                        !cell.isCurrentMonth
+                          ? styles.calendarCellPreviewMuted
+                          : null,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {hasEvents
+                        ? cell.events
+                            .slice(0, 2)
+                            .map((event) =>
+                              event.time
+                                ? `${event.title} ${event.time}`
+                                : event.title,
+                            )
+                            .join("\n")
+                        : ""}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -1276,6 +1736,19 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 28,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#0d0d10",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  loadingText: {
+    color: "#ffffff",
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: "600",
   },
   loginBox: {
     flex: 1,
@@ -1328,20 +1801,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  secondaryButton: {
-    backgroundColor: "#1f1f25",
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#2c2c34",
-  },
-  secondaryButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   loginStatusCard: {
     borderRadius: 18,
     padding: 14,
@@ -1350,16 +1809,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#151519",
     borderColor: "#232329",
   },
-  loginStatusHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
   loginStatusTitle: {
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "800",
+    marginBottom: 8,
   },
   loginStatusText: {
     color: "#d8d8dd",
@@ -1377,6 +1831,46 @@ const styles = StyleSheet.create({
   },
   loginStatusInfo: {
     borderColor: "#2c6ca6",
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  topBarTitle: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  topCalendarButton: {
+    position: "fixed",
+    right: 35,
+    width: 55,
+    height: 55,
+    borderRadius: 14,
+    backgroundColor: "#151519",
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topCalendarButtonDisabled: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#151519",
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0.4,
+  },
+  topCalendarIcon: {
+    fontSize: 30,
+  },
+  topCalendarIconDisabled: {
+    fontSize: 20,
   },
   profileCard: {
     backgroundColor: "#151519",
@@ -1510,14 +2004,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
   },
-  paymentButton: {
+  mainActionButton: {
     marginTop: 14,
     backgroundColor: "#c1121f",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
   },
-  paymentButtonText: {
+  mainActionButtonText: {
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "800",
@@ -1536,45 +2030,48 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 14,
   },
-  infoColumnBlock: {
-    paddingBottom: 12,
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#232329",
+    borderBottomColor: "#26262d",
+    paddingBottom: 12,
+    marginBottom: 12,
   },
-  infoColumnBlockNoBorder: {
-    paddingTop: 12,
+  infoRowNoBorder: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
   },
   infoLabel: {
-    color: "#8f8f97",
+    color: "#a6a6af",
     fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 8,
+    fontWeight: "600",
+    flex: 1,
   },
-  infoValueBlock: {
+  infoValue: {
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
+    flex: 1,
+  },
+  infoValueRight: {
+    textAlign: "right",
     lineHeight: 22,
   },
   missingDocsList: {
-    gap: 8,
+    flex: 1,
+    alignItems: "flex-end",
+    gap: 4,
   },
   missingDocItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  missingDocBullet: {
-    color: "#ffffff",
-    fontSize: 16,
-    lineHeight: 22,
-    marginRight: 8,
-  },
-  missingDocText: {
-    flex: 1,
     color: "#ffffff",
     fontSize: 14,
-    fontWeight: "700",
     lineHeight: 22,
+    textAlign: "right",
   },
   miniCard: {
     backgroundColor: "#1c1c22",
@@ -1588,8 +2085,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
     gap: 8,
+    marginBottom: 10,
   },
   miniCardTitle: {
     color: "#ffffff",
@@ -1602,25 +2099,17 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 4,
   },
-  paymentWideButton: {
-    backgroundColor: "#1f1f25",
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: "#2c2c34",
-    marginTop: 2,
+  inlinePayButton: {
+    marginTop: 10,
+    backgroundColor: "#c1121f",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
   },
-  paymentWideButtonText: {
+  inlinePayButtonText: {
     color: "#ffffff",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
-    marginBottom: 4,
-  },
-  paymentWideButtonSubText: {
-    color: "#9c9ca6",
-    fontSize: 13,
-    lineHeight: 18,
   },
   stepsCard: {
     backgroundColor: "#151519",
@@ -1714,7 +2203,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.55)",
     justifyContent: "center",
     paddingHorizontal: 18,
   },
@@ -1737,7 +2226,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   modalCloseButton: {
-    marginTop: 18,
+    marginTop: 16,
     backgroundColor: "#c1121f",
     borderRadius: 14,
     paddingVertical: 14,
@@ -1747,5 +2236,217 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "800",
+  },
+  fullScreenCalendar: {
+    flex: 1,
+    backgroundColor: "#0d0d10",
+    paddingTop: 56,
+  },
+  calendarHeader: {
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  calendarHeaderTitle: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  calendarHeaderClose: {
+    backgroundColor: "#1d1d23",
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  calendarHeaderCloseText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  monthNavigator: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  monthNavigatorTitle: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  monthNavButtons: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  monthNavButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#1d1d23",
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  monthNavButtonDisabled: {
+    opacity: 0.35,
+  },
+  monthNavButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  calendarRangeText: {
+    color: "#a0a0a8",
+    fontSize: 13,
+    lineHeight: 20,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  dayNamesRow: {
+    flexDirection: "row",
+    paddingHorizontal: 8,
+    marginBottom: 10,
+  },
+  dayNameText: {
+    flex: 1,
+    textAlign: "center",
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  calendarLegendRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 14,
+    paddingHorizontal: 16,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    color: "#cfd0d6",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  monthPickerRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  monthPill: {
+    backgroundColor: "#151519",
+    borderWidth: 1,
+    borderColor: "#2a2a31",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  monthPillActive: {
+    backgroundColor: "#686868",
+    borderColor: "#686868",
+  },
+  monthPillText: {
+    color: "#d8d8dd",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  monthPillTextActive: {
+    color: "#ffffff",
+  },
+  calendarPageScroll: {
+    flex: 1,
+  },
+  calendarPageContent: {
+    paddingHorizontal: 8,
+    paddingBottom: 32,
+  },
+  monthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  calendarCell: {
+    width: "14.2857%",
+    aspectRatio: 0.82,
+    padding: 4,
+  },
+  calendarCellMuted: {
+    opacity: 0.38,
+  },
+  calendarCellToday: {
+    opacity: 1,
+  },
+  calendarCellDayBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  calendarCellDayBadgeToday: {
+    backgroundColor: "#686868",
+  },
+  calendarCellDayText: {
+    color: "#ffffff",
+    fontSize: 22,
+    fontWeight: "500",
+  },
+  calendarCellDayTextMuted: {
+    color: "#8a8a90",
+  },
+  calendarCellDayTextToday: {
+    color: "#ffffff",
+    fontWeight: "800",
+  },
+  cellDotsRow: {
+    minHeight: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 3,
+    marginBottom: 3,
+  },
+  cellDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+  eventDotRed: {
+    backgroundColor: "#c1121f",
+  },
+  eventDotBlue: {
+    backgroundColor: "#2c6ca6",
+  },
+  eventDotOrange: {
+    backgroundColor: "#c98819",
+  },
+  eventDotGreen: {
+    backgroundColor: "#1f8f55",
+  },
+  calendarCellPreview: {
+    color: "#d8d8dd",
+    fontSize: 9,
+    lineHeight: 11,
+    textAlign: "center",
+    paddingHorizontal: 1,
+  },
+  calendarCellPreviewMuted: {
+    color: "#707078",
   },
 });
