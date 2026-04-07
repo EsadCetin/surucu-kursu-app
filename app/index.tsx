@@ -507,7 +507,7 @@ function getSmartStatus(user: Student): SmartStatus {
     return {
       title: "Yeni sınav tarihi bekleniyor",
       description:
-        "Yeni harç ödemeniz alındı. Yeni e-sınav tarihi açıklandığında burada gösterilecek.",
+        "Harç ödemeniz alındı. Yeni e-sınav tarihi açıklandığında burada gösterilecek.",
       type: "info",
       actionLabel: "Detayı Gör",
       actionType: "detail",
@@ -1303,8 +1303,17 @@ export default function Index() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.topBar}>
-          <Text style={styles.topBarTitle}>Anasayfa</Text>
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+            </View>
+
+            <View style={styles.profileTextArea}>
+              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
+              <Text style={styles.subName}>Öğrenci Paneli</Text>
+            </View>
+          </View>
           {canOpenCalendar ? (
             <TouchableOpacity
               style={styles.topCalendarButton}
@@ -1317,19 +1326,6 @@ export default function Index() {
               <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
             </View>
           )}
-        </View>
-
-        <View style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
-            </View>
-
-            <View style={styles.profileTextArea}>
-              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-              <Text style={styles.subName}>Öğrenci Paneli</Text>
-            </View>
-          </View>
 
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} />
@@ -1348,7 +1344,6 @@ export default function Index() {
             />
           </View>
         </View>
-
         <View
           style={[
             styles.statusCard,
@@ -1379,7 +1374,6 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
-
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>Evrak Durumu</Text>
 
@@ -1412,7 +1406,6 @@ export default function Index() {
             )}
           </View>
         </View>
-
         {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
           <View style={styles.infoCard}>
             <Text style={styles.sectionTitle}>Sınav ve Ödeme Bilgileri</Text>
@@ -1512,7 +1505,6 @@ export default function Index() {
             ) : null}
           </View>
         ) : null}
-
         <View style={styles.stepsCard}>
           <Text style={styles.sectionTitle}>Süreç Adımları</Text>
 
@@ -1535,7 +1527,6 @@ export default function Index() {
             );
           })}
         </View>
-
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
         </TouchableOpacity>
@@ -1848,8 +1839,10 @@ const styles = StyleSheet.create({
   },
   topBarTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   topCalendarButton: {
-    width: 44,
-    height: 44,
+    position: "absolute",
+    right: 20,
+    width: 60,
+    height: 60,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -1868,7 +1861,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     opacity: 0.4,
   },
-  topCalendarIcon: { fontSize: 20 },
+  topCalendarIcon: { fontSize: 30 },
   topCalendarIconDisabled: { fontSize: 20 },
   profileCard: {
     backgroundColor: "#151519",
