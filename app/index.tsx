@@ -656,6 +656,15 @@ function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
   );
 }
 
+function InfoChip({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoChip}>
+      <Text style={styles.infoChipLabel}>{label}</Text>
+      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
+    </View>
+  );
+}
+
 export default function Index() {
   const [tc, setTc] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
