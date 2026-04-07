@@ -97,6 +97,31 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
     return asDateText(Number(d), Number(m), yy);
   }
 
+  const jsDateMatch = raw.match(
+    /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s+(\d{4})/i,
+  );
+  if (jsDateMatch) {
+    const monthMap = {
+      jan: 1,
+      feb: 2,
+      mar: 3,
+      apr: 4,
+      may: 5,
+      jun: 6,
+      jul: 7,
+      aug: 8,
+      sep: 9,
+      oct: 10,
+      nov: 11,
+      dec: 12,
+    };
+    const day = Number(jsDateMatch[3]);
+    const month = monthMap[jsDateMatch[2].toLowerCase()];
+    const year =
+      Number(jsDateMatch[4]) <= 1901 ? fallbackYear : Number(jsDateMatch[4]);
+    return asDateText(day, month, year);
+  }
+
   const parsedDate = new Date(raw);
   if (!Number.isNaN(parsedDate.getTime())) {
     const y =

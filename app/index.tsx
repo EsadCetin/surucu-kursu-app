@@ -613,7 +613,7 @@ function StepItem({
           ]}
         >
           <Text style={styles.stepCircleText}>
-            {checked ? "✓" : active ? "•" : ""}
+            {checked || active ? "✓" : ""}
           </Text>
         </View>
 
@@ -1055,6 +1055,16 @@ export default function Index() {
 
     if (user.evrak_durumu !== "tamam") {
       openDetailModal("Önce evraklarınızın tamamlanması gerekiyor.");
+      return;
+    }
+
+    if (
+      user.durum === "direksiyon" ||
+      user.esinav_sonuc === "gecti" ||
+      !!user.direksiyon_tarih ||
+      !!user.direksiyon_saati
+    ) {
+      openDetailModal("E-sınav aşamasını tamamladınız.");
       return;
     }
 
@@ -2082,7 +2092,10 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   stepCircleChecked: { backgroundColor: "#22c55e", borderColor: "#22c55e" },
-  stepCircleActive: { borderColor: "#22c55e" },
+  stepCircleActive: {
+    backgroundColor: "#22c55e",
+    borderColor: "#22c55e",
+  },
   stepCircleText: { color: "#ffffff", fontSize: 14, fontWeight: "800" },
   stepContent: {
     flex: 1,
