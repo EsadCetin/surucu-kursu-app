@@ -1,16 +1,18 @@
 /**
  * excel-to-json.js
  *
- * Bu sürüm yüklediğin ogrenciler.xlsx dosyasının GERÇEK yapısına göre yazıldı.
+ * Amaç:
+ * - excel/ogrenciler.xlsx içindeki 4 sayfayı oku:
+ *   - E-SINAV
+ *   - DİREKSİYON
+ *   - EKSİK BELGELER
+ *   - ALACAK RAPORU
+ * - Aynı öğrenciyi TC ile, TC yoksa ad soyad ile birleştir
+ * - Borç son ödeme tarihlerini ana alanlara da yansıt
+ * - docs/students.json üret
  *
- * Sayfalar:
- * - E-SINAV      -> header satırı 2
- * - DİREKSİYON   -> header satırı 2
- * - EKSİK BELGELER -> header satırı 1
- * - ALACAK RAPORU  -> header satırı 3
- *
- * Çıktı:
- * - docs/students.json
+ * Kullanım:
+ *   node scripts/excel-to-json.js
  */
 
 const fs = require("fs");
@@ -46,11 +48,17 @@ function formatDate(v, fallbackYear = 2026) {
     return `${d}.${m}.${y}`;
   }
 
+  if (typeof v === "number" && !Number.isNaN(v)) {
+    const parsed = XLSX.SSF.parse_date_code(v);
+    if (parsed && parsed.y && parsed.m && parsed.d) {
+      return `${String(parsed.d).padStart(2, "0")}.${String(parsed.m).padStart(2, "0")}.${parsed.y}`;
+    }
+  }
+
   const raw = t(v);
 
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(raw)) return raw;
 
-  // Excel'de 09,03 gibi geliyor -> 09.03.2026
   if (/^\d{1,2}[,.]\d{1,2}$/.test(raw)) {
     const [d, m] = raw.replace(",", ".").split(".");
     return `${String(Number(d)).padStart(2, "0")}.${String(Number(m)).padStart(2, "0")}.${fallbackYear}`;
@@ -70,6 +78,15 @@ function formatDate(v, fallbackYear = 2026) {
 }
 
 function formatTime(v) {
+  if (v == null || v === "") return "";
+
+  if (typeof v === "number" && !Number.isNaN(v)) {
+    const totalMinutes = Math.round(v * 24 * 60);
+    const hh = String(Math.floor(totalMinutes / 60) % 24).padStart(2, "0");
+    const mm = String(totalMinutes % 60).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+
   const raw = t(v);
   if (!raw) return "";
   if (/^\d{2}:\d{2}$/.test(raw)) return raw;
@@ -87,12 +104,11 @@ function money(v) {
 }
 
 function parseSheet(ws, headerRowIndex) {
-  const rows = XLSX.utils.sheet_to_json(ws, {
+  return XLSX.utils.sheet_to_json(ws, {
     defval: "",
     raw: true,
     range: headerRowIndex - 1,
   });
-  return rows;
 }
 
 function createStudent(tcValue = "", nameValue = "") {
@@ -145,19 +161,6 @@ function setAlways(obj, key, value) {
 
   const val = t(value);
   if (val) obj[key] = val;
-}
-
-function addLesson(student, lesson) {
-  if (!lesson.tarih && !lesson.saat && !lesson.not) return;
-  const sig = JSON.stringify(lesson);
-  const exists = (student.direksiyon_dersleri || []).some(
-    (x) => JSON.stringify(x) === sig,
-  );
-  if (!exists) {
-    if (!Array.isArray(student.direksiyon_dersleri))
-      student.direksiyon_dersleri = [];
-    student.direksiyon_dersleri.push(lesson);
-  }
 }
 
 function buildStore() {
@@ -216,6 +219,51 @@ function xMissing(value, label) {
   return t(value).toLocaleUpperCase("tr-TR") === "X" ? label : "";
 }
 
+function syncDerivedFields(student) {
+  if (!student.evrak_durumu) {
+    student.evrak_durumu = student.eksik_evraklar ? "eksik" : "tamam";
+  }
+
+  if (!student.esinav_harc && student.esinav_harc_borcu) {
+    student.esinav_harc = "odenmedi";
+  }
+
+  if (!student.direksiyon_harc && student.direksiyon_harc_borcu) {
+    student.direksiyon_harc = "odenmedi";
+  }
+
+  // KRİTİK DÜZELTME:
+  // borç son ödeme tarihleri doluysa ana son ödeme alanlarını da doldur
+  if (!student.esinav_son_odeme && student.esinav_borc_son_odeme) {
+    student.esinav_son_odeme = student.esinav_borc_son_odeme;
+  }
+
+  if (!student.direksiyon_son_odeme && student.direksiyon_borc_son_odeme) {
+    student.direksiyon_son_odeme = student.direksiyon_borc_son_odeme;
+  }
+
+  // borç varsa ama durum boşsa mantıklı default ver
+  if (!student.durum) {
+    if (
+      student.direksiyon_harc_borcu ||
+      student.direksiyon_tarih ||
+      student.direksiyon_saati
+    ) {
+      student.durum = "direksiyon";
+    } else if (
+      student.esinav_harc_borcu ||
+      student.esinav_tarih ||
+      student.esinav_saati
+    ) {
+      student.durum = "esinav";
+    }
+  }
+
+  if (!Array.isArray(student.direksiyon_dersleri)) {
+    student.direksiyon_dersleri = [];
+  }
+}
+
 function main() {
   if (!fs.existsSync(EXCEL_PATH)) {
     throw new Error(`Excel dosyası bulunamadı: ${EXCEL_PATH}`);
@@ -247,6 +295,7 @@ function main() {
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "sinif", row["SINIF"]);
     setIfEmpty(student, "telefonlar", row["TELEFONLAR"]);
+
     if (!student.durum) student.durum = "esinav";
 
     const examDate = formatDate(row["SINAV TARİHİ"]);
@@ -271,11 +320,16 @@ function main() {
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "sinif", row["SINIF"]);
-    setIfEmpty(student, "telefonlar", row["__EMPTY_7"]);
+    setIfEmpty(
+      student,
+      "telefonlar",
+      row["__EMPTY_7"] || row["TELEFON"] || row["TELEFONLAR"],
+    );
+
     student.durum = "direksiyon";
 
-    const examDate = formatDate(row["__EMPTY_8"]);
-    const examTime = formatTime(row["__EMPTY_9"]);
+    const examDate = formatDate(row["__EMPTY_8"] || row["SINAV TARİHİ"]);
+    const examTime = formatTime(row["__EMPTY_9"] || row["SINAV SAATİ"]);
 
     if (examDate) student.direksiyon_tarih = examDate;
     if (examTime) student.direksiyon_saati = examTime;
@@ -326,7 +380,6 @@ function main() {
     if (!nameValue) continue;
 
     const student = getOrCreate(store, "", nameValue);
-
     setIfEmpty(student, "ad_soyad", nameValue);
 
     const eDebt = money(row["E SINAV HARCI"]);
@@ -337,12 +390,18 @@ function main() {
     if (eDebt) {
       student.esinav_harc_borcu = eDebt;
       student.esinav_borc_son_odeme = dueDate;
+      if (!student.esinav_son_odeme) {
+        student.esinav_son_odeme = dueDate;
+      }
       student.esinav_harc = "odenmedi";
     }
 
     if (dDebt) {
       student.direksiyon_harc_borcu = dDebt;
       student.direksiyon_borc_son_odeme = dueDate;
+      if (!student.direksiyon_son_odeme) {
+        student.direksiyon_son_odeme = dueDate;
+      }
       student.direksiyon_harc = "odenmedi";
     }
 
@@ -355,18 +414,7 @@ function main() {
   const result = allStudents(store)
     .filter((student) => student.tc || student.ad_soyad)
     .map((student) => {
-      if (!student.evrak_durumu) {
-        student.evrak_durumu = student.eksik_evraklar ? "eksik" : "tamam";
-      }
-
-      if (!student.esinav_harc && student.esinav_harc_borcu) {
-        student.esinav_harc = "odenmedi";
-      }
-
-      if (!student.direksiyon_harc && student.direksiyon_harc_borcu) {
-        student.direksiyon_harc = "odenmedi";
-      }
-
+      syncDerivedFields(student);
       return student;
     })
     .sort((a, b) => a.ad_soyad.localeCompare(b.ad_soyad, "tr"));
