@@ -364,7 +364,10 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
       });
     }
 
-    if (user.taksit_son_odeme) {
+    if (
+      user.taksit_son_odeme &&
+      formatDebt(user.taksit_borcu).toLocaleLowerCase("tr-TR") !== "yok"
+    ) {
       events.push({
         key: `taksit-odeme-${user.taksit_son_odeme}`,
         date: user.taksit_son_odeme,
@@ -507,7 +510,7 @@ function getSmartStatus(user: Student): SmartStatus {
     return {
       title: "Yeni sınav tarihi bekleniyor",
       description:
-        "Harç ödemeniz alındı. Yeni e-sınav tarihi açıklandığında burada gösterilecek.",
+        "Yeni harç ödemeniz alındı. Yeni e-sınav tarihi açıklandığında burada gösterilecek.",
       type: "info",
       actionLabel: "Detayı Gör",
       actionType: "detail",
@@ -1303,17 +1306,8 @@ export default function Index() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
-            </View>
-
-            <View style={styles.profileTextArea}>
-              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-              <Text style={styles.subName}>Öğrenci Paneli</Text>
-            </View>
-          </View>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Anasayfa</Text>
           {canOpenCalendar ? (
             <TouchableOpacity
               style={styles.topCalendarButton}
@@ -1326,6 +1320,19 @@ export default function Index() {
               <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
             </View>
           )}
+        </View>
+
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+            </View>
+
+            <View style={styles.profileTextArea}>
+              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
+              <Text style={styles.subName}>Öğrenci Paneli</Text>
+            </View>
+          </View>
 
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} />
@@ -1344,6 +1351,7 @@ export default function Index() {
             />
           </View>
         </View>
+
         <View
           style={[
             styles.statusCard,
@@ -1374,6 +1382,7 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
+
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>Evrak Durumu</Text>
 
@@ -1406,6 +1415,7 @@ export default function Index() {
             )}
           </View>
         </View>
+
         {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
           <View style={styles.infoCard}>
             <Text style={styles.sectionTitle}>Sınav ve Ödeme Bilgileri</Text>
@@ -1426,9 +1436,11 @@ export default function Index() {
                     ? formatExamText(user.esinav_tarih, user.esinav_saati)
                     : "Yeni sınav tarihi bekleniyor"}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Sonuç: {formatOutcome(user.esinav_sonuc)}
-                </Text>
+                {user.esinav_tarih ? (
+                  <Text style={styles.miniCardText}>
+                    Sonuç: {formatOutcome(user.esinav_sonuc)}
+                  </Text>
+                ) : null}
                 <Text style={styles.miniCardText}>
                   Harç durumu: {formatPayment(user.esinav_harc)}
                 </Text>
@@ -1469,9 +1481,11 @@ export default function Index() {
                   Sınav tarihi:{" "}
                   {formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Sonuç: {formatOutcome(user.direksiyon_sonuc)}
-                </Text>
+                {user.direksiyon_tarih ? (
+                  <Text style={styles.miniCardText}>
+                    Sonuç: {formatOutcome(user.direksiyon_sonuc)}
+                  </Text>
+                ) : null}
                 <Text style={styles.miniCardText}>
                   Harç durumu: {formatPayment(user.direksiyon_harc)}
                 </Text>
@@ -1487,9 +1501,12 @@ export default function Index() {
                 <Text style={styles.miniCardText}>
                   Taksit borcu: {formatDebt(user.taksit_borcu)}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Taksit son ödeme: {normalizeValue(user.taksit_son_odeme)}
-                </Text>
+                {formatDebt(user.taksit_borcu).toLocaleLowerCase("tr-TR") !==
+                "yok" ? (
+                  <Text style={styles.miniCardText}>
+                    Taksit son ödeme: {normalizeValue(user.taksit_son_odeme)}
+                  </Text>
+                ) : null}
 
                 {user.direksiyon_harc === "odenmedi" ? (
                   <TouchableOpacity
@@ -1505,6 +1522,7 @@ export default function Index() {
             ) : null}
           </View>
         ) : null}
+
         <View style={styles.stepsCard}>
           <Text style={styles.sectionTitle}>Süreç Adımları</Text>
 
@@ -1527,6 +1545,7 @@ export default function Index() {
             );
           })}
         </View>
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
         </TouchableOpacity>
@@ -1839,10 +1858,8 @@ const styles = StyleSheet.create({
   },
   topBarTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   topCalendarButton: {
-    position: "absolute",
-    right: 20,
-    width: 60,
-    height: 60,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -1861,7 +1878,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     opacity: 0.4,
   },
-  topCalendarIcon: { fontSize: 30 },
+  topCalendarIcon: { fontSize: 20 },
   topCalendarIconDisabled: { fontSize: 20 },
   profileCard: {
     backgroundColor: "#151519",
@@ -2160,7 +2177,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendDot: { width: 12, height: 12, borderRadius: 6 },
+  legendDot: { width: 14, height: 14, borderRadius: 7 },
   legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
   calendarPageScroll: { flex: 1 },
   calendarPageContent: { paddingHorizontal: 8, paddingBottom: 32 },
@@ -2182,24 +2199,24 @@ const styles = StyleSheet.create({
   calendarCellDayTextMuted: { color: "#8a8a90" },
   calendarCellDayTextToday: { color: "#ffffff", fontWeight: "800" },
   cellDotsRow: {
-    minHeight: 14,
+    minHeight: 18,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 4,
-    marginBottom: 4,
+    gap: 5,
+    marginBottom: 5,
   },
-  cellDot: { width: 7, height: 7, borderRadius: 4 },
+  cellDot: { width: 9, height: 9, borderRadius: 5 },
   eventDotRed: { backgroundColor: "#c1121f" },
   eventDotBlue: { backgroundColor: "#2c6ca6" },
   eventDotOrange: { backgroundColor: "#c98819" },
   eventDotGreen: { backgroundColor: "#1f8f55" },
   calendarCellPreview: {
     color: "#f2f2f5",
-    fontSize: 10,
-    lineHeight: 12,
+    fontSize: 11,
+    lineHeight: 14,
     textAlign: "center",
     paddingHorizontal: 1,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   calendarCellPreviewMuted: { color: "#707078" },
 });
