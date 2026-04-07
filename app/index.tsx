@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -702,6 +703,43 @@ export default function Index() {
   const canGoPrev = monthOffset > -3;
   const canGoNext = monthOffset < 2;
 
+  const goToPrevMonth = () => {
+    setMonthOffset((prev) => Math.max(prev - 1, -3));
+  };
+
+  const goToNextMonth = () => {
+    setMonthOffset((prev) => Math.min(prev + 1, 2));
+  };
+
+  const handleCalendarMonthChangeGesture = (deltaY: number) => {
+    if (Math.abs(deltaY) < 40) return;
+
+    if (deltaY > 0 && canGoNext) {
+      goToNextMonth();
+      return;
+    }
+
+    if (deltaY < 0 && canGoPrev) {
+      goToPrevMonth();
+    }
+  };
+
+  const calendarPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dy) > 12 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+        onPanResponderRelease: (_, gestureState) => {
+          handleCalendarMonthChangeGesture(gestureState.dy);
+        },
+        onPanResponderTerminate: (_, gestureState) => {
+          handleCalendarMonthChangeGesture(gestureState.dy);
+        },
+      }),
+    [canGoPrev, canGoNext],
+  );
+
   const loadStudents = async () => {
     try {
       setLoadingStudents(true);
@@ -1248,14 +1286,7 @@ export default function Index() {
     const endY = event.nativeEvent.contentOffset.y;
     const diff = endY - scrollStartYRef.current;
 
-    if (diff > 40 && canGoNext) {
-      setMonthOffset((prev) => Math.min(prev + 1, 2));
-      return;
-    }
-
-    if (diff < -40 && canGoPrev) {
-      setMonthOffset((prev) => Math.max(prev - 1, -3));
-    }
+    handleCalendarMonthChangeGesture(diff);
   };
 
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
@@ -1680,6 +1711,7 @@ export default function Index() {
             onScrollBeginDrag={handleCalendarScrollBeginDrag}
             onScrollEndDrag={handleCalendarScrollEndDrag}
             scrollEventThrottle={16}
+            {...calendarPanResponder.panHandlers}
           >
             <View style={styles.monthGrid}>
               {visibleMonthCells.map((cell) => {
