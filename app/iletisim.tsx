@@ -2,101 +2,123 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
   Linking,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-export default function Iletisim() {
-  const openWebsite = async () => {
-    const url = "https://ayassurucukursu.com";
+const WEBSITE_URL = "https://ayassurucukursu.com";
+const PHONE_URL = "tel:05375046984";
+const MAP_URL = "https://maps.app.goo.gl/cf1G2JGZWjw9zLWeA";
+const WHATSAPP_PHONE = "905375046984";
+const WHATSAPP_MESSAGE =
+  "Merhaba, Yeni Ayaş Sürücü Kursu hakkında bilgi almak istiyorum.";
 
+// Geçici yorum linki.
+// Elindeki gerçek Google yorum / placeId linkini gönderirsen bunu direkt ona çeviririm.
+const GOOGLE_REVIEW_URL = "https://g.page/r/CX1vdkMuiG-_EAI/review";
+
+export default function Iletisim() {
+  const openUrl = async (url: string, errorMessage: string) => {
     try {
       const supported = await Linking.canOpenURL(url);
 
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert("Hata", "Web sitesi açılamadı.");
+        Alert.alert("Hata", errorMessage);
       }
     } catch (error) {
-      Alert.alert("Hata", "Web sitesi açılamadı.");
+      Alert.alert("Hata", errorMessage);
     }
+  };
+
+  const openWebsite = async () => {
+    await openUrl(WEBSITE_URL, "Web sitesi açılamadı.");
   };
 
   const callPhone = async () => {
-    const url = "tel:05375046984";
-
-    try {
-      const supported = await Linking.canOpenURL(url);
-
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert("Hata", "Telefon araması başlatılamadı.");
-      }
-    } catch (error) {
-      Alert.alert("Hata", "Telefon araması başlatılamadı.");
-    }
+    await openUrl(PHONE_URL, "Telefon araması başlatılamadı.");
   };
+
   const openMap = async () => {
-    const url = "https://maps.app.goo.gl/cf1G2JGZWjw9zLWeA";
-
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert("Hata", "Konum açılamadı.");
-    }
+    await openUrl(MAP_URL, "Konum açılamadı.");
   };
+
   const openWhatsApp = async () => {
-    const whatsappPhone = "905375046984";
-    const message = encodeURIComponent(
-      "Merhaba, Yeni Ayaş Sürücü Kursu hakkında bilgi almak istiyorum.",
-    );
-    const url = `https://wa.me/${whatsappPhone}?text=${message}`;
+    const message = encodeURIComponent(WHATSAPP_MESSAGE);
+    const url = `https://wa.me/${WHATSAPP_PHONE}?text=${message}`;
+    await openUrl(url, "WhatsApp açılamadı.");
+  };
 
-    try {
-      const supported = await Linking.canOpenURL(url);
-
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert("Hata", "WhatsApp açılamadı.");
-      }
-    } catch (error) {
-      Alert.alert("Hata", "WhatsApp açılamadı.");
+  const openGoogleReview = async () => {
+    if (GOOGLE_REVIEW_URL.includes("YOUR_PLACE_ID")) {
+      Alert.alert(
+        "Google Yorum Linki Eksik",
+        "Bu alan hazır. Çalışması için gerçek Google yorum linki veya placeId eklenmeli.",
+      );
+      return;
     }
+
+    await openUrl(GOOGLE_REVIEW_URL, "Google yorum sayfası açılamadı.");
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
 
-        <Text style={styles.text}>Telefon: 0537 504 69 84</Text>
-        <Text style={styles.text}>Web: ayassurucukursu.com</Text>
-        <Text style={styles.text}>
-          Adres: Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı)
-          Ayaş/Ankara
-        </Text>
+          <Text style={styles.label}>Telefon</Text>
+          <Text style={styles.text}>0537 504 69 84</Text>
 
-        <TouchableOpacity style={styles.button} onPress={callPhone}>
-          <Text style={styles.buttonText}>Ara</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>Web</Text>
+          <Text style={styles.text}>ayassurucukursu.com</Text>
 
-        <TouchableOpacity style={styles.buttonSecondary} onPress={openWebsite}>
-          <Text style={styles.buttonText}>Web Sitesine Git</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonSecondary} onPress={openMap}>
-          <Text style={styles.buttonText}>Konumu Aç</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.label}>Adres</Text>
+          <Text style={styles.text}>
+            Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı) Ayaş/Ankara
+          </Text>
+
+          <TouchableOpacity style={styles.button} onPress={callPhone}>
+            <Text style={styles.buttonText}>Ara</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.buttonSecondary}
+            onPress={openWebsite}
+          >
+            <Text style={styles.buttonText}>Web Sitesine Git</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.buttonSecondary} onPress={openMap}>
+            <Text style={styles.buttonText}>Konumu Aç</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.reviewCard}>
+          <View style={styles.reviewHeader}>
+            <Ionicons name="logo-google" size={22} color="#1f8f55" />
+            <Text style={styles.reviewTitle}>Google Değerlendirme</Text>
+          </View>
+
+          <Text style={styles.reviewText}>
+            Memnun kaldıysan bize Google üzerinden yorum bırakabilirsin.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={openGoogleReview}
+          >
+            <Text style={styles.buttonText}>Google'da Yorum Yap</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       <TouchableOpacity style={styles.whatsappButton} onPress={openWhatsApp}>
-        <Ionicons name="logo-whatsapp" size={50} color="#fff" />
+        <Ionicons name="logo-whatsapp" size={42} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -106,21 +128,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0e0e11",
+  },
+  content: {
     padding: 16,
+    paddingBottom: 120,
   },
   card: {
-    top: 15,
+    marginTop: 15,
     backgroundColor: "#17171b",
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
     borderColor: "#232329",
   },
+  reviewCard: {
+    marginTop: 16,
+    backgroundColor: "#17171b",
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#232329",
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
   title: {
     color: "#fff",
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 18,
+  },
+  reviewTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
   },
   label: {
     color: "#8f9098",
@@ -136,16 +180,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 22,
   },
+  reviewText: {
+    color: "#d7d7dc",
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 14,
+  },
   whatsappButton: {
     position: "absolute",
     bottom: 20,
-    right: 50,
-    width: 80,
-    alignSelf: "flex-end",
+    right: 20,
+    width: 72,
+    height: 72,
     backgroundColor: "#1f8f55",
-    paddingVertical: 14,
-    borderRadius: 50,
+    borderRadius: 36,
     alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
   },
   button: {
     marginTop: 12,
@@ -157,6 +208,13 @@ const styles = StyleSheet.create({
   buttonSecondary: {
     marginTop: 12,
     backgroundColor: "#2a2a31",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  reviewButton: {
+    marginTop: 4,
+    backgroundColor: "#1f8f55",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

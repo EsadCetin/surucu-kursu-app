@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   PanResponder,
   Pressable,
@@ -129,7 +130,15 @@ const MONTH_NAMES = [
   "Aralık",
 ];
 
-const DAY_NAMES = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pa"];
+const DAY_NAMES = [
+  "Pazartesi",
+  "Salı",
+  "Çarşamba",
+  "Perşembe",
+  "Cuma",
+  "Cumartesi",
+  "Pazar",
+];
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
@@ -224,6 +233,10 @@ function formatPayment(value?: string) {
 function formatDebt(value?: string) {
   if (!value || !value.trim()) return "Yok";
   return value.trim();
+}
+
+function hasDebtValue(value?: string) {
+  return formatDebt(value).toLocaleLowerCase("tr-TR") !== "yok";
 }
 
 function getMissingDocumentsList(value?: string) {
@@ -321,7 +334,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   if (user.evrak_durumu === "eksik") return events;
 
   if (user.durum === "esinav") {
-    if (user.esinav_borc_son_odeme) {
+    if (user.esinav_borc_son_odeme && hasDebtValue(getEsinavDebt(user))) {
       events.push({
         key: `esinav-odeme-${user.esinav_borc_son_odeme}`,
         date: user.esinav_borc_son_odeme,
@@ -352,7 +365,10 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   }
 
   if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
-    if (user.direksiyon_borc_son_odeme) {
+    if (
+      user.direksiyon_borc_son_odeme &&
+      hasDebtValue(getDireksiyonDebt(user))
+    ) {
       events.push({
         key: `direksiyon-odeme-${user.direksiyon_borc_son_odeme}`,
         date: user.direksiyon_borc_son_odeme,
@@ -365,10 +381,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
       });
     }
 
-    if (
-      user.taksit_son_odeme &&
-      formatDebt(user.taksit_borcu).toLocaleLowerCase("tr-TR") !== "yok"
-    ) {
+    if (user.taksit_son_odeme && hasDebtValue(user.taksit_borcu)) {
       events.push({
         key: `taksit-odeme-${user.taksit_son_odeme}`,
         date: user.taksit_son_odeme,
@@ -1022,6 +1035,21 @@ export default function Index() {
     return user.durum === "esinav";
   }, [user]);
 
+  const hasEsinavDebt = useMemo(
+    () => (user ? hasDebtValue(getEsinavDebt(user)) : false),
+    [user],
+  );
+
+  const hasDireksiyonDebt = useMemo(
+    () => (user ? hasDebtValue(getDireksiyonDebt(user)) : false),
+    [user],
+  );
+
+  const hasTaksitDebt = useMemo(
+    () => (user ? hasDebtValue(user.taksit_borcu) : false),
+    [user],
+  );
+
   const showDireksiyonPaymentCard = useMemo(() => {
     if (!user) return false;
     if (user.evrak_durumu === "eksik") return false;
@@ -1303,8 +1331,14 @@ export default function Index() {
   if (!loggedIn || !user) {
     return (
       <View style={styles.container}>
-        <View style={styles.loginBox}>
+        <View style={{ alignItems: "center", marginTop: 100 }}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={{ width: 270, height: 270 }}
+          />
           <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
+        </View>
+        <View style={styles.loginBox}>
           <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
           <Text style={styles.loginSub}>
             TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
@@ -1497,15 +1531,19 @@ export default function Index() {
                 <Text style={styles.miniCardText}>
                   Harç durumu: {formatPayment(user.esinav_harc)}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Harç borcu: {formatDebt(getEsinavDebt(user))}
-                </Text>
-                <Text style={styles.miniCardText}>
-                  Son ödeme:{" "}
-                  {normalizeValue(
-                    user.esinav_borc_son_odeme || user.esinav_son_odeme,
-                  )}
-                </Text>
+                {hasEsinavDebt ? (
+                  <Text style={styles.miniCardText}>
+                    Harç borcu: {formatDebt(getEsinavDebt(user))}
+                  </Text>
+                ) : null}
+                {hasEsinavDebt ? (
+                  <Text style={styles.miniCardText}>
+                    Son ödeme:{" "}
+                    {normalizeValue(
+                      user.esinav_borc_son_odeme || user.esinav_son_odeme,
+                    )}
+                  </Text>
+                ) : null}
 
                 {user.esinav_harc === "odenmedi" ? (
                   <TouchableOpacity
@@ -1542,20 +1580,24 @@ export default function Index() {
                 <Text style={styles.miniCardText}>
                   Harç durumu: {formatPayment(user.direksiyon_harc)}
                 </Text>
-                <Text style={styles.miniCardText}>
-                  Direksiyon harç borcu: {formatDebt(getDireksiyonDebt(user))}
-                </Text>
-                <Text style={styles.miniCardText}>
-                  Direksiyon son ödeme:{" "}
-                  {normalizeValue(
-                    user.direksiyon_borc_son_odeme || user.direksiyon_son_odeme,
-                  )}
-                </Text>
+                {hasDireksiyonDebt ? (
+                  <Text style={styles.miniCardText}>
+                    Direksiyon harç borcu: {formatDebt(getDireksiyonDebt(user))}
+                  </Text>
+                ) : null}
+                {hasDireksiyonDebt ? (
+                  <Text style={styles.miniCardText}>
+                    Direksiyon son ödeme:{" "}
+                    {normalizeValue(
+                      user.direksiyon_borc_son_odeme ||
+                        user.direksiyon_son_odeme,
+                    )}
+                  </Text>
+                ) : null}
                 <Text style={styles.miniCardText}>
                   Taksit borcu: {formatDebt(user.taksit_borcu)}
                 </Text>
-                {formatDebt(user.taksit_borcu).toLocaleLowerCase("tr-TR") !==
-                "yok" ? (
+                {hasTaksitDebt ? (
                   <Text style={styles.miniCardText}>
                     Taksit son ödeme: {normalizeValue(user.taksit_son_odeme)}
                   </Text>
@@ -1672,10 +1714,6 @@ export default function Index() {
               </TouchableOpacity>
             </View>
           </View>
-
-          <Text style={styles.calendarRangeText}>
-            Ekranı yukarı veya aşağı kaydırarak ay değiştirebilirsiniz.
-          </Text>
 
           <View style={styles.dayNamesRow}>
             {DAY_NAMES.map((dayName) => (
@@ -1844,10 +1882,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
-  loginBox: { flex: 1, justifyContent: "center", paddingHorizontal: 18 },
+  loginBox: { top: 10, flex: 1, paddingHorizontal: 18 },
   brand: {
     color: "#c1121f",
-    fontSize: 16,
+    fontSize: 46,
     fontWeight: "800",
     marginBottom: 8,
     textAlign: "center",
@@ -2223,6 +2261,7 @@ const styles = StyleSheet.create({
   },
   dayNamesRow: { flexDirection: "row", paddingHorizontal: 8, marginBottom: 10 },
   dayNameText: {
+    top: 5,
     flex: 1,
     textAlign: "center",
     color: "#ffffff",
@@ -2236,7 +2275,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 16,
   },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendItem: { top: 5, flexDirection: "row", alignItems: "center", gap: 6 },
   legendDot: { width: 14, height: 14, borderRadius: 7 },
   legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
   calendarPageScroll: { flex: 1 },
