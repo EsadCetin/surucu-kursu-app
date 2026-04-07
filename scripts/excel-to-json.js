@@ -2,12 +2,10 @@
  * scripts/excel-to-json.js
  *
  * Kesin düzeltme:
- * - Saat için ExcelJS değil, xlsx'in hücrede görünen "w" değerini kullanır
- * - Renk için ExcelJS kullanır
- *
- * Sebep:
- * ExcelJS bazı saat hücrelerini Date'e çevirip saçma saat üretebiliyor.
- * xlsx ise hücrede ekranda ne görünüyorsa onu "w" alanında veriyor.
+ * - Saat için xlsx'in hücrede görünen "w" değeri kullanılır
+ * - Renk için ExcelJS kullanılır
+ * - 14,04 / 14.04 gibi yıl içermeyen tarihler ZORUNLU olarak 2026'ya çevrilir
+ * - Excel serial date içinden yıl 1900 gelirse 2026'ya sabitlenir
  *
  * Kullanım:
  *   node scripts/excel-to-json.js
@@ -21,6 +19,7 @@ const ExcelJS = require("exceljs");
 const ROOT = path.resolve(__dirname, "..");
 const EXCEL_PATH = path.join(ROOT, "excel", "ogrenciler.xlsx");
 const OUTPUT_PATH = path.join(ROOT, "docs", "students.json");
+const DEFAULT_YEAR = 2026;
 
 function t(v) {
   return String(v ?? "")
@@ -50,40 +49,55 @@ function normalizeHeader(v) {
     .trim();
 }
 
-function formatDate(v, fallbackYear = 2026) {
+function asDateText(day, month, year = DEFAULT_YEAR) {
+  return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
+}
+
+function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   if (v == null || v === "") return "";
 
+  // ExcelJS bazen saat/tarih hücresini Date'e çeviriyor ama yılı 1900 verebiliyor.
+  // Bu projede yıl içermeyen tarihler için daima 2026 istiyoruz.
   if (v instanceof Date && !isNaN(v.getTime())) {
-    const d = String(v.getDate()).padStart(2, "0");
-    const m = String(v.getMonth() + 1).padStart(2, "0");
+    const d = v.getDate();
+    const m = v.getMonth() + 1;
     const y = v.getFullYear();
-    return `${d}.${m}.${y}`;
+    return asDateText(d, m, y <= 1901 ? fallbackYear : y);
   }
 
   if (typeof v === "number" && !Number.isNaN(v)) {
     const parsed = XLSX.SSF.parse_date_code(v);
-    if (parsed && parsed.y && parsed.m && parsed.d) {
-      return `${String(parsed.d).padStart(2, "0")}.${String(parsed.m).padStart(2, "0")}.${parsed.y}`;
+    if (parsed && parsed.m && parsed.d) {
+      const y = !parsed.y || parsed.y <= 1901 ? fallbackYear : parsed.y;
+      return asDateText(parsed.d, parsed.m, y);
     }
   }
 
   const raw = t(v);
+  if (!raw) return "";
 
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(raw)) return raw;
 
   if (/^\d{1,2}[,.]\d{1,2}$/.test(raw)) {
     const [d, m] = raw.replace(",", ".").split(".");
-    return `${String(Number(d)).padStart(2, "0")}.${String(Number(m)).padStart(2, "0")}.${fallbackYear}`;
+    return asDateText(Number(d), Number(m), fallbackYear);
+  }
+
+  if (/^\d{1,2}[.,]\d{1,2}[.,]\d{2}$/.test(raw)) {
+    const [d, m, y2] = raw.replace(/,/g, ".").split(".");
+    return asDateText(Number(d), Number(m), 2000 + Number(y2));
   }
 
   if (/^\d{2}[/-]\d{2}[/-]\d{4}$/.test(raw)) {
     const [d, m, y] = raw.split(/[/-]/);
-    return `${d}.${m}.${y}`;
+    const yy = Number(y) <= 1901 ? fallbackYear : Number(y);
+    return asDateText(Number(d), Number(m), yy);
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     const [y, m, d] = raw.split("-");
-    return `${d}.${m}.${y}`;
+    const yy = Number(y) <= 1901 ? fallbackYear : Number(y);
+    return asDateText(Number(d), Number(m), yy);
   }
 
   return raw;
@@ -365,7 +379,7 @@ async function main() {
   await workbookJs.xlsx.readFile(EXCEL_PATH);
 
   const workbookXlsx = XLSX.readFile(EXCEL_PATH, {
-    cellDates: true,
+    cellDates: false,
     raw: false,
   });
 
@@ -380,15 +394,12 @@ async function main() {
     workbookXlsx.Sheets["E-SINAV"] || workbookXlsx.Sheets["E-SINAV "];
   const direksiyonSheetX =
     workbookXlsx.Sheets["DİREKSİYON"] || workbookXlsx.Sheets["DİREKSİYON "];
-  const eksikSheetX =
-    workbookXlsx.Sheets["EKSİK BELGELER"] ||
-    workbookXlsx.Sheets["EKSİK BELGELER "];
   const alacakSheetX = workbookXlsx.Sheets["ALACAK RAPORU"];
 
   if (!eSinavSheetJs || !direksiyonSheetJs || !eksikSheetJs || !alacakSheetJs) {
     throw new Error("ExcelJS tarafında gerekli sayfalardan biri eksik.");
   }
-  if (!eSinavSheetX || !direksiyonSheetX || !eksikSheetX || !alacakSheetX) {
+  if (!eSinavSheetX || !direksiyonSheetX || !alacakSheetX) {
     throw new Error("xlsx tarafında gerekli sayfalardan biri eksik.");
   }
 
@@ -421,9 +432,12 @@ async function main() {
     );
     if (!student.durum) student.durum = "esinav";
 
-    const examDateCell = getCellByHeaderExcelJS(row, eHeaderMapJs, [
-      "SINAV TARİHİ",
-    ]);
+    const examDateDisplay = getDisplayedTextFromXLSXSheet(
+      eSinavSheetX,
+      r,
+      eHeaderMapX,
+      ["SINAV TARİHİ"],
+    );
     const examTimeDisplay = getDisplayedTextFromXLSXSheet(
       eSinavSheetX,
       r,
@@ -435,7 +449,10 @@ async function main() {
       "HARC",
     ]);
 
-    const examDate = formatDate(examDateCell?.value);
+    const examDate = formatDate(
+      examDateDisplay ||
+        getCellByHeaderExcelJS(row, eHeaderMapJs, ["SINAV TARİHİ"])?.value,
+    );
     const examTime = normalizeTimeText(examTimeDisplay);
     const harcStatus = detectEsinavHarcStatus(harcCell);
 
@@ -479,10 +496,12 @@ async function main() {
     );
     student.durum = "direksiyon";
 
-    const examDateCell = getCellByHeaderExcelJS(row, dHeaderMapJs, [
-      "SINAV TARİHİ",
-      "__EMPTY_8",
-    ]);
+    const examDateDisplay = getDisplayedTextFromXLSXSheet(
+      direksiyonSheetX,
+      r,
+      dHeaderMapX,
+      ["SINAV TARİHİ", "__EMPTY_8"],
+    );
     const examTimeDisplay = getDisplayedTextFromXLSXSheet(
       direksiyonSheetX,
       r,
@@ -490,7 +509,11 @@ async function main() {
       ["SINAV SAATİ", "__EMPTY_9"],
     );
 
-    const examDate = formatDate(examDateCell?.value);
+    const examDate = formatDate(
+      examDateDisplay ||
+        getCellByHeaderExcelJS(row, dHeaderMapJs, ["SINAV TARİHİ", "__EMPTY_8"])
+          ?.value,
+    );
     const examTime = normalizeTimeText(examTimeDisplay);
 
     if (examDate) student.direksiyon_tarih = examDate;
@@ -604,7 +627,8 @@ async function main() {
       getCellTextByHeaderExcelJS(row, aHeaderMapJs, ["TAKSİT", "TAKSIT"]),
     );
     const dueDate = formatDate(
-      getCellByHeaderExcelJS(row, aHeaderMapJs, ["TARİH", "TARIH"])?.value,
+      getCellTextByHeaderExcelJS(row, aHeaderMapJs, ["TARİH", "TARIH"]) ||
+        getCellByHeaderExcelJS(row, aHeaderMapJs, ["TARİH", "TARIH"])?.value,
     );
 
     if (eDebt) {
