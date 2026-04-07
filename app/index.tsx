@@ -1,5 +1,5 @@
 import * as Linking from "expo-linking";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -27,17 +27,31 @@ type Student = {
   durum: string;
   evrak_durumu: string;
   eksik_evraklar?: string;
+
   esinav_harc: string;
   esinav_son_odeme?: string;
   esinav_tarih?: string;
   esinav_saati?: string;
   esinav_sonuc: string;
+
   direksiyon_harc: string;
   direksiyon_son_odeme?: string;
   direksiyon_tarih?: string;
   direksiyon_saati?: string;
   direksiyon_sonuc: string;
+
   direksiyon_dersleri?: LessonItem[] | string;
+
+  esinav_harc_borcu?: string;
+  esinav_harc_borc?: string;
+  esinav_borc_son_odeme?: string;
+
+  direksiyon_harc_borcu?: string;
+  direksiyon_harc_borc?: string;
+  direksiyon_borc_son_odeme?: string;
+
+  taksit_borcu?: string;
+  taksit_son_odeme?: string;
 };
 
 type StatusType = "success" | "error" | "warning" | "info" | "normal";
@@ -70,6 +84,7 @@ type StepItemProps = {
 type CalendarEventType =
   | "payment-esinav"
   | "payment-direksiyon"
+  | "payment-taksit"
   | "exam-esinav"
   | "exam-direksiyon"
   | "lesson";
@@ -205,6 +220,11 @@ function formatPayment(value?: string) {
   return value;
 }
 
+function formatDebt(value?: string) {
+  if (!value || !value.trim()) return "Yok";
+  return value.trim();
+}
+
 function getMissingDocumentsList(value?: string) {
   if (!value || !value.trim()) return [];
   return value
@@ -223,6 +243,7 @@ function parseLessonText(value?: string): LessonItem[] {
       const clean = line.replace(/^[•\-\s]+/, "").trim();
       const dateMatch = clean.match(/\b\d{2}\.\d{2}\.\d{4}\b/);
       const timeMatch = clean.match(/\b\d{2}:\d{2}\b/);
+
       return {
         tarih: dateMatch?.[0],
         saat: timeMatch?.[0],
@@ -243,6 +264,14 @@ function getLessons(user: Student) {
   }
 
   return [];
+}
+
+function getEsinavDebt(user: Student) {
+  return user.esinav_harc_borcu || user.esinav_harc_borc || "";
+}
+
+function getDireksiyonDebt(user: Student) {
+  return user.direksiyon_harc_borcu || user.direksiyon_harc_borc || "";
 }
 
 function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
@@ -273,7 +302,13 @@ function getDocumentBadge(user: Student): { label: string; tone: BadgeTone } {
 }
 
 function getCalendarBadgeTone(type: CalendarEventType): BadgeTone {
-  if (type === "payment-esinav" || type === "payment-direksiyon") return "red";
+  if (
+    type === "payment-esinav" ||
+    type === "payment-direksiyon" ||
+    type === "payment-taksit"
+  ) {
+    return "red";
+  }
   if (type === "exam-esinav") return "blue";
   if (type === "exam-direksiyon") return "orange";
   return "green";
@@ -285,19 +320,16 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   if (user.evrak_durumu === "eksik") return events;
 
   if (user.durum === "esinav") {
-    if (user.esinav_son_odeme) {
+    if (user.esinav_borc_son_odeme) {
       events.push({
-        key: `esinav-odeme-${user.esinav_son_odeme}`,
-        date: user.esinav_son_odeme,
+        key: `esinav-odeme-${user.esinav_borc_son_odeme}`,
+        date: user.esinav_borc_son_odeme,
         title: "E-sınav harcı son ödeme günü",
-        description:
-          user.esinav_harc === "odendi"
-            ? "E-sınav harcı ödendi."
-            : "E-sınav harcını bu tarihe kadar yatırın.",
+        description: `Borç: ${formatDebt(getEsinavDebt(user))}`,
         type: "payment-esinav",
-        isPast: isPastDate(user.esinav_son_odeme),
-        isToday: isTodayDate(user.esinav_son_odeme),
-        isUpcoming: isUpcomingDate(user.esinav_son_odeme),
+        isPast: isPastDate(user.esinav_borc_son_odeme),
+        isToday: isTodayDate(user.esinav_borc_son_odeme),
+        isUpcoming: isUpcomingDate(user.esinav_borc_son_odeme),
       });
     }
 
@@ -308,7 +340,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         time: user.esinav_saati,
         title: "E-sınav",
         description: user.esinav_saati
-          ? `Sınav saati: ${user.esinav_saati}`
+          ? `Sınav saati ${user.esinav_saati}`
           : "Sınav saati henüz eklenmemiş.",
         type: "exam-esinav",
         isPast: false,
@@ -319,19 +351,29 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   }
 
   if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
-    if (user.direksiyon_son_odeme) {
+    if (user.direksiyon_borc_son_odeme) {
       events.push({
-        key: `direksiyon-odeme-${user.direksiyon_son_odeme}`,
-        date: user.direksiyon_son_odeme,
-        title: "Direksiyon ücreti son ödeme günü",
-        description:
-          user.direksiyon_harc === "odendi"
-            ? "Direksiyon ücreti ödendi."
-            : "Direksiyon ücretini bu tarihe kadar yatırın.",
+        key: `direksiyon-odeme-${user.direksiyon_borc_son_odeme}`,
+        date: user.direksiyon_borc_son_odeme,
+        title: "Direksiyon harcı son ödeme günü",
+        description: `Borç: ${formatDebt(getDireksiyonDebt(user))}`,
         type: "payment-direksiyon",
-        isPast: isPastDate(user.direksiyon_son_odeme),
-        isToday: isTodayDate(user.direksiyon_son_odeme),
-        isUpcoming: isUpcomingDate(user.direksiyon_son_odeme),
+        isPast: isPastDate(user.direksiyon_borc_son_odeme),
+        isToday: isTodayDate(user.direksiyon_borc_son_odeme),
+        isUpcoming: isUpcomingDate(user.direksiyon_borc_son_odeme),
+      });
+    }
+
+    if (user.taksit_son_odeme) {
+      events.push({
+        key: `taksit-odeme-${user.taksit_son_odeme}`,
+        date: user.taksit_son_odeme,
+        title: "Taksit son ödeme günü",
+        description: `Borç: ${formatDebt(user.taksit_borcu)}`,
+        type: "payment-taksit",
+        isPast: isPastDate(user.taksit_son_odeme),
+        isToday: isTodayDate(user.taksit_son_odeme),
+        isUpcoming: isUpcomingDate(user.taksit_son_odeme),
       });
     }
 
@@ -359,7 +401,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         time: user.direksiyon_saati,
         title: "Direksiyon sınavı",
         description: user.direksiyon_saati
-          ? `Sınav saati: ${user.direksiyon_saati}`
+          ? `Sınav saati ${user.direksiyon_saati}`
           : "Sınav saati henüz eklenmemiş.",
         type: "exam-direksiyon",
         isPast: isPastDate(user.direksiyon_tarih),
@@ -380,10 +422,6 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
 
 function addMonthsSafe(base: Date, amount: number) {
   return new Date(base.getFullYear(), base.getMonth() + amount, 1);
-}
-
-function areSameMonthYear(a: Date, b: Date) {
-  return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
 }
 
 function buildMonthCells(
@@ -418,6 +456,7 @@ function buildMonthCells(
       events: events.filter((event) => event.date === fullDate),
     });
   }
+
   return cells;
 }
 
@@ -596,15 +635,6 @@ function StepItem({
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.infoChip}>
-      <Text style={styles.infoChipLabel}>{label}</Text>
-      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
-    </View>
-  );
-}
-
 function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
   return (
     <View
@@ -641,15 +671,11 @@ export default function Index() {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
+  const calendarScrollRef = useRef<ScrollView | null>(null);
+  const scrollStartYRef = useRef(0);
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
   const [monthOffset, setMonthOffset] = useState(0);
-
-  const monthOptions = useMemo(
-    () =>
-      [-3, -2, -1, 0, 1, 2].map((offset) => addMonthsSafe(baseMonth, offset)),
-    [baseMonth],
-  );
 
   const visibleMonth = useMemo(
     () => addMonthsSafe(baseMonth, monthOffset),
@@ -685,6 +711,12 @@ export default function Index() {
   useEffect(() => {
     loadStudents();
   }, []);
+
+  useEffect(() => {
+    if (calendarVisible && calendarScrollRef.current) {
+      calendarScrollRef.current.scrollTo({ y: 0, animated: false });
+    }
+  }, [monthOffset, calendarVisible]);
 
   const openDetailModal = (text: string) => {
     setSelectedDetail(text);
@@ -1002,15 +1034,6 @@ export default function Index() {
       return;
     }
 
-    if (
-      user.durum !== "esinav" &&
-      user.esinav_sonuc !== "gecti" &&
-      user.esinav_sonuc !== "kaldi"
-    ) {
-      openDetailModal("Bu öğrenci şu an e-sınav aşamasında görünmüyor.");
-      return;
-    }
-
     if (user.esinav_harc === "odenmedi") {
       openDetailModal("E-sınav harcınız henüz ödenmemiş görünüyor.");
       return;
@@ -1166,7 +1189,6 @@ export default function Index() {
 
   const handleCalendarCellPress = (cell: CalendarCell) => {
     if (!cell.events.length) return;
-
     const detail = cell.events
       .map((event) => {
         const datetime = event.time
@@ -1177,6 +1199,24 @@ export default function Index() {
       .join("\n\n");
 
     openCalendarDetailModal(detail);
+  };
+
+  const handleCalendarScrollBeginDrag = (event: any) => {
+    scrollStartYRef.current = event.nativeEvent.contentOffset.y;
+  };
+
+  const handleCalendarScrollEndDrag = (event: any) => {
+    const endY = event.nativeEvent.contentOffset.y;
+    const diff = endY - scrollStartYRef.current;
+
+    if (diff > 40 && canGoNext) {
+      setMonthOffset((prev) => Math.min(prev + 1, 2));
+      return;
+    }
+
+    if (diff < -40 && canGoPrev) {
+      setMonthOffset((prev) => Math.max(prev - 1, -3));
+    }
   };
 
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
@@ -1388,7 +1428,16 @@ export default function Index() {
                   Sonuç: {formatOutcome(user.esinav_sonuc)}
                 </Text>
                 <Text style={styles.miniCardText}>
-                  Harç: {formatPayment(user.esinav_harc)}
+                  Harç durumu: {formatPayment(user.esinav_harc)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Harç borcu: {formatDebt(getEsinavDebt(user))}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Son ödeme:{" "}
+                  {normalizeValue(
+                    user.esinav_borc_son_odeme || user.esinav_son_odeme,
+                  )}
                 </Text>
 
                 {user.esinav_harc === "odenmedi" ? (
@@ -1422,7 +1471,22 @@ export default function Index() {
                   Sonuç: {formatOutcome(user.direksiyon_sonuc)}
                 </Text>
                 <Text style={styles.miniCardText}>
-                  Ücret: {formatPayment(user.direksiyon_harc)}
+                  Harç durumu: {formatPayment(user.direksiyon_harc)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Direksiyon harç borcu: {formatDebt(getDireksiyonDebt(user))}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Direksiyon son ödeme:{" "}
+                  {normalizeValue(
+                    user.direksiyon_borc_son_odeme || user.direksiyon_son_odeme,
+                  )}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Taksit borcu: {formatDebt(user.taksit_borcu)}
+                </Text>
+                <Text style={styles.miniCardText}>
+                  Taksit son ödeme: {normalizeValue(user.taksit_son_odeme)}
                 </Text>
 
                 {user.direksiyon_harc === "odenmedi" ? (
@@ -1514,7 +1578,9 @@ export default function Index() {
                   styles.monthNavButton,
                   !canGoPrev ? styles.monthNavButtonDisabled : null,
                 ]}
-                onPress={() => canGoPrev && setMonthOffset(monthOffset - 1)}
+                onPress={() =>
+                  canGoPrev && setMonthOffset((prev) => Math.max(prev - 1, -3))
+                }
                 disabled={!canGoPrev}
               >
                 <Text style={styles.monthNavButtonText}>▲</Text>
@@ -1525,7 +1591,9 @@ export default function Index() {
                   styles.monthNavButton,
                   !canGoNext ? styles.monthNavButtonDisabled : null,
                 ]}
-                onPress={() => canGoNext && setMonthOffset(monthOffset + 1)}
+                onPress={() =>
+                  canGoNext && setMonthOffset((prev) => Math.min(prev + 1, 2))
+                }
                 disabled={!canGoNext}
               >
                 <Text style={styles.monthNavButtonText}>▼</Text>
@@ -1534,7 +1602,7 @@ export default function Index() {
           </View>
 
           <Text style={styles.calendarRangeText}>
-            Geçmiş 3 ay ve gelecek 2 ay arasında geçiş yapabilirsiniz.
+            Ekranı yukarı veya aşağı kaydırarak ay değiştirebilirsiniz.
           </Text>
 
           <View style={styles.dayNamesRow}>
@@ -1564,36 +1632,13 @@ export default function Index() {
             </View>
           </View>
 
-          <View style={styles.monthPickerRow}>
-            {monthOptions.map((monthItem, index) => {
-              const monthText = `${MONTH_NAMES[monthItem.getMonth()].slice(0, 3)} ${monthItem.getFullYear()}`;
-              const active = areSameMonthYear(monthItem, visibleMonth);
-
-              return (
-                <TouchableOpacity
-                  key={`${monthItem.getMonth()}-${monthItem.getFullYear()}`}
-                  style={[
-                    styles.monthPill,
-                    active ? styles.monthPillActive : null,
-                  ]}
-                  onPress={() => setMonthOffset(index - 3)}
-                >
-                  <Text
-                    style={[
-                      styles.monthPillText,
-                      active ? styles.monthPillTextActive : null,
-                    ]}
-                  >
-                    {monthText}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
           <ScrollView
+            ref={calendarScrollRef}
             style={styles.calendarPageScroll}
             contentContainerStyle={styles.calendarPageContent}
+            onScrollBeginDrag={handleCalendarScrollBeginDrag}
+            onScrollEndDrag={handleCalendarScrollEndDrag}
+            scrollEventThrottle={16}
           >
             <View style={styles.monthGrid}>
               {visibleMonthCells.map((cell) => {
@@ -2115,24 +2160,6 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   legendDot: { width: 12, height: 12, borderRadius: 6 },
   legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
-  monthPickerRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-  },
-  monthPill: {
-    backgroundColor: "#151519",
-    borderWidth: 1,
-    borderColor: "#2a2a31",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  monthPillActive: { backgroundColor: "#686868", borderColor: "#686868" },
-  monthPillText: { color: "#d8d8dd", fontSize: 12, fontWeight: "700" },
-  monthPillTextActive: { color: "#ffffff" },
   calendarPageScroll: { flex: 1 },
   calendarPageContent: { paddingHorizontal: 8, paddingBottom: 32 },
   monthGrid: { flexDirection: "row", flexWrap: "wrap" },
@@ -2159,15 +2186,15 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 4,
   },
-  cellDot: { marginTop: 5, width: 16, height: 16, borderRadius: 10 },
+  cellDot: { width: 7, height: 7, borderRadius: 4 },
   eventDotRed: { backgroundColor: "#c1121f" },
   eventDotBlue: { backgroundColor: "#2c6ca6" },
   eventDotOrange: { backgroundColor: "#c98819" },
   eventDotGreen: { backgroundColor: "#1f8f55" },
   calendarCellPreview: {
     color: "#f2f2f5",
-    fontSize: 15,
-    lineHeight: 42,
+    fontSize: 10,
+    lineHeight: 12,
     textAlign: "center",
     paddingHorizontal: 1,
     fontWeight: "700",
