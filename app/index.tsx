@@ -4,8 +4,10 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -703,6 +705,7 @@ export default function Index() {
   const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
   const calendarScrollRef = useRef<ScrollView | null>(null);
+  const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
@@ -1317,6 +1320,16 @@ export default function Index() {
     handleCalendarMonthChangeGesture(diff);
   };
 
+  const handleTcInputFocus = () => {
+    setTimeout(() => {
+      loginScrollRef.current?.scrollTo({ y: 220, animated: true });
+    }, 180);
+  };
+
+  const resetLoginScroll = () => {
+    loginScrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
 
   if (loadingStudents && !loggedIn) {
@@ -1330,65 +1343,83 @@ export default function Index() {
 
   if (!loggedIn || !user) {
     return (
-      <View style={styles.container}>
-        <View style={{ alignItems: "center", marginTop: 100 }}>
-          <Image
-            source={require("../assets/images/logo.png")}
-            style={{ width: 270, height: 270 }}
-          />
-          <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
-        </View>
-        <View style={styles.loginBox}>
-          <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
-          <Text style={styles.loginSub}>
-            TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
-            görüntüleyebilirsiniz.
-          </Text>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          ref={loginScrollRef}
+          style={styles.container}
+          contentContainerStyle={styles.loginContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          onContentSizeChange={() => {
+            if (!tc) {
+              resetLoginScroll();
+            }
+          }}
+        >
+          <View style={{ alignItems: "center", marginTop: 100 }}>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={{ width: 270, height: 270 }}
+            />
+            <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
+          </View>
+          <View style={styles.loginBox}>
+            <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
+            <Text style={styles.loginSub}>
+              TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
+              görüntüleyebilirsiniz.
+            </Text>
 
-          {visibleLoginFeedback ? (
-            <View
+            {visibleLoginFeedback ? (
+              <View
+                style={[
+                  styles.loginStatusCard,
+                  visibleLoginFeedback.type === "success"
+                    ? styles.loginStatusSuccess
+                    : visibleLoginFeedback.type === "error"
+                      ? styles.loginStatusError
+                      : visibleLoginFeedback.type === "warning"
+                        ? styles.loginStatusWarning
+                        : styles.loginStatusInfo,
+                ]}
+              >
+                <Text style={styles.loginStatusTitle}>
+                  {visibleLoginFeedback.title}
+                </Text>
+                <Text style={styles.loginStatusText}>
+                  {visibleLoginFeedback.message}
+                </Text>
+              </View>
+            ) : null}
+
+            <TextInput
+              placeholder="TC kimlik numaranız"
+              placeholderTextColor="#7f7f88"
+              keyboardType="number-pad"
+              maxLength={11}
+              value={tc}
+              onChangeText={handleTcChange}
+              onFocus={handleTcInputFocus}
+              style={styles.input}
+            />
+
+            <TouchableOpacity
               style={[
-                styles.loginStatusCard,
-                visibleLoginFeedback.type === "success"
-                  ? styles.loginStatusSuccess
-                  : visibleLoginFeedback.type === "error"
-                    ? styles.loginStatusError
-                    : visibleLoginFeedback.type === "warning"
-                      ? styles.loginStatusWarning
-                      : styles.loginStatusInfo,
+                styles.loginButton,
+                isLoginDisabled ? styles.loginButtonDisabled : null,
               ]}
+              onPress={handleLogin}
+              disabled={isLoginDisabled}
             >
-              <Text style={styles.loginStatusTitle}>
-                {visibleLoginFeedback.title}
-              </Text>
-              <Text style={styles.loginStatusText}>
-                {visibleLoginFeedback.message}
-              </Text>
-            </View>
-          ) : null}
-
-          <TextInput
-            placeholder="TC kimlik numaranız"
-            placeholderTextColor="#7f7f88"
-            keyboardType="number-pad"
-            maxLength={11}
-            value={tc}
-            onChangeText={handleTcChange}
-            style={styles.input}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.loginButton,
-              isLoginDisabled ? styles.loginButtonDisabled : null,
-            ]}
-            onPress={handleLogin}
-            disabled={isLoginDisabled}
-          >
-            <Text style={styles.loginButtonText}>Giriş Yap</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+              <Text style={styles.loginButtonText}>Giriş Yap</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
