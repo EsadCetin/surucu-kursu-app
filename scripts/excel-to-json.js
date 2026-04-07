@@ -1,15 +1,13 @@
 /**
  * excel-to-json.js
  *
- * Amaç:
- * - excel/ogrenciler.xlsx içindeki 4 sayfayı oku:
- *   - E-SINAV
- *   - DİREKSİYON
- *   - EKSİK BELGELER
- *   - ALACAK RAPORU
- * - Aynı öğrenciyi TC ile, TC yoksa ad soyad ile birleştir
- * - Borç son ödeme tarihlerini ana alanlara da yansıt
- * - docs/students.json üret
+ * Bu sürüm:
+ * - E-SINAV, DİREKSİYON, EKSİK BELGELER, ALACAK RAPORU sayfalarını okur
+ * - Aynı öğrenciyi TC ile, TC yoksa ad soyad ile birleştirir
+ * - Borç son ödeme tarihlerini ana son ödeme alanlarına da yansıtır
+ * - E-SINAV sayfasındaki harç hücresinin rengine göre ödeme durumunu çıkarır:
+ *   - yeşil / sarı  => odendi
+ *   - beyaz / boş   => odenmedi
  *
  * Kullanım:
  *   node scripts/excel-to-json.js
@@ -111,6 +109,75 @@ function parseSheet(ws, headerRowIndex) {
   });
 }
 
+function decodeSheetRange(ws) {
+  if (!ws || !ws["!ref"]) return null;
+  return XLSX.utils.decode_range(ws["!ref"]);
+}
+
+function findColumnLetterByHeader(ws, headerRowIndex, headerMatchers) {
+  const range = decodeSheetRange(ws);
+  if (!range) return "";
+
+  for (let c = range.s.c; c <= range.e.c; c += 1) {
+    const address = XLSX.utils.encode_cell({ r: headerRowIndex - 1, c });
+    const value = t(ws[address]?.v);
+    if (!value) continue;
+
+    const norm = value.toLocaleLowerCase("tr-TR");
+    if (headerMatchers.some((m) => norm.includes(m))) {
+      return XLSX.utils.encode_col(c);
+    }
+  }
+
+  return "";
+}
+
+function getArgbFromCellStyle(cell) {
+  if (!cell || !cell.s) return "";
+  const fill = cell.s.fill || {};
+  const fg = fill.fgColor || {};
+  const bg = fill.bgColor || {};
+  return String(fg.rgb || bg.rgb || "").toUpperCase();
+}
+
+function mapFillColorToPaymentStatus(argb) {
+  const rgb = String(argb || "")
+    .replace(/^FF/, "")
+    .toUpperCase();
+
+  if (!rgb) return "";
+
+  const whiteSet = new Set(["FFFFFF", "FFFFFE", "F2F2F2", "F7F7F7", "EDEDED"]);
+  if (whiteSet.has(rgb)) return "odenmedi";
+
+  const greenHints = ["00B050", "70AD47", "92D050", "A9D18E", "C6E0B4"];
+  if (greenHints.includes(rgb)) return "odendi";
+
+  const yellowHints = ["FFFF00", "FFD966", "FFE699", "FFF2CC", "FFC000"];
+  if (yellowHints.includes(rgb)) return "odendi";
+
+  return "";
+}
+
+function detectEsinavHarcStatusFromColor(
+  ws,
+  rowNumber1Based,
+  harcColumnLetter,
+) {
+  if (!harcColumnLetter) return "";
+  const address = `${harcColumnLetter}${rowNumber1Based}`;
+  const cell = ws[address];
+  const argb = getArgbFromCellStyle(cell);
+  const byColor = mapFillColorToPaymentStatus(argb);
+  if (byColor) return byColor;
+
+  const rawText = t(cell?.v).toLocaleLowerCase("tr-TR");
+  if (["yeşil", "yesil", "sarı", "sari"].includes(rawText)) return "odendi";
+  if (rawText === "beyaz") return "odenmedi";
+
+  return "";
+}
+
 function createStudent(tcValue = "", nameValue = "") {
   return {
     tc: tcValue,
@@ -120,20 +187,17 @@ function createStudent(tcValue = "", nameValue = "") {
     durum: "",
     evrak_durumu: "",
     eksik_evraklar: "",
-
     esinav_harc: "",
     esinav_son_odeme: "",
     esinav_tarih: "",
     esinav_saati: "",
     esinav_sonuc: "",
-
     direksiyon_harc: "",
     direksiyon_son_odeme: "",
     direksiyon_tarih: "",
     direksiyon_saati: "",
     direksiyon_sonuc: "",
     direksiyon_dersleri: [],
-
     esinav_harc_borcu: "",
     esinav_borc_son_odeme: "",
     direksiyon_harc_borcu: "",
@@ -148,39 +212,23 @@ function setIfEmpty(obj, key, value) {
     if (!obj[key] || !obj[key].length) obj[key] = value;
     return;
   }
-
   const val = t(value);
   if (val && !obj[key]) obj[key] = val;
 }
 
-function setAlways(obj, key, value) {
-  if (Array.isArray(value)) {
-    if (value.length) obj[key] = value;
-    return;
-  }
-
-  const val = t(value);
-  if (val) obj[key] = val;
-}
-
 function buildStore() {
-  return {
-    byTc: new Map(),
-    byName: new Map(),
-  };
+  return { byTc: new Map(), byName: new Map() };
 }
 
 function getOrCreate(store, tcValue, nameValue) {
   const cleanTc = tc(tcValue);
   const cleanName = t(nameValue);
 
-  if (cleanTc && store.byTc.has(cleanTc)) {
-    return store.byTc.get(cleanTc);
-  }
+  if (cleanTc && store.byTc.has(cleanTc)) return store.byTc.get(cleanTc);
 
-  const nameNorm = nameKey(cleanName);
-  if (nameNorm && store.byName.has(nameNorm)) {
-    const existing = store.byName.get(nameNorm);
+  const normName = nameKey(cleanName);
+  if (normName && store.byName.has(normName)) {
+    const existing = store.byName.get(normName);
     if (cleanTc && !existing.tc) {
       existing.tc = cleanTc;
       store.byTc.set(cleanTc, existing);
@@ -190,7 +238,7 @@ function getOrCreate(store, tcValue, nameValue) {
 
   const student = createStudent(cleanTc, cleanName);
   if (cleanTc) store.byTc.set(cleanTc, student);
-  if (nameNorm) store.byName.set(nameNorm, student);
+  if (normName) store.byName.set(normName, student);
   return student;
 }
 
@@ -227,22 +275,17 @@ function syncDerivedFields(student) {
   if (!student.esinav_harc && student.esinav_harc_borcu) {
     student.esinav_harc = "odenmedi";
   }
-
   if (!student.direksiyon_harc && student.direksiyon_harc_borcu) {
     student.direksiyon_harc = "odenmedi";
   }
 
-  // KRİTİK DÜZELTME:
-  // borç son ödeme tarihleri doluysa ana son ödeme alanlarını da doldur
   if (!student.esinav_son_odeme && student.esinav_borc_son_odeme) {
     student.esinav_son_odeme = student.esinav_borc_son_odeme;
   }
-
   if (!student.direksiyon_son_odeme && student.direksiyon_borc_son_odeme) {
     student.direksiyon_son_odeme = student.direksiyon_borc_son_odeme;
   }
 
-  // borç varsa ama durum boşsa mantıklı default ver
   if (!student.durum) {
     if (
       student.direksiyon_harc_borcu ||
@@ -269,7 +312,7 @@ function main() {
     throw new Error(`Excel dosyası bulunamadı: ${EXCEL_PATH}`);
   }
 
-  const wb = XLSX.readFile(EXCEL_PATH, { cellDates: true });
+  const wb = XLSX.readFile(EXCEL_PATH, { cellDates: true, cellStyles: true });
   const store = buildStore();
 
   const eSinavSheet = wb.Sheets["E-SINAV "] || wb.Sheets["E-SINAV"];
@@ -282,33 +325,46 @@ function main() {
     throw new Error("Gerekli sayfalardan biri eksik.");
   }
 
-  // E-SINAV
-  const eRows = parseSheet(eSinavSheet, 2);
-  for (const row of eRows) {
+  const eHeaderRow = 2;
+  const eRows = parseSheet(eSinavSheet, eHeaderRow);
+  const eSinavHarcColumn = findColumnLetterByHeader(eSinavSheet, eHeaderRow, [
+    "harç",
+    "harc",
+  ]);
+
+  for (let i = 0; i < eRows.length; i += 1) {
+    const row = eRows[i];
     const tcValue = tc(row["TC"]);
     const nameValue = t(row["ADI SOYADI"]);
     if (!tcValue && !nameValue) continue;
 
     const student = getOrCreate(store, tcValue, nameValue);
-
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "sinif", row["SINIF"]);
     setIfEmpty(student, "telefonlar", row["TELEFONLAR"]);
-
     if (!student.durum) student.durum = "esinav";
 
     const examDate = formatDate(row["SINAV TARİHİ"]);
     const examTime = formatTime(row["SINAV SAATİ"]);
+    const colorBasedHarc = detectEsinavHarcStatusFromColor(
+      eSinavSheet,
+      eHeaderRow + 1 + i,
+      eSinavHarcColumn,
+    );
 
     if (examDate) student.esinav_tarih = examDate;
     if (examTime) student.esinav_saati = examTime;
 
-    if (!student.esinav_harc) student.esinav_harc = "odenmedi";
+    if (colorBasedHarc) {
+      student.esinav_harc = colorBasedHarc;
+    } else if (!student.esinav_harc) {
+      student.esinav_harc = "odenmedi";
+    }
+
     if (!student.evrak_durumu) student.evrak_durumu = "tamam";
   }
 
-  // DİREKSİYON
   const dRows = parseSheet(direksiyonSheet, 2);
   for (const row of dRows) {
     const tcValue = tc(row["TC"]);
@@ -316,7 +372,6 @@ function main() {
     if (!tcValue && !nameValue) continue;
 
     const student = getOrCreate(store, tcValue, nameValue);
-
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "sinif", row["SINIF"]);
@@ -325,12 +380,10 @@ function main() {
       "telefonlar",
       row["__EMPTY_7"] || row["TELEFON"] || row["TELEFONLAR"],
     );
-
     student.durum = "direksiyon";
 
     const examDate = formatDate(row["__EMPTY_8"] || row["SINAV TARİHİ"]);
     const examTime = formatTime(row["__EMPTY_9"] || row["SINAV SAATİ"]);
-
     if (examDate) student.direksiyon_tarih = examDate;
     if (examTime) student.direksiyon_saati = examTime;
 
@@ -338,7 +391,6 @@ function main() {
     if (!student.evrak_durumu) student.evrak_durumu = "tamam";
   }
 
-  // EKSİK BELGELER
   const xRows = parseSheet(eksikSheet, 1);
   for (const row of xRows) {
     const tcValue = tc(row["TC"]);
@@ -346,7 +398,6 @@ function main() {
     if (!tcValue && !nameValue) continue;
 
     const student = getOrCreate(store, tcValue, nameValue);
-
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "ad_soyad", nameValue);
 
@@ -373,7 +424,6 @@ function main() {
     }
   }
 
-  // ALACAK RAPORU
   const aRows = parseSheet(alacakSheet, 3);
   for (const row of aRows) {
     const nameValue = t(row["ADI SOYADI"]);
@@ -390,18 +440,14 @@ function main() {
     if (eDebt) {
       student.esinav_harc_borcu = eDebt;
       student.esinav_borc_son_odeme = dueDate;
-      if (!student.esinav_son_odeme) {
-        student.esinav_son_odeme = dueDate;
-      }
-      student.esinav_harc = "odenmedi";
+      if (!student.esinav_son_odeme) student.esinav_son_odeme = dueDate;
+      if (!student.esinav_harc) student.esinav_harc = "odenmedi";
     }
 
     if (dDebt) {
       student.direksiyon_harc_borcu = dDebt;
       student.direksiyon_borc_son_odeme = dueDate;
-      if (!student.direksiyon_son_odeme) {
-        student.direksiyon_son_odeme = dueDate;
-      }
+      if (!student.direksiyon_son_odeme) student.direksiyon_son_odeme = dueDate;
       student.direksiyon_harc = "odenmedi";
     }
 
