@@ -1,17 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
+
+import { initializeOneSignal } from "../lib/onesignal";
 
 export default function Layout() {
+  useEffect(() => {
+    initializeOneSignal();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: "#0F5BFF",
+        tabBarInactiveTintColor: "#6B7280",
         tabBarStyle: {
-          backgroundColor: "#111",
-          borderTopColor: "#222",
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: "#c1121f",
-        tabBarInactiveTintColor: "#888",
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "700",
+        },
       }}
     >
       <Tabs.Screen
@@ -43,12 +55,13 @@ export default function Layout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="sss"
         options={{
           title: "SSS",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="help" size={size} color={color} />
+            <Ionicons name="help-circle" size={size} color={color} />
           ),
         }}
       />
