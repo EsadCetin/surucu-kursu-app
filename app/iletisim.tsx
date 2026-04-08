@@ -70,25 +70,36 @@ export default function Iletisim() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
           <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
-
-          <Text style={styles.label}>
-            Telefon
-            <Ionicons name="call" size={16} color="#8f9098" />
-          </Text>
-
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#232329",
+            }}
+          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={styles.label}>Telefon</Text>
+            <Ionicons
+              name="call"
+              size={16}
+              color="#8f9098"
+              style={{ marginTop: 5 }}
+            />
+          </View>
           <Text style={styles.text}>0537 504 69 84 </Text>
-
-          <Text style={styles.label}>
-            Web
-            <Ionicons name="globe" size={16} color="#8f9098" />
-          </Text>
-
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={styles.label}>Web</Text>
+            <Ionicons
+              name="globe"
+              size={16}
+              color="#8f9098"
+              style={{ marginTop: 5 }}
+            />
+          </View>
           <Text style={styles.text}>ayassurucukursu.com</Text>
-
-          <Text style={styles.label}>
-            Adres
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text style={styles.label}>Adres</Text>
             <Ionicons name="location" size={16} color="#8f9098" />
-          </Text>
+          </View>
           <Text style={styles.text}>
             Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı) Ayaş/Ankara
           </Text>
@@ -111,8 +122,12 @@ export default function Iletisim() {
 
         <View style={styles.reviewCard}>
           <View style={styles.reviewHeader}>
-            <Ionicons name="logo-google" size={22} color="#1f8f55" />
+            <Ionicons name="logo-google" size={18} color="#1f8f55" />
             <Text style={styles.reviewTitle}>Google Değerlendirme</Text>
+            <Ionicons name="star" size={16} color="#f1c40f" />
+            <Text style={{ color: "#8f9098", fontSize: 13 }}>
+              5.0 (280+ yorum)
+            </Text>
           </View>
 
           <Text style={styles.reviewText}>
@@ -171,11 +186,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 22,
     fontWeight: "700",
-    marginBottom: 18,
+    marginBottom: 13,
   },
   reviewTitle: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
   },
   label: {
@@ -184,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 4,
-    marginTop: 6,
+    marginTop: 10,
     textTransform: "uppercase",
   },
 
