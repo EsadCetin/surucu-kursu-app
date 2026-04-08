@@ -110,6 +110,7 @@ type CalendarCell = {
   fullDate: string;
   dayNumber: number;
   isCurrentMonth: boolean;
+  isHidden: boolean;
   isToday: boolean;
   events: CalendarEvent[];
 };
@@ -132,15 +133,7 @@ const MONTH_NAMES = [
   "Aralık",
 ];
 
-const DAY_NAMES = [
-  "Pazartesi",
-  "Salı",
-  "Çarşamba",
-  "Perşembe",
-  "Cuma",
-  "Cumartesi",
-  "Pazar",
-];
+const DAY_NAMES = ["Pa", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
@@ -443,6 +436,17 @@ function addMonthsSafe(base: Date, amount: number) {
   return new Date(base.getFullYear(), base.getMonth() + amount, 1);
 }
 
+function getMonthWeekCount(monthDate: Date) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const totalDays = lastDay.getDate();
+
+  return Math.ceil((startOffset + totalDays) / 7);
+}
+
 function buildMonthCells(
   monthDate: Date,
   events: CalendarEvent[],
@@ -450,27 +454,37 @@ function buildMonthCells(
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
   const startOffset = (firstDay.getDay() + 6) % 7;
-  const gridStart = new Date(year, month, 1 - startOffset);
+  const totalDays = lastDay.getDate();
+  const totalSlots = getMonthWeekCount(monthDate) * 7;
   const cells: CalendarCell[] = [];
 
-  for (let i = 0; i < 42; i += 1) {
-    const current = new Date(
-      gridStart.getFullYear(),
-      gridStart.getMonth(),
-      gridStart.getDate() + i,
-    );
-    const fullDate = formatDateFromParts(
-      current.getDate(),
-      current.getMonth() + 1,
-      current.getFullYear(),
-    );
+  for (let i = 0; i < totalSlots; i += 1) {
+    const dayNumber = i - startOffset + 1;
+    const isHidden = dayNumber < 1 || dayNumber > totalDays;
+
+    if (isHidden) {
+      cells.push({
+        key: `${year}-${month}-empty-${i}`,
+        fullDate: "",
+        dayNumber: 0,
+        isCurrentMonth: false,
+        isHidden: true,
+        isToday: false,
+        events: [],
+      });
+      continue;
+    }
+
+    const fullDate = formatDateFromParts(dayNumber, month + 1, year);
 
     cells.push({
       key: `${fullDate}-${i}`,
       fullDate,
-      dayNumber: current.getDate(),
-      isCurrentMonth: current.getMonth() === month,
+      dayNumber,
+      isCurrentMonth: true,
+      isHidden: false,
       isToday: isTodayDate(fullDate),
       events: events.filter((event) => event.date === fullDate),
     });
@@ -704,11 +718,12 @@ export default function Index() {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
-  const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
-  const scrollStartYRef = useRef(0);
+  const isCalendarGestureLockedRef = useRef(false);
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
+  const minMonthOffset = -3;
+  const maxMonthOffset = 2;
   const [monthOffset, setMonthOffset] = useState(0);
 
   const visibleMonth = useMemo(
@@ -716,35 +731,41 @@ export default function Index() {
     [baseMonth, monthOffset],
   );
 
-  const canGoPrev = monthOffset > -3;
-  const canGoNext = monthOffset < 2;
+  const canGoPrev = monthOffset > minMonthOffset;
+  const canGoNext = monthOffset < maxMonthOffset;
 
   const goToPrevMonth = () => {
-    setMonthOffset((prev) => Math.max(prev - 1, -3));
+    if (!canGoPrev) return;
+    setMonthOffset((prev) => Math.max(prev - 1, minMonthOffset));
   };
 
   const goToNextMonth = () => {
-    setMonthOffset((prev) => Math.min(prev + 1, 2));
+    if (!canGoNext) return;
+    setMonthOffset((prev) => Math.min(prev + 1, maxMonthOffset));
   };
 
   const handleCalendarMonthChangeGesture = (deltaY: number) => {
-    if (Math.abs(deltaY) < 40) return;
+    if (isCalendarGestureLockedRef.current) return;
+    if (Math.abs(deltaY) < 32) return;
 
-    if (deltaY > 0 && canGoNext) {
+    isCalendarGestureLockedRef.current = true;
+
+    if (deltaY > 0) {
       goToNextMonth();
-      return;
-    }
-
-    if (deltaY < 0 && canGoPrev) {
+    } else {
       goToPrevMonth();
     }
+
+    setTimeout(() => {
+      isCalendarGestureLockedRef.current = false;
+    }, 220);
   };
 
   const calendarPanResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) =>
-          Math.abs(gestureState.dy) > 12 &&
+          Math.abs(gestureState.dy) > 14 &&
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
         onPanResponderRelease: (_, gestureState) => {
           handleCalendarMonthChangeGesture(gestureState.dy);
@@ -782,12 +803,6 @@ export default function Index() {
   useEffect(() => {
     loadStudents();
   }, []);
-
-  useEffect(() => {
-    if (calendarVisible && calendarScrollRef.current) {
-      calendarScrollRef.current.scrollTo({ y: 0, animated: false });
-    }
-  }, [monthOffset, calendarVisible]);
 
   const openDetailModal = (text: string) => {
     setSelectedDetail(text);
@@ -1025,6 +1040,11 @@ export default function Index() {
   const visibleMonthCells = useMemo(
     () => buildMonthCells(visibleMonth, calendarEvents),
     [visibleMonth, calendarEvents],
+  );
+
+  const visibleMonthWeekCount = useMemo(
+    () => getMonthWeekCount(visibleMonth),
+    [visibleMonth],
   );
 
   const missingDocs = useMemo(
@@ -1309,17 +1329,6 @@ export default function Index() {
     openCalendarDetailModal(detail);
   };
 
-  const handleCalendarScrollBeginDrag = (event: any) => {
-    scrollStartYRef.current = event.nativeEvent.contentOffset.y;
-  };
-
-  const handleCalendarScrollEndDrag = (event: any) => {
-    const endY = event.nativeEvent.contentOffset.y;
-    const diff = endY - scrollStartYRef.current;
-
-    handleCalendarMonthChangeGesture(diff);
-  };
-
   const handleTcInputFocus = () => {
     setTimeout(() => {
       loginScrollRef.current?.scrollTo({ y: 160, animated: true });
@@ -1444,18 +1453,7 @@ export default function Index() {
               <Text style={styles.subName}>Öğrenci Paneli</Text>
             </View>
           </View>
-          {canOpenCalendar ? (
-            <TouchableOpacity
-              style={styles.topCalendarButton}
-              onPress={openCalendarModal}
-            >
-              <Text style={styles.topCalendarIcon}>🗓️</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.topCalendarButtonDisabled}>
-              <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
-            </View>
-          )}
+
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} />
             <InfoChip label="Sınıf" value={user.sinif || "-"} />
@@ -1463,6 +1461,18 @@ export default function Index() {
 
           <View style={styles.chipsRow}>
             <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
+            {canOpenCalendar ? (
+              <TouchableOpacity
+                style={styles.topCalendarButton}
+                onPress={openCalendarModal}
+              >
+                <Text style={styles.topCalendarIcon}>🗓️</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.topCalendarButtonDisabled}>
+                <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.badgesRow}>
@@ -1717,47 +1727,6 @@ export default function Index() {
               <Text style={styles.calendarHeaderCloseText}>Kapat</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={styles.monthNavigator}>
-            <Text style={styles.monthNavigatorTitle}>{visibleMonthLabel}</Text>
-
-            <View style={styles.monthNavButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.monthNavButton,
-                  !canGoPrev ? styles.monthNavButtonDisabled : null,
-                ]}
-                onPress={() =>
-                  canGoPrev && setMonthOffset((prev) => Math.max(prev - 1, -3))
-                }
-                disabled={!canGoPrev}
-              >
-                <Text style={styles.monthNavButtonText}>▲</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.monthNavButton,
-                  !canGoNext ? styles.monthNavButtonDisabled : null,
-                ]}
-                onPress={() =>
-                  canGoNext && setMonthOffset((prev) => Math.min(prev + 1, 2))
-                }
-                disabled={!canGoNext}
-              >
-                <Text style={styles.monthNavButtonText}>▼</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.dayNamesRow}>
-            {DAY_NAMES.map((dayName) => (
-              <Text key={dayName} style={styles.dayNameText}>
-                {dayName}
-              </Text>
-            ))}
-          </View>
-
           <View style={styles.calendarLegendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotRed]} />
@@ -1776,14 +1745,53 @@ export default function Index() {
               <Text style={styles.legendText}>Ders</Text>
             </View>
           </View>
+          <View style={styles.calendarStickyTop}>
+            <View style={styles.monthNavigator}>
+              <Text style={styles.monthNavigatorTitle}>
+                {visibleMonthLabel}
+              </Text>
 
-          <ScrollView
-            ref={calendarScrollRef}
-            style={styles.calendarPageScroll}
-            contentContainerStyle={styles.calendarPageContent}
-            onScrollBeginDrag={handleCalendarScrollBeginDrag}
-            onScrollEndDrag={handleCalendarScrollEndDrag}
-            scrollEventThrottle={16}
+              <View style={styles.monthNavButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.monthNavButton,
+                    !canGoPrev ? styles.monthNavButtonDisabled : null,
+                  ]}
+                  onPress={goToPrevMonth}
+                  disabled={!canGoPrev}
+                >
+                  <Text style={styles.monthNavButtonText}>▲</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.monthNavButton,
+                    !canGoNext ? styles.monthNavButtonDisabled : null,
+                  ]}
+                  onPress={goToNextMonth}
+                  disabled={!canGoNext}
+                >
+                  <Text style={styles.monthNavButtonText}>▼</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.dayNamesRow}>
+              {DAY_NAMES.map((dayName) => (
+                <Text key={dayName} style={styles.dayNameText}>
+                  {dayName}
+                </Text>
+              ))}
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.calendarPageViewport,
+              visibleMonthWeekCount === 4
+                ? styles.calendarPageViewportCentered
+                : null,
+            ]}
             {...calendarPanResponder.panHandlers}
           >
             <View style={styles.monthGrid}>
@@ -1812,66 +1820,66 @@ export default function Index() {
                     key={cell.key}
                     style={[
                       styles.calendarCell,
-                      !cell.isCurrentMonth ? styles.calendarCellMuted : null,
+                      cell.isHidden ? styles.calendarCellHidden : null,
                       cell.isToday ? styles.calendarCellToday : null,
                     ]}
-                    activeOpacity={hasEvents ? 0.85 : 1}
+                    activeOpacity={hasEvents && !cell.isHidden ? 0.85 : 1}
                     onPress={() => handleCalendarCellPress(cell)}
-                    disabled={!hasEvents}
+                    disabled={!hasEvents || cell.isHidden}
                   >
-                    <View
-                      style={[
-                        styles.calendarCellDayBadge,
-                        cell.isToday ? styles.calendarCellDayBadgeToday : null,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.calendarCellDayText,
-                          !cell.isCurrentMonth
-                            ? styles.calendarCellDayTextMuted
-                            : null,
-                          cell.isToday ? styles.calendarCellDayTextToday : null,
-                        ]}
-                      >
-                        {cell.dayNumber}
-                      </Text>
-                    </View>
-
-                    <View style={styles.cellDotsRow}>
-                      {eventTones.slice(0, 3).map((tone, idx) => (
+                    {!cell.isHidden ? (
+                      <>
                         <View
-                          key={`${cell.key}-${tone}-${idx}`}
                           style={[
-                            styles.cellDot,
-                            tone === "red"
-                              ? styles.eventDotRed
-                              : tone === "blue"
-                                ? styles.eventDotBlue
-                                : tone === "orange"
-                                  ? styles.eventDotOrange
-                                  : styles.eventDotGreen,
+                            styles.calendarCellDayBadge,
+                            cell.isToday
+                              ? styles.calendarCellDayBadgeToday
+                              : null,
                           ]}
-                        />
-                      ))}
-                    </View>
+                        >
+                          <Text
+                            style={[
+                              styles.calendarCellDayText,
+                              cell.isToday
+                                ? styles.calendarCellDayTextToday
+                                : null,
+                            ]}
+                          >
+                            {cell.dayNumber}
+                          </Text>
+                        </View>
 
-                    <Text
-                      style={[
-                        styles.calendarCellPreview,
-                        !cell.isCurrentMonth
-                          ? styles.calendarCellPreviewMuted
-                          : null,
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {previewText}
-                    </Text>
+                        <View style={styles.cellDotsRow}>
+                          {eventTones.slice(0, 3).map((tone, idx) => (
+                            <View
+                              key={`${cell.key}-${tone}-${idx}`}
+                              style={[
+                                styles.cellDot,
+                                tone === "red"
+                                  ? styles.eventDotRed
+                                  : tone === "blue"
+                                    ? styles.eventDotBlue
+                                    : tone === "orange"
+                                      ? styles.eventDotOrange
+                                      : styles.eventDotGreen,
+                              ]}
+                            />
+                          ))}
+                        </View>
+
+                        <Text
+                          style={styles.calendarCellPreview}
+                          numberOfLines={2}
+                        >
+                          {previewText}
+                        </Text>
+                      </>
+                    ) : null}
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </ScrollView>
+          </View>
 
           <Modal
             visible={calendarDetailVisible}
@@ -1992,11 +2000,8 @@ const styles = StyleSheet.create({
   },
   topBarTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
   topCalendarButton: {
-    position: "absolute",
-    top: 18,
-    right: 18,
-    width: 55,
-    height: 55,
+    width: 65,
+    height: 65,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -2015,9 +2020,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     opacity: 0.4,
   },
-  topCalendarIcon: { fontSize: 30 },
+  topCalendarIcon: { fontSize: 40 },
   topCalendarIconDisabled: { fontSize: 20 },
   profileCard: {
+    marginTop: 30,
     backgroundColor: "#151519",
     borderRadius: 24,
     padding: 18,
@@ -2301,30 +2307,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 14,
   },
-  dayNamesRow: { flexDirection: "row", paddingHorizontal: 8, marginBottom: 10 },
+  dayNamesRow: { flexDirection: "row", paddingHorizontal: 8 },
   dayNameText: {
     top: 5,
     flex: 1,
     textAlign: "center",
     color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  calendarStickyTop: {
+    paddingTop: 6,
+    paddingBottom: 10,
+    backgroundColor: "#0f1014",
   },
   calendarLegendRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
     marginBottom: 14,
+    marginTop: 8,
     paddingHorizontal: 16,
   },
   legendItem: { top: 5, flexDirection: "row", alignItems: "center", gap: 6 },
   legendDot: { width: 14, height: 14, borderRadius: 7 },
   legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
-  calendarPageScroll: { flex: 1 },
-  calendarPageContent: { paddingHorizontal: 8, paddingBottom: 32 },
+  calendarPageViewport: {
+    marginHorizontal: 8,
+    minHeight: 420,
+    justifyContent: "flex-start",
+  },
+  calendarPageViewportCentered: {
+    justifyContent: "center",
+  },
   monthGrid: { flexDirection: "row", flexWrap: "wrap" },
   calendarCell: { width: "14.2857%", aspectRatio: 0.82, padding: 4 },
-  calendarCellMuted: { opacity: 0.38 },
+  calendarCellHidden: { opacity: 0 },
   calendarCellToday: { opacity: 1 },
   calendarCellDayBadge: {
     width: 38,
@@ -2337,7 +2355,6 @@ const styles = StyleSheet.create({
   },
   calendarCellDayBadgeToday: { backgroundColor: "#686868" },
   calendarCellDayText: { color: "#ffffff", fontSize: 22, fontWeight: "500" },
-  calendarCellDayTextMuted: { color: "#8a8a90" },
   calendarCellDayTextToday: { color: "#ffffff", fontWeight: "800" },
   cellDotsRow: {
     minHeight: 18,
@@ -2359,5 +2376,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 1,
     fontWeight: "800",
   },
-  calendarCellPreviewMuted: { color: "#707078" },
 });

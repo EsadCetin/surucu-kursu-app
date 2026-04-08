@@ -71,13 +71,24 @@ export default function Iletisim() {
         <View style={styles.card}>
           <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
 
-          <Text style={styles.label}>Telefon</Text>
-          <Text style={styles.text}>0537 504 69 84</Text>
+          <Text style={styles.label}>
+            Telefon
+            <Ionicons name="call" size={16} color="#8f9098" />
+          </Text>
 
-          <Text style={styles.label}>Web</Text>
+          <Text style={styles.text}>0537 504 69 84 </Text>
+
+          <Text style={styles.label}>
+            Web
+            <Ionicons name="globe" size={16} color="#8f9098" />
+          </Text>
+
           <Text style={styles.text}>ayassurucukursu.com</Text>
 
-          <Text style={styles.label}>Adres</Text>
+          <Text style={styles.label}>
+            Adres
+            <Ionicons name="location" size={16} color="#8f9098" />
+          </Text>
           <Text style={styles.text}>
             Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı) Ayaş/Ankara
           </Text>
@@ -168,6 +179,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   label: {
+    flexDirection: "row",
     color: "#8f9098",
     fontSize: 13,
     fontWeight: "700",
@@ -175,6 +187,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textTransform: "uppercase",
   },
+
   text: {
     color: "#d7d7dc",
     fontSize: 15,
