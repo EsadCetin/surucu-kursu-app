@@ -1322,7 +1322,7 @@ export default function Index() {
 
   const handleTcInputFocus = () => {
     setTimeout(() => {
-      loginScrollRef.current?.scrollTo({ y: 220, animated: true });
+      loginScrollRef.current?.scrollTo({ y: 160, animated: true });
     }, 180);
   };
 
@@ -1365,7 +1365,6 @@ export default function Index() {
               source={require("../assets/images/logo.png")}
               style={{ width: 270, height: 270 }}
             />
-            <Text style={styles.brand}>Yeni Ayaş Sürücü Kursu</Text>
           </View>
           <View style={styles.loginBox}>
             <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
@@ -1399,7 +1398,12 @@ export default function Index() {
             <TextInput
               placeholder="TC kimlik numaranız"
               placeholderTextColor="#7f7f88"
-              keyboardType="number-pad"
+              inputMode="numeric"
+              keyboardType="numeric"
+              showSoftInputOnFocus={true}
+              autoCorrect={false}
+              autoComplete="off"
+              textContentType="none"
               maxLength={11}
               value={tc}
               onChangeText={handleTcChange}
