@@ -1968,6 +1968,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 8,
   },
+  loginContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 60,
+  },
   loginStatusText: { color: "#d8d8dd", fontSize: 14, lineHeight: 22 },
   loginStatusSuccess: { borderColor: "#1f8f55" },
   loginStatusError: { borderColor: "#a62d2d" },
