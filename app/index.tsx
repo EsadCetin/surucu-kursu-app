@@ -1,7 +1,6 @@
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { clearStudentPushProfile, syncStudentPushProfile } from "../lib/onesignal";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +17,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  clearStudentPushProfile,
+  syncStudentPushProfile,
+} from "../lib/onesignal";
 
 type LessonItem = {
   tarih?: string;
@@ -134,15 +137,7 @@ const MONTH_NAMES = [
   "Aralık",
 ];
 
-const DAY_NAMES = [
-  "Pazartesi",
-  "Salı",
-  "Çarşamba",
-  "Perşembe",
-  "Cuma",
-  "Cumartesi",
-  "Pazar",
-];
+const DAY_NAMES = ["Pa", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
