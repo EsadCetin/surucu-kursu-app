@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -121,6 +122,21 @@ type CalendarCell = {
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
+
+const STUDENT_SESSION_TC_KEY = "student_session_tc";
+
+async function saveStudentSessionTc(tc: string) {
+  await AsyncStorage.setItem(STUDENT_SESSION_TC_KEY, tc.trim());
+}
+
+async function getStudentSessionTc() {
+  const storedTc = await AsyncStorage.getItem(STUDENT_SESSION_TC_KEY);
+  return storedTc?.trim() || "";
+}
+
+async function clearStudentSessionTc() {
+  await AsyncStorage.removeItem(STUDENT_SESSION_TC_KEY);
+}
 
 const MONTH_NAMES = [
   "Ocak",
@@ -701,6 +717,8 @@ export default function Index() {
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
+  const [sessionTc, setSessionTc] = useState("");
+  const [restoringSession, setRestoringSession] = useState(true);
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
@@ -781,6 +799,60 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    const restoreStoredSession = async () => {
+      try {
+        const storedTc = await getStudentSessionTc();
+        if (!active) return;
+        setSessionTc(storedTc);
+        if (storedTc) {
+          setTc(storedTc);
+        }
+      } catch (error) {
+        console.log("Kayıtlı oturum okunamadı:", error);
+      } finally {
+        if (active) {
+          setRestoringSession(false);
+        }
+      }
+    };
+
+    restoreStoredSession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (restoringSession) return;
+    if (loadingStudents) return;
+    if (loggedIn) return;
+    if (!sessionTc) return;
+
+    const foundUser = students.find((student) => student.tc === sessionTc);
+
+    if (!foundUser) {
+      clearStudentSessionTc().catch((error) => {
+        console.log("Geçersiz kayıtlı oturum temizlenemedi:", error);
+      });
+      setSessionTc("");
+      setTc("");
+      return;
+    }
+
+    setTc(foundUser.tc);
+    setUser(foundUser);
+    setLoggedIn(true);
+    setLoginFeedback(null);
+    setSelectedDetail("");
+    setDetailVisible(false);
+    setCalendarVisible(false);
+    setCalendarDetailVisible(false);
+  }, [restoringSession, loadingStudents, loggedIn, sessionTc, students]);
+
+  useEffect(() => {
     if (!loggedIn || !user?.tc) return;
 
     syncStudentPushProfile({
@@ -837,7 +909,7 @@ export default function Index() {
     if (loginFeedback) setLoginFeedback(null);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const cleanedTc = tc.trim();
 
     if (loadingStudents) {
@@ -895,11 +967,25 @@ export default function Index() {
     }
 
     const foundUser = students.find((s) => s.tc === cleanedTc);
+
     if (!foundUser) {
       setLoginFeedback({
         type: "warning",
         title: "Kayıt bulunamadı",
         message: "Bu TC kimlik numarasına ait öğrenci bulunamadı.",
+      });
+      return;
+    }
+
+    try {
+      await saveStudentSessionTc(cleanedTc);
+      setSessionTc(cleanedTc);
+    } catch (error) {
+      console.log("Oturum kaydedilemedi:", error);
+      setLoginFeedback({
+        type: "error",
+        title: "Oturum kaydedilemedi",
+        message: "Uygulama oturumu cihazda saklanamadı. Lütfen tekrar deneyin.",
       });
       return;
     }
@@ -913,7 +999,15 @@ export default function Index() {
     setCalendarDetailVisible(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await clearStudentSessionTc();
+    } catch (error) {
+      console.log("Kayıtlı oturum temizlenemedi:", error);
+    }
+
+    setSessionTc("");
+
     clearStudentPushProfile().catch((error) => {
       console.log("OneSignal çıkış hatası:", error);
     });
@@ -985,7 +1079,8 @@ export default function Index() {
     return null;
   }, [loginFeedback, fetchError, loadingStudents, students.length]);
 
-  const isLoginDisabled = loadingStudents || !!fetchError || !students.length;
+  const isLoginDisabled =
+    restoringSession || loadingStudents || !!fetchError || !students.length;
 
   const stepStates = useMemo(() => {
     if (!user) {
