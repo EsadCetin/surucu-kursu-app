@@ -14,7 +14,7 @@ function getOneSignalAppId() {
   const appId =
     Constants.expoConfig?.extra?.oneSignalAppId ||
     process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID ||
-    "cbcd93ba-b9ff-499b-aa6d-adfcd458fd7e";
+    "fb327fa5-7e9b-411b-b4fa-3217462cde7b";
 
   return typeof appId === "string" ? appId.trim() : "";
 }
