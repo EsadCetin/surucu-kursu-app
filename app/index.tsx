@@ -18,10 +18,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  clearStudentPushProfile,
-  syncStudentPushProfile,
-} from "../lib/onesignal";
 
 type LessonItem = {
   tarih?: string;
@@ -853,19 +849,6 @@ export default function Index() {
   }, [restoringSession, loadingStudents, loggedIn, sessionTc, students]);
 
   useEffect(() => {
-    if (!loggedIn || !user?.tc) return;
-
-    syncStudentPushProfile({
-      tc: user.tc,
-      sinif: user.sinif,
-      durum: user.durum,
-      evrakDurumu: user.evrak_durumu,
-    }).catch((error) => {
-      console.log("OneSignal profil eşleme hatası:", error);
-    });
-  }, [loggedIn, user]);
-
-  useEffect(() => {
     if (calendarVisible && calendarScrollRef.current) {
       calendarScrollRef.current.scrollTo({ y: 0, animated: false });
     }
@@ -1007,10 +990,6 @@ export default function Index() {
     }
 
     setSessionTc("");
-
-    clearStudentPushProfile().catch((error) => {
-      console.log("OneSignal çıkış hatası:", error);
-    });
 
     setLoggedIn(false);
     setUser(null);

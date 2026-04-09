@@ -1,14 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { useEffect } from "react";
-
-import { initializeOneSignal } from "../lib/onesignal";
 
 export default function Layout() {
-  useEffect(() => {
-    initializeOneSignal();
-  }, []);
-
   return (
     <Tabs
       screenOptions={{
@@ -36,7 +29,6 @@ export default function Layout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="duyurular"
         options={{
@@ -46,7 +38,6 @@ export default function Layout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="iletisim"
         options={{
@@ -56,7 +47,6 @@ export default function Layout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="sss"
         options={{
