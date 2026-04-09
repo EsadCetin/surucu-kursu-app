@@ -365,7 +365,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         time: user.esinav_saati,
         title: "E-sınav",
         description: user.esinav_saati
-          ? `Sınav saati ${user.esinav_saati}`
+          ? `Sınav saati: ${user.esinav_saati}`
           : "Sınav saati henüz eklenmemiş.",
         type: "exam-esinav",
         isPast: false,
@@ -588,7 +588,7 @@ function getSmartStatus(user: Student): SmartStatus {
       title: "Direksiyon aşamasındasınız",
       description: user.direksiyon_tarih
         ? `Direksiyon sınav tarihiniz: ${formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}`
-        : "Direksiyon dersleri ve sınav süreciniz devam ediyor.",
+        : "Direksiyon dersleri ve sınav ile ilgili kurs tarafından bilgilendirileceksiniz.",
       type: "info",
       actionLabel: "Detayı Gör",
       actionType: "detail",
@@ -1301,7 +1301,9 @@ export default function Index() {
       return;
     }
 
-    openDetailModal("Direksiyon süreciniz devam ediyor.");
+    openDetailModal(
+      "Direksiyon dersleri ve sınav tarihi belli olduğunda tarafınıza bilgilendirme yapılacaktır.",
+    );
   };
 
   const stepItems = useMemo(
@@ -1388,7 +1390,7 @@ export default function Index() {
     const detail = cell.events
       .map((event) => {
         const datetime = event.time
-          ? `${event.date} / ${event.time}`
+          ? `Sınav tarihi: ${event.date} `
           : event.date;
         return `• ${event.title}\n${datetime}${event.description ? `\n${event.description}` : ""}`;
       })
@@ -2090,8 +2092,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   topCalendarButtonDisabled: {
-    width: 44,
-    height: 44,
+    width: 65,
+    height: 65,
     borderRadius: 14,
     backgroundColor: "#151519",
     borderWidth: 1,
@@ -2101,7 +2103,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   topCalendarIcon: { fontSize: 40 },
-  topCalendarIconDisabled: { fontSize: 20 },
+  topCalendarIconDisabled: { fontSize: 40 },
   profileCard: {
     marginTop: 30,
     backgroundColor: "#151519",
