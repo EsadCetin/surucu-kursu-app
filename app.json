@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "surucukursuapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.esadcetin.surucukursuapp",
@@ -17,7 +16,7 @@
       "entitlements": {
         "aps-environment": "development",
         "com.apple.security.application-groups": [
-          "group.com.esadcetin.surucukursuapp.onesignal"
+          "group.com.esadcetin.surucukursuapp"
         ]
       }
     },
@@ -26,7 +25,6 @@
       "adaptiveIcon": {
         "monochromeImage": "./assets/images/logo.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -34,12 +32,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "onesignal-expo-plugin",
-        {
-          "mode": "development"
-        }
-      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -57,9 +49,6 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "oneSignalAppId": "fb327fa5-7e9b-411b-b4fa-3217462cde7b"
     }
   }
 }
