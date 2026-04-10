@@ -672,9 +672,15 @@ function StepItem({
         <Text
           style={[
             styles.stepTitle,
-            { color: checked || active ? colors.text : colors.subText },
             checked ? styles.stepTitleChecked : null,
             !checked && active ? styles.stepTitleActive : null,
+            {
+              color: checked
+                ? colors.text
+                : active
+                  ? colors.text
+                  : colors.subText,
+            },
           ]}
         >
           {title}
@@ -774,7 +780,8 @@ function ThemeToggle({
       activeOpacity={0.9}
       onPress={onToggle}
       style={{
-        width: 72,
+        marginBottom: 12,
+        width: 78,
         height: 40,
         borderRadius: 20,
         borderWidth: 1,
@@ -1574,7 +1581,9 @@ export default function Index() {
               paddingHorizontal: 18,
               alignItems: "flex-end",
             }}
-          >
+          ></View>
+
+          <View style={{ alignItems: "center", marginTop: 24 }}>
             {themeReady ? (
               <ThemeToggle
                 selectedTheme={theme}
@@ -1582,9 +1591,6 @@ export default function Index() {
                 colors={colors}
               />
             ) : null}
-          </View>
-
-          <View style={{ alignItems: "center", marginTop: 24 }}>
             <Image
               source={require("../assets/images/logo.png")}
               style={{ width: 270, height: 270 }}
@@ -1768,7 +1774,6 @@ export default function Index() {
             />
           </View>
         </View>
-
         <View
           style={[
             styles.statusCard,
@@ -1802,7 +1807,6 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
-
         <View
           style={[
             styles.infoCard,
@@ -1861,7 +1865,6 @@ export default function Index() {
             )}
           </View>
         </View>
-
         {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
           <View
             style={[
@@ -2017,7 +2020,6 @@ export default function Index() {
             ) : null}
           </View>
         ) : null}
-
         <View
           style={[
             styles.stepsCard,
@@ -2048,7 +2050,6 @@ export default function Index() {
             );
           })}
         </View>
-
         <TouchableOpacity
           style={[
             styles.logoutButton,
@@ -2732,8 +2733,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 18,
   },
-  calendarHeaderTitle: { color: "#ffffff", fontSize: 24, fontWeight: "800" },
+  calendarHeaderTitle: {
+    color: "#ffffff",
+    fontSize: 24,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
   calendarHeaderClose: {
+    marginBottom: 10,
     backgroundColor: "#1d1d23",
     borderWidth: 1,
     borderColor: "#2a2a31",
