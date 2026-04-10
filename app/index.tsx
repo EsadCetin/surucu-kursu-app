@@ -15,6 +15,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -779,47 +780,27 @@ function ThemeToggle({
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onToggle}
-      style={{
-        marginBottom: 12,
-        width: 78,
-        height: 40,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.cardAltBg,
-        justifyContent: "center",
-        paddingHorizontal: 3,
-        overflow: "hidden",
-      }}
+      style={[
+        styles.themeToggle,
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.cardAltBg,
+        },
+      ]}
     >
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: 0,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 10,
-        }}
-      >
+      <View pointerEvents="none" style={styles.themeToggleIcons}>
         <Ionicons name="moon" size={15} color={colors.mutedText} />
         <Ionicons name="sunny" size={16} color={colors.mutedText} />
       </View>
 
       <Animated.View
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 17,
-          backgroundColor: colors.accent,
-          alignItems: "center",
-          justifyContent: "center",
-          transform: [{ translateX }],
-        }}
+        style={[
+          styles.themeToggleThumb,
+          {
+            backgroundColor: colors.accent,
+            transform: [{ translateX }],
+          },
+        ]}
       >
         <Ionicons
           name={selectedTheme === "light" ? "sunny" : "moon"}
@@ -1558,141 +1539,148 @@ export default function Index() {
 
   if (!loggedIn || !user) {
     return (
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: colors.screenBg }]}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          ref={loginScrollRef}
+      <>
+        <StatusBar
+          translucent={false}
+          backgroundColor={colors.screenBg}
+          barStyle={theme === "dark" ? "light-content" : "dark-content"}
+        />
+        <KeyboardAvoidingView
           style={[styles.container, { backgroundColor: colors.screenBg }]}
-          contentContainerStyle={styles.loginContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-          onContentSizeChange={() => {
-            if (!tc) {
-              resetLoginScroll();
-            }
-          }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View
-            style={{
-              marginTop: 22,
-              paddingHorizontal: 18,
-              alignItems: "flex-end",
+          <ScrollView
+            ref={loginScrollRef}
+            style={[styles.container, { backgroundColor: colors.screenBg }]}
+            contentContainerStyle={styles.loginContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+            onContentSizeChange={() => {
+              if (!tc) {
+                resetLoginScroll();
+              }
             }}
-          ></View>
-
-          <View style={{ alignItems: "center", marginTop: 24 }}>
-            {themeReady ? (
-              <ThemeToggle
-                selectedTheme={theme}
-                onToggle={toggleTheme}
-                colors={colors}
-              />
-            ) : null}
-            <Image
-              source={require("../assets/images/logo.png")}
-              style={{ width: 270, height: 270 }}
-              resizeMode="contain"
-            />
-
-            {loadingStudents ? (
-              <View style={{ marginTop: 10, alignItems: "center" }}>
-                <ActivityIndicator size="small" color={colors.accent} />
-                <Text
-                  style={{
-                    marginTop: 8,
-                    color: colors.mutedText,
-                    fontSize: 13,
-                    fontWeight: "600",
-                  }}
-                >
-                  Öğrenci bilgileri yükleniyor...
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <View
-            style={[
-              styles.loginBox,
-              {
-                backgroundColor: colors.cardBg,
-                borderColor: colors.border,
-              },
-            ]}
           >
-            <Text style={[styles.loginTitle, { color: colors.text }]}>
-              Öğrenci Girişi
-            </Text>
-            <Text style={[styles.loginSub, { color: colors.subText }]}>
-              TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
-              görüntüleyebilirsiniz.
-            </Text>
+            <View style={styles.loginThemeToggleWrap}>
+              {themeReady ? (
+                <ThemeToggle
+                  selectedTheme={theme}
+                  onToggle={toggleTheme}
+                  colors={colors}
+                />
+              ) : null}
+            </View>
 
-            {visibleLoginFeedback ? (
-              <View
-                style={[
-                  styles.loginStatusCard,
-                  visibleLoginFeedback.type === "success"
-                    ? styles.loginStatusSuccess
-                    : visibleLoginFeedback.type === "error"
-                      ? styles.loginStatusError
-                      : visibleLoginFeedback.type === "warning"
-                        ? styles.loginStatusWarning
-                        : styles.loginStatusInfo,
-                ]}
-              >
-                <Text style={styles.loginStatusTitle}>
-                  {visibleLoginFeedback.title}
-                </Text>
-                <Text style={styles.loginStatusText}>
-                  {visibleLoginFeedback.message}
-                </Text>
-              </View>
-            ) : null}
+            <View style={styles.loginHero}>
+              <Image
+                source={require("../assets/images/logo.png")}
+                style={styles.loginLogo}
+                resizeMode="contain"
+              />
 
-            <TextInput
-              placeholder="TC kimlik numaranız"
-              placeholderTextColor={colors.mutedText}
-              inputMode="numeric"
-              keyboardType="numeric"
-              showSoftInputOnFocus={true}
-              autoCorrect={false}
-              autoComplete="off"
-              textContentType="none"
-              maxLength={11}
-              value={tc}
-              onChangeText={handleTcChange}
-              onFocus={handleTcInputFocus}
+              {loadingStudents ? (
+                <View style={{ marginTop: 10, alignItems: "center" }}>
+                  <ActivityIndicator size="small" color={colors.accent} />
+                  <Text
+                    style={{
+                      marginTop: 8,
+                      color: colors.mutedText,
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Öğrenci bilgileri yükleniyor...
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <View
               style={[
-                styles.input,
+                styles.loginBox,
                 {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.inputBorder,
-                  color: colors.inputText,
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
                 },
               ]}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.loginButton,
-                isLoginDisabled ? styles.loginButtonDisabled : null,
-              ]}
-              onPress={handleLogin}
-              disabled={isLoginDisabled}
             >
-              <Text style={styles.loginButtonText}>Giriş Yap</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <Text style={[styles.loginTitle, { color: colors.text }]}>
+                Öğrenci Girişi
+              </Text>
+              <Text style={[styles.loginSub, { color: colors.subText }]}>
+                TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
+                görüntüleyebilirsiniz.
+              </Text>
+
+              {visibleLoginFeedback ? (
+                <View
+                  style={[
+                    styles.loginStatusCard,
+                    visibleLoginFeedback.type === "success"
+                      ? styles.loginStatusSuccess
+                      : visibleLoginFeedback.type === "error"
+                        ? styles.loginStatusError
+                        : visibleLoginFeedback.type === "warning"
+                          ? styles.loginStatusWarning
+                          : styles.loginStatusInfo,
+                  ]}
+                >
+                  <Text style={styles.loginStatusTitle}>
+                    {visibleLoginFeedback.title}
+                  </Text>
+                  <Text style={styles.loginStatusText}>
+                    {visibleLoginFeedback.message}
+                  </Text>
+                </View>
+              ) : null}
+
+              <TextInput
+                placeholder="TC kimlik numaranız"
+                placeholderTextColor={colors.mutedText}
+                inputMode="numeric"
+                keyboardType="numeric"
+                showSoftInputOnFocus={true}
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="none"
+                maxLength={11}
+                value={tc}
+                onChangeText={handleTcChange}
+                onFocus={handleTcInputFocus}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.inputText,
+                  },
+                ]}
+              />
+
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  isLoginDisabled ? styles.loginButtonDisabled : null,
+                ]}
+                onPress={handleLogin}
+                disabled={isLoginDisabled}
+              >
+                <Text style={styles.loginButtonText}>Giriş Yap</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </>
     );
   }
 
   return (
     <>
+      <StatusBar
+        translucent={false}
+        backgroundColor={colors.screenBg}
+        barStyle={theme === "dark" ? "light-content" : "dark-content"}
+      />
       <ScrollView
         style={[styles.container, { backgroundColor: colors.screenBg }]}
         contentContainerStyle={styles.content}
@@ -1704,20 +1692,31 @@ export default function Index() {
           ]}
         >
           <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+            <View style={styles.profileHeaderLeft}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials || "Ö"}</Text>
+              </View>
+
+              <View style={styles.profileTextArea}>
+                <Text style={[styles.name, { color: colors.text }]}>
+                  {normalizeValue(user.ad_soyad)}
+                </Text>
+                <Text style={[styles.subName, { color: colors.mutedText }]}>
+                  Öğrenci Paneli
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.profileTextArea}>
-              <Text style={[styles.name, { color: colors.text }]}>
-                {normalizeValue(user.ad_soyad)}
-              </Text>
-              <Text style={[styles.subName, { color: colors.mutedText }]}>
-                Öğrenci Paneli
-              </Text>
-            </View>
+            {themeReady ? (
+              <View style={styles.profileThemeToggleWrap}>
+                <ThemeToggle
+                  selectedTheme={theme}
+                  onToggle={toggleTheme}
+                  colors={colors}
+                />
+              </View>
+            ) : null}
           </View>
-
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} colors={colors} />
             <InfoChip label="Sınıf" value={user.sinif || "-"} colors={colors} />
@@ -2455,6 +2454,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 60,
   },
+  loginThemeToggleWrap: {
+    marginTop: 22,
+    paddingHorizontal: 18,
+  },
+  loginHero: {
+    alignItems: "center",
+    marginTop: 12,
+  },
+  loginLogo: {
+    width: 270,
+    height: 270,
+  },
   loginStatusText: { color: "#d8d8dd", fontSize: 14, lineHeight: 22 },
   loginStatusSuccess: { borderColor: "#1f8f55" },
   loginStatusError: { borderColor: "#a62d2d" },
@@ -2490,6 +2501,33 @@ const styles = StyleSheet.create({
   },
   topCalendarIcon: { fontSize: 40 },
   topCalendarIconDisabled: { fontSize: 40 },
+  themeToggle: {
+    width: 78,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    justifyContent: "center",
+    paddingHorizontal: 3,
+    overflow: "hidden",
+  },
+  themeToggleIcons: {
+    position: "absolute",
+    left: 2,
+    right: 2,
+    top: 0,
+    bottom: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+  },
+  themeToggleThumb: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   profileCard: {
     marginTop: 30,
     backgroundColor: "#151519",
@@ -2501,8 +2539,18 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 16,
+  },
+  profileHeaderLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 12,
+  },
+  profileThemeToggleWrap: {
+    alignSelf: "flex-start",
   },
   profileTextArea: { flex: 1 },
   avatar: {
