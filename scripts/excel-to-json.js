@@ -1,10 +1,14 @@
 /**
  * scripts/excel-to-json.js
  *
- * v8
+ * v9
  *
- * Bu sürüm kullanıcı isteğine göre net kuralla yazıldı:
+ * Bu sürümde düzeltilen:
+ * - Direksiyon sınav tarihi ve saati artık çekilmiyor
+ * - Çünkü mevcut Excel yapısında henüz bunu güvenilir şekilde alacağımız doğru sütun yok
+ * - Önceki sürümde yanlış kolondan tarih/saat okunuyordu
  *
+ * Net kural:
  * DİREKSİYON sheet:
  * - HARÇ hücresi yeşil veya sarı ise -> direksiyon_harc = "odendi"
  * - HARÇ hücresi beyaz / boş ise -> direksiyon_harc = "odenmedi"
@@ -16,7 +20,7 @@
  * Ek olarak:
  * - Slash tarihleri TR formatına çevrilir
  * - İsim eşleştirme güçlendirildi
- * - CUMA ÇELİK gibi örnekler için ALACAK RAPORU doğrudan isimden eşleştirilir
+ * - Direksiyon tarih / saat alanları bilinçli olarak boş bırakılır
  */
 
 const fs = require("fs");
@@ -99,11 +103,7 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   if (v == null || v === "") return "";
 
   if (v instanceof Date && !isNaN(v.getTime())) {
-    return asDateText(
-      v.getDate(),
-      v.getMonth() + 1,
-      normalizeYear(v.getFullYear(), fallbackYear),
-    );
+    return asDateText(v.getDate(), v.getMonth() + 1, normalizeYear(v.getFullYear(), fallbackYear));
   }
 
   if (typeof v === "object" && v && typeof v.text === "string") {
@@ -111,26 +111,19 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   }
 
   if (typeof v === "number" && !Number.isNaN(v)) {
-    // Excel serial date ise önce onu dene
     if (v > 1000) {
       const parsed = XLSX.SSF.parse_date_code(v);
       if (parsed && parsed.d && parsed.m) {
-        return asDateText(
-          parsed.d,
-          parsed.m,
-          normalizeYear(parsed.y, fallbackYear),
-        );
+        return asDateText(parsed.d, parsed.m, normalizeYear(parsed.y, fallbackYear));
       }
     }
 
-    // 28.01 / 5.02 gibi sayı şeklinde tutulmuş gün-ay formatı
     const raw = String(v);
     if (/^\d{1,2}\.\d{1,2}$/.test(raw)) {
       const [d, m] = raw.split(".");
       return asDateText(Number(d), Number(m), fallbackYear);
     }
 
-    // 5.2 gibi gelirse de destekle
     const fixed = v.toFixed(2);
     if (/^\d{1,2}\.\d{2}$/.test(fixed)) {
       const [d, m] = fixed.split(".");
@@ -178,17 +171,6 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
 function normalizeTimeText(rawValue) {
   if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
     return `${String(rawValue.getHours()).padStart(2, "0")}:${String(rawValue.getMinutes()).padStart(2, "0")}`;
-  }
-
-  if (
-    rawValue &&
-    typeof rawValue === "object" &&
-    rawValue.constructor &&
-    rawValue.constructor.name === "Time"
-  ) {
-    const hour = rawValue.hours || 0;
-    const minute = rawValue.minutes || 0;
-    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
   }
 
   const raw = t(rawValue);
@@ -300,9 +282,7 @@ function getWorksheetByNameExcelJS(workbook, wantedName) {
 
 function getSheetByNameXLSX(workbook, wantedName) {
   const wanted = normalizeHeader(wantedName);
-  const realName = workbook.SheetNames.find(
-    (name) => normalizeHeader(name) === wanted,
-  );
+  const realName = workbook.SheetNames.find((name) => normalizeHeader(name) === wanted);
   return realName ? workbook.Sheets[realName] : null;
 }
 
@@ -336,13 +316,6 @@ function setIfEmpty(obj, key, value) {
 function buildAlacakLookup(alacakSheetJs) {
   const map = new Map();
 
-  // Yapı bu dosyada sabit:
-  // A: NO
-  // B: ADI SOYADI
-  // C: E SINAV HARCI
-  // D: DİREKSİYON SINAV HARCI
-  // E: TAKSİT
-  // F: TARİH
   for (let r = 4; r <= alacakSheetJs.rowCount; r += 1) {
     const row = alacakSheetJs.getRow(r);
     const name = t(row.getCell(2).text || row.getCell(2).value);
@@ -374,12 +347,7 @@ function buildEksikBelgeler(student, row) {
   ];
 
   const missing = labels
-    .filter(
-      ({ col }) =>
-        t(row.getCell(col).text || row.getCell(col).value).toLocaleUpperCase(
-          "tr-TR",
-        ) === "X",
-    )
+    .filter(({ col }) => t(row.getCell(col).text || row.getCell(col).value).toLocaleUpperCase("tr-TR") === "X")
     .map(({ label }) => label);
 
   if (missing.length) {
@@ -400,11 +368,7 @@ function syncDerivedFields(student) {
   }
 
   if (!student.direksiyon_harc) {
-    if (
-      student.direksiyon_harc_borcu ||
-      student.direksiyon_borc_son_odeme ||
-      student.direksiyon_son_odeme
-    ) {
+    if (student.direksiyon_harc_borcu || student.direksiyon_borc_son_odeme || student.direksiyon_son_odeme) {
       student.direksiyon_harc = "odenmedi";
     }
   }
@@ -418,19 +382,9 @@ function syncDerivedFields(student) {
   }
 
   if (!student.durum) {
-    if (
-      student.direksiyon_tarih ||
-      student.direksiyon_saati ||
-      student.direksiyon_harc ||
-      student.direksiyon_harc_borcu
-    ) {
+    if (student.direksiyon_harc || student.direksiyon_harc_borcu) {
       student.durum = "direksiyon";
-    } else if (
-      student.esinav_tarih ||
-      student.esinav_saati ||
-      student.esinav_harc ||
-      student.esinav_harc_borcu
-    ) {
+    } else if (student.esinav_tarih || student.esinav_saati || student.esinav_harc || student.esinav_harc_borcu) {
       student.durum = "esinav";
     }
   }
@@ -438,6 +392,10 @@ function syncDerivedFields(student) {
   if (!Array.isArray(student.direksiyon_dersleri)) {
     student.direksiyon_dersleri = [];
   }
+
+  // Bu sürümde bilinçli olarak boş tutuluyor
+  student.direksiyon_tarih = "";
+  student.direksiyon_saati = "";
 }
 
 async function main() {
@@ -450,10 +408,7 @@ async function main() {
   await exceljsBook.xlsx.readFile(EXCEL_PATH);
 
   const esinavSheetJs = getWorksheetByNameExcelJS(exceljsBook, "E-SINAV");
-  const direksiyonSheetJs = getWorksheetByNameExcelJS(
-    exceljsBook,
-    "DİREKSİYON",
-  );
+  const direksiyonSheetJs = getWorksheetByNameExcelJS(exceljsBook, "DİREKSİYON");
   const eksikSheetJs = getWorksheetByNameExcelJS(exceljsBook, "EKSİK BELGELER");
   const alacakSheetJs = getWorksheetByNameExcelJS(exceljsBook, "ALACAK RAPORU");
 
@@ -473,7 +428,6 @@ async function main() {
   const alacakLookup = buildAlacakLookup(alacakSheetJs);
 
   // E-SINAV
-  // Satırlar 3'ten başlıyor
   for (let r = 3; r <= esinavSheetJs.rowCount; r += 1) {
     const row = esinavSheetJs.getRow(r);
 
@@ -486,11 +440,7 @@ async function main() {
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "sinif", row.getCell(5).text || row.getCell(5).value);
-    setIfEmpty(
-      student,
-      "telefonlar",
-      row.getCell(8).text || row.getCell(8).value,
-    );
+    setIfEmpty(student, "telefonlar", row.getCell(8).text || row.getCell(8).value);
 
     student.durum = "esinav";
 
@@ -517,7 +467,6 @@ async function main() {
   }
 
   // DİREKSİYON
-  // Satırlar 3'ten başlıyor
   for (let r = 3; r <= direksiyonSheetJs.rowCount; r += 1) {
     const row = direksiyonSheetJs.getRow(r);
 
@@ -530,20 +479,15 @@ async function main() {
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "sinif", row.getCell(5).text || row.getCell(5).value);
-    setIfEmpty(
-      student,
-      "telefonlar",
-      row.getCell(8).text || row.getCell(8).value,
-    );
+    setIfEmpty(student, "telefonlar", row.getCell(8).text || row.getCell(8).value);
 
     student.durum = "direksiyon";
 
-    const examDate = formatDate(row.getCell(9).value);
-    const examTime = normalizeTimeText(row.getCell(10).value);
     const paid = isPaidByFill(row.getCell(6));
 
-    if (examDate) student.direksiyon_tarih = examDate;
-    if (examTime) student.direksiyon_saati = examTime;
+    // Bilinçli olarak boş bırakılıyor
+    student.direksiyon_tarih = "";
+    student.direksiyon_saati = "";
 
     if (paid) {
       student.direksiyon_harc = "odendi";
@@ -567,7 +511,6 @@ async function main() {
   }
 
   // EKSİK BELGELER
-  // Satırlar 2'den başlıyor
   for (let r = 2; r <= eksikSheetJs.rowCount; r += 1) {
     const row = eksikSheetJs.getRow(r);
 
@@ -583,8 +526,6 @@ async function main() {
   }
 
   // ALACAK RAPORU
-  // Direksiyon tarafında ödemeyenlerin verisi zaten buradan çekildi.
-  // Burada ayrıca e-sınav ve taksit borçlarını da işleyelim.
   for (let r = 4; r <= alacakSheetJs.rowCount; r += 1) {
     const row = alacakSheetJs.getRow(r);
 
@@ -601,14 +542,10 @@ async function main() {
     if (esinavDebt && !student.esinav_harc_borcu) {
       student.esinav_harc = "odenmedi";
       student.esinav_harc_borcu = esinavDebt;
-      if (dueDate && !student.esinav_borc_son_odeme)
-        student.esinav_borc_son_odeme = dueDate;
-      if (dueDate && !student.esinav_son_odeme)
-        student.esinav_son_odeme = dueDate;
+      if (dueDate && !student.esinav_borc_son_odeme) student.esinav_borc_son_odeme = dueDate;
+      if (dueDate && !student.esinav_son_odeme) student.esinav_son_odeme = dueDate;
     }
 
-    // DİREKSİYON mantığı kullanıcı isteğine göre asıl DİREKSİYON sheet'te belirlendi.
-    // Burada sadece boş kalmışsa tamamlayalım.
     if (student.direksiyon_harc === "odenmedi") {
       if (direksiyonDebt && !student.direksiyon_harc_borcu) {
         student.direksiyon_harc_borcu = direksiyonDebt;
@@ -640,16 +577,15 @@ async function main() {
   console.log("✅ students.json oluşturuldu");
   console.log(`👤 Toplam benzersiz öğrenci: ${result.length}`);
 
-  const cuma = result.find(
-    (item) =>
-      normalizePersonName(item.ad_soyad) === normalizePersonName("CUMA ÇELİK"),
-  );
+  const cuma = result.find((item) => normalizePersonName(item.ad_soyad) === normalizePersonName("CUMA ÇELİK"));
   if (cuma) {
     console.log("🧪 CUMA ÇELİK kontrol:", {
       ad_soyad: cuma.ad_soyad,
       direksiyon_harc: cuma.direksiyon_harc,
       direksiyon_harc_borcu: cuma.direksiyon_harc_borcu,
       direksiyon_borc_son_odeme: cuma.direksiyon_borc_son_odeme,
+      direksiyon_tarih: cuma.direksiyon_tarih,
+      direksiyon_saati: cuma.direksiyon_saati,
     });
   }
 }
