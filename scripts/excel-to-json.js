@@ -1,18 +1,19 @@
 /**
  * scripts/excel-to-json.js
  *
- * v5
+ * v7
  *
  * Ne düzeldi:
  * - Slash formatındaki tarihler TR formatına çevrilir
- * - Direksiyon harcı artık varsayılan olarak "odendi" yapılmaz
- * - Direksiyon sheet'inde son ödeme tarihi varsa ve açık bir "ödendi" işareti yoksa durum "odenmedi" kabul edilir
- * - syncDerivedFields içindeki hatalı otomatik "odendi" ataması kaldırıldı
+ * - İsim eşleştirme güçlü kalır
+ * - Direksiyon harcı yanlışlıkla "odendi" olmaz
+ * - ALACAK RAPORU kolon başlıkları farklı olsa bile direksiyon / e-sınav / taksit alanları fuzzy olarak bulunur
  *
- * Bu düzeltme neden gerekli:
- * - Önceki sürümde öğrenci direksiyon aşamasındaysa ve direksiyon_harc_borcu boşsa
- *   harç otomatik "odendi" yazılıyordu.
- * - Bu yüzden Cuma Çelik gibi ödememiş bazı öğrenciler yanlışlıkla "odendi" görünüyordu.
+ * Bu sürüm neden gerekli:
+ * - Sorun artık sadece isim eşleştirme değil.
+ * - Cuma Çelik örneğinde asıl muhtemel problem, ALACAK RAPORU sheet'inde kolon başlığının
+ *   beklediğimiz isimlerden farklı olması ve borç kolonunun hiç okunmaması.
+ * - Bu sürüm, kolon adını birebir beklemek yerine başlıktaki ana kelimelere göre kolonu bulur.
  */
 
 const fs = require("fs");
@@ -37,8 +38,17 @@ function tc(v) {
   return t(v).replace(/\D/g, "");
 }
 
+function normalizePersonName(v) {
+  return t(v)
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[‐‑‒–—―\-_/\\.'`’]+/g, " ")
+    .replace(/[()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function nameKey(v) {
-  return t(v).toLocaleLowerCase("tr-TR").replace(/\s+/g, " ").trim();
+  return normalizePersonName(v);
 }
 
 function normalizeHeader(v) {
@@ -182,10 +192,6 @@ function money(v) {
   return t(v);
 }
 
-function hasValue(v) {
-  return !!t(v);
-}
-
 function createStudent(tcValue = "", nameValue = "") {
   return {
     tc: tcValue,
@@ -228,17 +234,28 @@ function buildStore() {
   return { byTc: new Map(), byName: new Map() };
 }
 
+function registerNameAlias(store, student, rawName) {
+  const key = nameKey(rawName);
+  if (key) store.byName.set(key, student);
+}
+
 function getOrCreate(store, tcValue, nameValue) {
   const cleanTc = tc(tcValue);
   const cleanName = t(nameValue);
-
-  if (cleanTc && store.byTc.has(cleanTc)) return store.byTc.get(cleanTc);
-
   const normName = nameKey(cleanName);
+
+  if (cleanTc && store.byTc.has(cleanTc)) {
+    const existing = store.byTc.get(cleanTc);
+    if (normName) store.byName.set(normName, existing);
+    return existing;
+  }
+
   if (normName && store.byName.has(normName)) {
     const existing = store.byName.get(normName);
     if (cleanTc && !existing.tc) {
       existing.tc = cleanTc;
+      store.byTc.set(cleanTc, existing);
+    } else if (cleanTc) {
       store.byTc.set(cleanTc, existing);
     }
     return existing;
@@ -300,7 +317,8 @@ function syncDerivedFields(student) {
     if (
       student.direksiyon_harc_borcu ||
       student.direksiyon_tarih ||
-      student.direksiyon_saati
+      student.direksiyon_saati ||
+      student.direksiyon_borc_son_odeme
     ) {
       student.durum = "direksiyon";
     } else if (
@@ -312,9 +330,6 @@ function syncDerivedFields(student) {
     }
   }
 
-  // KRİTİK DÜZELTME:
-  // Önceki sürümde direksiyon aşamasında olup borç alanı boşsa direkt "odendi" yazılıyordu.
-  // Bu yanlış sonuç veriyordu. Artık varsayılan "odendi" ataması yok.
   if (!student.direksiyon_harc) {
     if (
       student.direksiyon_harc_borcu ||
@@ -369,6 +384,37 @@ function getColumnNumber(headerMap, headerCandidates) {
   return 0;
 }
 
+function findColumnByKeywords(headerMap, includeWords, excludeWords = []) {
+  const includes = includeWords.map((w) => normalizeHeader(w));
+  const excludes = excludeWords.map((w) => normalizeHeader(w));
+
+  for (const [header, colNo] of headerMap.entries()) {
+    const okInclude = includes.every((w) => header.includes(w));
+    const okExclude = excludes.every((w) => !header.includes(w));
+    if (okInclude && okExclude) return colNo;
+  }
+
+  return 0;
+}
+
+function getCellByColumnNumberExcelJS(row, colNo) {
+  return colNo ? row.getCell(colNo) : null;
+}
+
+function getCellTextByColumnNumberExcelJS(row, colNo) {
+  const cell = getCellByColumnNumberExcelJS(row, colNo);
+  if (!cell) return "";
+  return t(cell.text || cell.value);
+}
+
+function getDisplayedCellTextByColumnNumberXLSX(sheet, rowNumber, colNo) {
+  if (!colNo) return "";
+  const address = XLSX.utils.encode_cell({ r: rowNumber - 1, c: colNo - 1 });
+  const cell = sheet[address];
+  if (!cell) return "";
+  return t(cell.w || cell.v);
+}
+
 function getCellByHeaderExcelJS(row, headerMap, headerCandidates) {
   const colNo = getColumnNumber(headerMap, headerCandidates);
   return colNo ? row.getCell(colNo) : null;
@@ -388,12 +434,7 @@ function getDisplayedCellTextXLSX(
 ) {
   const colNo = getColumnNumber(headerMap, headerCandidates);
   if (!colNo) return "";
-
-  const address = XLSX.utils.encode_cell({ r: rowNumber - 1, c: colNo - 1 });
-  const cell = sheet[address];
-  if (!cell) return "";
-
-  return t(cell.w || cell.v);
+  return getDisplayedCellTextByColumnNumberXLSX(sheet, rowNumber, colNo);
 }
 
 function getFormattedDateFromCells(
@@ -446,6 +487,57 @@ function applyEsinavFixedFee(student, dueDate) {
 
 function getDebtByHeader(row, headerMap, names) {
   return money(getCellTextByHeaderExcelJS(row, headerMap, names));
+}
+
+function buildAlacakColumnResolver(headerMap) {
+  return {
+    tc: getColumnNumber(headerMap, ["TC", "T.C.", "T C"]),
+    adSoyad:
+      getColumnNumber(headerMap, [
+        "ADI SOYADI",
+        "AD SOYAD",
+        "ÖĞRENCİ",
+        "OGRENCI",
+      ]) ||
+      findColumnByKeywords(headerMap, ["ad"]) ||
+      findColumnByKeywords(headerMap, ["soyad"]),
+    eDebt:
+      getColumnNumber(headerMap, [
+        "E SINAV BORCU",
+        "E-SINAV BORCU",
+        "E SINAV HARCI",
+        "E-SINAV HARCI",
+      ]) ||
+      findColumnByKeywords(headerMap, ["e", "sinav", "borc"]) ||
+      findColumnByKeywords(headerMap, ["e", "sinav", "harc"]),
+    dDebt:
+      getColumnNumber(headerMap, [
+        "DIREKSIYON BORCU",
+        "DİREKSİYON BORCU",
+        "DIREKSIYON HARCI",
+        "DİREKSİYON HARCI",
+      ]) ||
+      findColumnByKeywords(headerMap, ["direksiyon", "borc"]) ||
+      findColumnByKeywords(headerMap, ["direksiyon", "harc"]),
+    installment:
+      getColumnNumber(headerMap, [
+        "TAKSIT",
+        "TAKSİT",
+        "TAKSIT BORCU",
+        "TAKSİT BORCU",
+      ]) || findColumnByKeywords(headerMap, ["taksit"]),
+    dueDate:
+      getColumnNumber(headerMap, [
+        "TARİH",
+        "TARIH",
+        "SON ODEME",
+        "SON ÖDEME",
+        "SON ODEME TARIHI",
+        "SON ÖDEME TARİHİ",
+      ]) ||
+      findColumnByKeywords(headerMap, ["son", "odeme"]) ||
+      findColumnByKeywords(headerMap, ["tarih"]),
+  };
 }
 
 async function main() {
@@ -506,7 +598,6 @@ async function main() {
     const nameValue = t(
       getCellTextByHeaderExcelJS(rowJs, eHeaderMapJs, [
         "ADI SOYADI",
-        "ADI SOYADI",
         "AD SOYAD",
       ]),
     );
@@ -518,6 +609,8 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, eHeaderMapJs, ["TC", "T.C.", "T C"]),
       nameValue,
     );
+
+    registerNameAlias(store, student, nameValue);
 
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(
@@ -591,18 +684,14 @@ async function main() {
     const resultText = normalizeHeader(
       getCellTextByHeaderExcelJS(rowJs, eHeaderMapJs, ["SONUC", "SONUÇ"]),
     );
-
     const harcStatus = getHarcStatusByColor(harcCell);
 
     if (examDate) student.esinav_tarih = examDate;
     if (examTime) student.esinav_saati = examTime;
     if (dueDate) student.esinav_son_odeme = dueDate;
 
-    if (resultText.includes("gecti")) {
-      student.esinav_sonuc = "gecti";
-    } else if (resultText.includes("kaldi")) {
-      student.esinav_sonuc = "kaldi";
-    }
+    if (resultText.includes("gecti")) student.esinav_sonuc = "gecti";
+    else if (resultText.includes("kaldi")) student.esinav_sonuc = "kaldi";
 
     if (isPaidStatus(harcStatus)) {
       student.esinav_harc = "odendi";
@@ -635,6 +724,8 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, ["TC", "T.C.", "T C"]),
       nameValue,
     );
+
+    registerNameAlias(store, student, nameValue);
 
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(
@@ -733,21 +824,13 @@ async function main() {
     if (examTime) student.direksiyon_saati = examTime;
     if (dueDate) {
       student.direksiyon_son_odeme = dueDate;
-      if (!student.direksiyon_borc_son_odeme) {
+      if (!student.direksiyon_borc_son_odeme)
         student.direksiyon_borc_son_odeme = dueDate;
-      }
     }
 
-    if (resultText.includes("gecti")) {
-      student.direksiyon_sonuc = "gecti";
-    } else if (resultText.includes("kaldi")) {
-      student.direksiyon_sonuc = "kaldi";
-    }
+    if (resultText.includes("gecti")) student.direksiyon_sonuc = "gecti";
+    else if (resultText.includes("kaldi")) student.direksiyon_sonuc = "kaldi";
 
-    // Ödeme mantığı:
-    // 1) Tutar varsa kesin borç vardır -> odenmedi
-    // 2) Açıkça ödendi bilgisi varsa -> odendi
-    // 3) Son ödeme tarihi varsa ama ödendi bilgisi yoksa -> odenmedi
     if (directFee) {
       student.direksiyon_harc_borcu = directFee;
       student.direksiyon_harc = "odenmedi";
@@ -785,6 +868,8 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["TC", "T.C.", "T C"]),
       nameValue,
     );
+
+    registerNameAlias(store, student, nameValue);
 
     const missingDocs = uniqStrings([
       xMissing(
@@ -839,66 +924,36 @@ async function main() {
   const aHeaderRowNo = 2;
   const aHeaderMapJs = buildHeaderMapExcelJS(alacakSheetJs, aHeaderRowNo);
   const aHeaderMapX = buildHeaderMapXLSX(alacakSheetX, aHeaderRowNo);
+  const aColsJs = buildAlacakColumnResolver(aHeaderMapJs);
+  const aColsX = buildAlacakColumnResolver(aHeaderMapX);
   let aCount = 0;
 
   for (let r = aHeaderRowNo + 1; r <= alacakSheetJs.rowCount; r += 1) {
     const rowJs = alacakSheetJs.getRow(r);
 
     const nameValue = t(
-      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, [
-        "ADI SOYADI",
-        "AD SOYAD",
-        "ÖĞRENCİ",
-        "OGRENCI",
-      ]),
+      getCellTextByColumnNumberExcelJS(rowJs, aColsJs.adSoyad),
     );
     if (!nameValue) continue;
     aCount += 1;
 
     const student = getOrCreate(
       store,
-      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, ["TC", "T.C.", "T C"]),
+      getCellTextByColumnNumberExcelJS(rowJs, aColsJs.tc),
       nameValue,
     );
 
-    const eDebt = getDebtByHeader(rowJs, aHeaderMapJs, [
-      "E SINAV BORCU",
-      "E-SINAV BORCU",
-      "E SINAV HARCI",
-      "E-SINAV HARCI",
-    ]);
+    registerNameAlias(store, student, nameValue);
 
-    const dDebt = getDebtByHeader(rowJs, aHeaderMapJs, [
-      "DIREKSIYON BORCU",
-      "DİREKSİYON BORCU",
-      "DIREKSIYON HARCI",
-      "DİREKSİYON HARCI",
-    ]);
-
-    const installment = getDebtByHeader(rowJs, aHeaderMapJs, [
-      "TAKSIT",
-      "TAKSİT",
-      "TAKSIT BORCU",
-      "TAKSİT BORCU",
-    ]);
+    const eDebt = money(getCellTextByColumnNumberExcelJS(rowJs, aColsJs.eDebt));
+    const dDebt = money(getCellTextByColumnNumberExcelJS(rowJs, aColsJs.dDebt));
+    const installment = money(
+      getCellTextByColumnNumberExcelJS(rowJs, aColsJs.installment),
+    );
 
     const dueDate = getFormattedDateFromCells(
-      getDisplayedCellTextXLSX(alacakSheetX, r, aHeaderMapX, [
-        "TARİH",
-        "TARIH",
-        "SON ODEME",
-        "SON ÖDEME",
-        "SON ODEME TARIHI",
-        "SON ÖDEME TARİHİ",
-      ]),
-      getCellByHeaderExcelJS(rowJs, aHeaderMapJs, [
-        "TARİH",
-        "TARIH",
-        "SON ODEME",
-        "SON ÖDEME",
-        "SON ODEME TARIHI",
-        "SON ÖDEME TARİHİ",
-      ])?.value,
+      getDisplayedCellTextByColumnNumberXLSX(alacakSheetX, r, aColsX.dueDate),
+      getCellByColumnNumberExcelJS(rowJs, aColsJs.dueDate)?.value,
     );
 
     if (eDebt && !student.esinav_harc_borcu) {
@@ -918,9 +973,12 @@ async function main() {
           student.direksiyon_son_odeme = dueDate;
       }
       student.direksiyon_harc = "odenmedi";
-    } else if (dueDate && !student.direksiyon_harc) {
-      // ALACAK RAPORU'nda isim var ve tarih var ama tutar boşsa bile
-      // yanlışlıkla "odendi" yazmamak için temkinli davran.
+      if (!student.durum) student.durum = "direksiyon";
+    } else if (
+      dueDate &&
+      !student.direksiyon_harc &&
+      student.durum === "direksiyon"
+    ) {
       student.direksiyon_harc = "odenmedi";
       if (!student.direksiyon_borc_son_odeme)
         student.direksiyon_borc_son_odeme = dueDate;
@@ -949,6 +1007,7 @@ async function main() {
   console.log(`📄 EKSİK BELGELER öğrenci: ${xCount}`);
   console.log(`📄 ALACAK RAPORU öğrenci: ${aCount}`);
   console.log(`👤 Toplam benzersiz öğrenci: ${result.length}`);
+  console.log("🧠 ALACAK RAPORU kolonları:", aColsJs);
 }
 
 main().catch((err) => {
