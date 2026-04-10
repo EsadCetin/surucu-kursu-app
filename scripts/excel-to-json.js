@@ -346,6 +346,16 @@ function getDisplayedCellTextXLSX(
   return t(cell.w || cell.v);
 }
 
+function getFormattedDateFromCells(
+  displayedText,
+  rawValue,
+  fallbackYear = DEFAULT_YEAR,
+) {
+  const fromDisplayed = formatDate(displayedText, fallbackYear);
+  if (fromDisplayed) return fromDisplayed;
+  return formatDate(rawValue, fallbackYear);
+}
+
 function getExcelCellArgb(cell) {
   const argb =
     cell?.fill?.fgColor?.argb || cell?.style?.fill?.fgColor?.argb || "";
@@ -410,10 +420,22 @@ async function main() {
         (name) => normalizeHeader(name) === normalizeHeader("DİREKSİYON"),
       )
     ];
+  const alacakSheetX =
+    xlsxBook.Sheets[
+      xlsxBook.SheetNames.find(
+        (name) => normalizeHeader(name) === normalizeHeader("ALACAK RAPORU"),
+      )
+    ];
 
   if (!esinavSheetJs || !direksiyonSheetJs || !eksikSheetJs || !alacakSheetJs) {
     throw new Error(
       "Gerekli sayfalardan biri bulunamadı. E-SINAV / DİREKSİYON / EKSİK BELGELER / ALACAK RAPORU kontrol et.",
+    );
+  }
+
+  if (!esinavSheetX || !direksiyonSheetX || !alacakSheetX) {
+    throw new Error(
+      "xlsx tarafında gerekli sayfalardan biri bulunamadı. E-SINAV / DİREKSİYON / ALACAK RAPORU kontrol et.",
     );
   }
 
@@ -473,7 +495,17 @@ async function main() {
       "E SINAV ÜCRETİ",
     ]);
 
-    const dueDate = formatDate(
+    const dueDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(esinavSheetX, r, eHeaderMapX, [
+        "SON ODEME",
+        "SON ODEME TARIHI",
+        "SON ODEME TARIH",
+        "SON ÖDEME",
+        "SON ÖDEME TARİHİ",
+        "SON ÖDEME TARİH",
+        "ODEME SON TARIHI",
+        "ÖDEME SON TARİHİ",
+      ]),
       getCellByHeaderExcelJS(rowJs, eHeaderMapJs, [
         "SON ODEME",
         "SON ODEME TARIHI",
@@ -486,7 +518,11 @@ async function main() {
       ])?.value,
     );
 
-    const examDate = formatDate(
+    const examDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(esinavSheetX, r, eHeaderMapX, [
+        "SINAV TARIHI",
+        "SINAV TARİHİ",
+      ]),
       getCellByHeaderExcelJS(rowJs, eHeaderMapJs, [
         "SINAV TARIHI",
         "SINAV TARİHİ",
@@ -576,7 +612,11 @@ async function main() {
       "HARC",
     ]);
 
-    const examDate = formatDate(
+    const examDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
+        "SINAV TARIHI",
+        "SINAV TARİHİ",
+      ]),
       getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "SINAV TARIHI",
         "SINAV TARİHİ",
@@ -589,7 +629,13 @@ async function main() {
       ]),
     );
 
-    const dueDate = formatDate(
+    const dueDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
+        "SON ODEME",
+        "SON ODEME TARIHI",
+        "SON ÖDEME",
+        "SON ÖDEME TARİHİ",
+      ]),
       getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "SON ODEME",
         "SON ODEME TARIHI",
@@ -613,7 +659,13 @@ async function main() {
       student.direksiyon_sonuc = "kaldi";
     }
 
-    const lessonDate = formatDate(
+    const lessonDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
+        "DERS TARIHI",
+        "DERS TARİHİ",
+        "TARIH",
+        "TARİH",
+      ]),
       getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "DERS TARIHI",
         "DERS TARİHİ",
@@ -730,6 +782,7 @@ async function main() {
   // ALACAK RAPORU
   const aHeaderRowNo = 3;
   const aHeaderMapJs = buildHeaderMapExcelJS(alacakSheetJs, aHeaderRowNo);
+  const aHeaderMapX = buildHeaderMapXLSX(alacakSheetX, aHeaderRowNo);
   let aCount = 0;
 
   for (let r = aHeaderRowNo + 1; r <= alacakSheetJs.rowCount; r += 1) {
@@ -765,7 +818,15 @@ async function main() {
     const installment = money(
       getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, ["TAKSİT", "TAKSIT"]),
     );
-    const dueDate = formatDate(
+    const dueDate = getFormattedDateFromCells(
+      getDisplayedCellTextXLSX(alacakSheetX, r, aHeaderMapX, [
+        "TARİH",
+        "TARIH",
+        "SON ODEME",
+        "SON ÖDEME",
+        "SON ODEME TARIHI",
+        "SON ÖDEME TARİHİ",
+      ]),
       getCellByHeaderExcelJS(rowJs, aHeaderMapJs, [
         "TARİH",
         "TARIH",

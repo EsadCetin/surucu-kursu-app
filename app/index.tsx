@@ -397,11 +397,25 @@ function getLessons(user: Student) {
 }
 
 function getEsinavDebt(user: Student) {
-  return user.esinav_harc_borcu || user.esinav_harc_borc || "";
+  const rawDebt = user.esinav_harc_borcu || user.esinav_harc_borc || "";
+  if (rawDebt && rawDebt.trim()) return rawDebt.trim();
+  return user.esinav_harc === "odenmedi" ? "1.250₺" : "";
+}
+
+function getEsinavPaymentDeadline(user: Student): string {
+  return (user.esinav_borc_son_odeme || user.esinav_son_odeme || "").trim();
 }
 
 function getDireksiyonDebt(user: Student) {
   return user.direksiyon_harc_borcu || user.direksiyon_harc_borc || "";
+}
+
+function getDireksiyonPaymentDeadline(user: Student): string {
+  return (
+    user.direksiyon_borc_son_odeme ||
+    user.direksiyon_son_odeme ||
+    ""
+  ).trim();
 }
 
 function getPaymentBadge(value?: string): { label: string; tone: BadgeTone } {
@@ -450,16 +464,18 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   if (user.evrak_durumu === "eksik") return events;
 
   if (user.durum === "esinav") {
-    if (user.esinav_borc_son_odeme && hasDebtValue(getEsinavDebt(user))) {
+    const esinavPaymentDeadline = getEsinavPaymentDeadline(user);
+
+    if (esinavPaymentDeadline && hasDebtValue(getEsinavDebt(user))) {
       events.push({
-        key: `esinav-odeme-${user.esinav_borc_son_odeme}`,
-        date: user.esinav_borc_son_odeme,
+        key: `esinav-odeme-${esinavPaymentDeadline}`,
+        date: esinavPaymentDeadline,
         title: "E-sınav harcı son ödeme günü",
         description: `Borç: ${formatDebt(getEsinavDebt(user))}`,
         type: "payment-esinav",
-        isPast: isPastDate(user.esinav_borc_son_odeme),
-        isToday: isTodayDate(user.esinav_borc_son_odeme),
-        isUpcoming: isUpcomingDate(user.esinav_borc_son_odeme),
+        isPast: isPastDate(esinavPaymentDeadline),
+        isToday: isTodayDate(esinavPaymentDeadline),
+        isUpcoming: isUpcomingDate(esinavPaymentDeadline),
       });
     }
 
@@ -481,19 +497,18 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
   }
 
   if (user.durum === "direksiyon" || user.esinav_sonuc === "gecti") {
-    if (
-      user.direksiyon_borc_son_odeme &&
-      hasDebtValue(getDireksiyonDebt(user))
-    ) {
+    const direksiyonPaymentDeadline = getDireksiyonPaymentDeadline(user);
+
+    if (direksiyonPaymentDeadline && hasDebtValue(getDireksiyonDebt(user))) {
       events.push({
-        key: `direksiyon-odeme-${user.direksiyon_borc_son_odeme}`,
-        date: user.direksiyon_borc_son_odeme,
+        key: `direksiyon-odeme-${direksiyonPaymentDeadline}`,
+        date: direksiyonPaymentDeadline,
         title: "Direksiyon harcı son ödeme günü",
         description: `Borç: ${formatDebt(getDireksiyonDebt(user))}`,
         type: "payment-direksiyon",
-        isPast: isPastDate(user.direksiyon_borc_son_odeme),
-        isToday: isTodayDate(user.direksiyon_borc_son_odeme),
-        isUpcoming: isUpcomingDate(user.direksiyon_borc_son_odeme),
+        isPast: isPastDate(direksiyonPaymentDeadline),
+        isToday: isTodayDate(direksiyonPaymentDeadline),
+        isUpcoming: isUpcomingDate(direksiyonPaymentDeadline),
       });
     }
 
@@ -2061,10 +2076,7 @@ export default function Index() {
                   <Text
                     style={[styles.miniCardText, { color: colors.subText }]}
                   >
-                    Son ödeme:{" "}
-                    {normalizeValue(
-                      user.esinav_borc_son_odeme || user.esinav_son_odeme,
-                    )}
+                    Son ödeme: {normalizeValue(getEsinavPaymentDeadline(user))}
                   </Text>
                 ) : null}
 
@@ -2127,10 +2139,7 @@ export default function Index() {
                     style={[styles.miniCardText, { color: colors.subText }]}
                   >
                     Direksiyon son ödeme:{" "}
-                    {normalizeValue(
-                      user.direksiyon_borc_son_odeme ||
-                        user.direksiyon_son_odeme,
-                    )}
+                    {normalizeValue(getDireksiyonPaymentDeadline(user))}
                   </Text>
                 ) : null}
                 <Text style={[styles.miniCardText, { color: colors.subText }]}>
