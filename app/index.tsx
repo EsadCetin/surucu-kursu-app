@@ -65,6 +65,12 @@ type Student = {
   taksit_son_odeme?: string;
 };
 
+type CachedStudentsPayload = {
+  students: Student[];
+  lastSuccessfulSyncAt?: string;
+  sourceModifiedAt?: string;
+};
+
 type StatusType = "success" | "error" | "warning" | "info" | "normal";
 type BadgeTone = "green" | "red" | "orange" | "blue" | "gray";
 
@@ -125,6 +131,7 @@ const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
+const STUDENTS_CACHE_KEY = "students_cache_v1";
 
 async function saveStudentSessionTc(tc: string) {
   await AsyncStorage.setItem(STUDENT_SESSION_TC_KEY, tc.trim());
@@ -137,6 +144,64 @@ async function getStudentSessionTc() {
 
 async function clearStudentSessionTc() {
   await AsyncStorage.removeItem(STUDENT_SESSION_TC_KEY);
+}
+
+async function saveStudentsCache(payload: CachedStudentsPayload) {
+  await AsyncStorage.setItem(STUDENTS_CACHE_KEY, JSON.stringify(payload));
+}
+
+async function getStudentsCache(): Promise<CachedStudentsPayload | null> {
+  const raw = await AsyncStorage.getItem(STUDENTS_CACHE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as CachedStudentsPayload;
+
+    if (!parsed || !Array.isArray(parsed.students)) {
+      return null;
+    }
+
+    return {
+      students: parsed.students.filter(
+        (item) => item && typeof item.tc === "string",
+      ),
+      lastSuccessfulSyncAt: parsed.lastSuccessfulSyncAt,
+      sourceModifiedAt: parsed.sourceModifiedAt,
+    };
+  } catch (error) {
+    console.log("Öğrenci cache verisi okunamadı:", error);
+    return null;
+  }
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return "Henüz bilinmiyor";
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "Henüz bilinmiyor";
+
+  return date.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getLastUpdateText(payload?: {
+  sourceModifiedAt?: string;
+  lastSuccessfulSyncAt?: string;
+}) {
+  if (payload?.sourceModifiedAt) {
+    return formatDateTime(payload.sourceModifiedAt);
+  }
+
+  if (payload?.lastSuccessfulSyncAt) {
+    return formatDateTime(payload.lastSuccessfulSyncAt);
+  }
+
+  return "Henüz bilinmiyor";
 }
 
 const MONTH_NAMES = [
@@ -819,6 +884,9 @@ export default function Index() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [lastDataUpdateText, setLastDataUpdateText] =
+    useState("Henüz bilinmiyor");
+  const [showOfflineDataNotice, setShowOfflineDataNotice] = useState(false);
   const [loginFeedback, setLoginFeedback] = useState<LoginFeedback | null>(
     null,
   );
@@ -894,11 +962,45 @@ export default function Index() {
       }
 
       const data: Student[] = await response.json();
+      const sourceModifiedAt =
+        response.headers.get("last-modified") ||
+        response.headers.get("Last-Modified") ||
+        "";
+      const cachePayload: CachedStudentsPayload = {
+        students: data,
+        lastSuccessfulSyncAt: new Date().toISOString(),
+        sourceModifiedAt: sourceModifiedAt || undefined,
+      };
+
       setStudents(data);
+      setLastDataUpdateText(getLastUpdateText(cachePayload));
+      setShowOfflineDataNotice(false);
+
+      try {
+        await saveStudentsCache(cachePayload);
+      } catch (error) {
+        console.log("Öğrenci verisi cache'e kaydedilemedi:", error);
+      }
     } catch {
+      try {
+        const cachedPayload = await getStudentsCache();
+
+        if (cachedPayload?.students?.length) {
+          setStudents(cachedPayload.students);
+          setLastDataUpdateText(getLastUpdateText(cachedPayload));
+          setShowOfflineDataNotice(true);
+          setFetchError("");
+          return;
+        }
+      } catch (cacheError) {
+        console.log("Öğrenci cache verisi yüklenemedi:", cacheError);
+      }
+
       setStudents([]);
+      setLastDataUpdateText("Henüz bilinmiyor");
+      setShowOfflineDataNotice(false);
       setFetchError(
-        "Veriler sunucudan alınamadı. Lütfen daha sonra tekrar deneyin.",
+        "Veriler sunucudan alınamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
       );
     } finally {
       setLoadingStudents(false);
@@ -1685,6 +1787,46 @@ export default function Index() {
         style={[styles.container, { backgroundColor: colors.screenBg }]}
         contentContainerStyle={styles.content}
       >
+        <View
+          style={[
+            styles.dataSyncCard,
+            {
+              backgroundColor: colors.cardBg,
+              borderColor: showOfflineDataNotice
+                ? colors.accent
+                : colors.border,
+            },
+          ]}
+        >
+          <View style={styles.dataSyncHeader}>
+            <Ionicons
+              name={
+                showOfflineDataNotice ? "cloud-offline-outline" : "time-outline"
+              }
+              size={18}
+              color={showOfflineDataNotice ? colors.accent : colors.text}
+            />
+            <Text style={[styles.dataSyncTitle, { color: colors.text }]}>
+              Verilerin son güncelleme zamanı
+            </Text>
+          </View>
+
+          <Text style={[styles.dataSyncValue, { color: colors.text }]}>
+            {lastDataUpdateText}
+          </Text>
+
+          {showOfflineDataNotice ? (
+            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
+              İnternet yok veya bağlantı zayıf. Kayıtlı son veriler
+              gösteriliyor.
+            </Text>
+          ) : (
+            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
+              Veriler açılışta otomatik olarak yenilenir.
+            </Text>
+          )}
+        </View>
+
         <View
           style={[
             styles.profileCard,
@@ -2528,8 +2670,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  profileCard: {
+  dataSyncCard: {
     marginTop: 30,
+    marginBottom: 14,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+  },
+  dataSyncHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  dataSyncTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  dataSyncValue: {
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  dataSyncNote: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  profileCard: {
+    marginTop: 0,
     backgroundColor: "#151519",
     borderRadius: 24,
     padding: 18,
