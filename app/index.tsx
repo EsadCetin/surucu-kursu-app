@@ -129,6 +129,8 @@ type CalendarCell = {
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
+const DATA_LAST_COMMIT_URL =
+  "https://api.github.com/repos/EsadCetin/surucu-kursu-app/commits?path=docs/students.json&sha=main&per_page=1";
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
 const STUDENTS_CACHE_KEY = "students_cache_v1";
@@ -202,6 +204,36 @@ function getLastUpdateText(payload?: {
   }
 
   return "Henüz bilinmiyor";
+}
+
+async function getStudentsLastCommitDate() {
+  try {
+    const response = await fetch(DATA_LAST_COMMIT_URL, {
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    if (!response.ok) {
+      return "";
+    }
+
+    const commits = await response.json();
+
+    if (!Array.isArray(commits) || !commits.length) {
+      return "";
+    }
+
+    const latestCommit = commits[0];
+    return (
+      latestCommit?.commit?.committer?.date ||
+      latestCommit?.commit?.author?.date ||
+      ""
+    );
+  } catch (error) {
+    console.log("students.json son commit tarihi alınamadı:", error);
+    return "";
+  }
 }
 
 const MONTH_NAMES = [
@@ -962,10 +994,12 @@ export default function Index() {
       }
 
       const data: Student[] = await response.json();
-      const sourceModifiedAt =
+      const githubLastCommitAt = await getStudentsLastCommitDate();
+      const rawLastModified =
         response.headers.get("last-modified") ||
         response.headers.get("Last-Modified") ||
         "";
+      const sourceModifiedAt = githubLastCommitAt || rawLastModified || "";
       const cachePayload: CachedStudentsPayload = {
         students: data,
         lastSuccessfulSyncAt: new Date().toISOString(),
@@ -1789,46 +1823,6 @@ export default function Index() {
       >
         <View
           style={[
-            styles.dataSyncCard,
-            {
-              backgroundColor: colors.cardBg,
-              borderColor: showOfflineDataNotice
-                ? colors.accent
-                : colors.border,
-            },
-          ]}
-        >
-          <View style={styles.dataSyncHeader}>
-            <Ionicons
-              name={
-                showOfflineDataNotice ? "cloud-offline-outline" : "time-outline"
-              }
-              size={18}
-              color={showOfflineDataNotice ? colors.accent : colors.text}
-            />
-            <Text style={[styles.dataSyncTitle, { color: colors.text }]}>
-              Verilerin son güncelleme zamanı
-            </Text>
-          </View>
-
-          <Text style={[styles.dataSyncValue, { color: colors.text }]}>
-            {lastDataUpdateText}
-          </Text>
-
-          {showOfflineDataNotice ? (
-            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
-              İnternet yok veya bağlantı zayıf. Kayıtlı son veriler
-              gösteriliyor.
-            </Text>
-          ) : (
-            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
-              Veriler açılışta otomatik olarak yenilenir.
-            </Text>
-          )}
-        </View>
-
-        <View
-          style={[
             styles.profileCard,
             { backgroundColor: colors.cardBg, borderColor: colors.border },
           ]}
@@ -2202,6 +2196,45 @@ export default function Index() {
             Çıkış Yap
           </Text>
         </TouchableOpacity>
+        <View
+          style={[
+            styles.dataSyncCard,
+            {
+              backgroundColor: colors.cardBg,
+              borderColor: showOfflineDataNotice
+                ? colors.accent
+                : colors.border,
+            },
+          ]}
+        >
+          <View style={styles.dataSyncHeader}>
+            <Ionicons
+              name={
+                showOfflineDataNotice ? "cloud-offline-outline" : "time-outline"
+              }
+              size={18}
+              color={showOfflineDataNotice ? colors.accent : colors.text}
+            />
+            <Text style={[styles.dataSyncTitle, { color: colors.text }]}>
+              Verilerin son güncelleme zamanı
+            </Text>
+          </View>
+
+          <Text style={[styles.dataSyncValue, { color: colors.text }]}>
+            {lastDataUpdateText}
+          </Text>
+
+          {showOfflineDataNotice ? (
+            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
+              İnternet yok veya bağlantı zayıf. Kayıtlı son veriler
+              gösteriliyor.
+            </Text>
+          ) : (
+            <Text style={[styles.dataSyncNote, { color: colors.mutedText }]}>
+              Veriler kurs tarafından günlük olarak girilmektedir.
+            </Text>
+          )}
+        </View>
       </ScrollView>
 
       <Modal
@@ -2671,8 +2704,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dataSyncCard: {
-    marginTop: 30,
-    marginBottom: 14,
+    marginTop: 14,
+
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -2698,7 +2731,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   profileCard: {
-    marginTop: 0,
+    marginTop: 20,
     backgroundColor: "#151519",
     borderRadius: 24,
     padding: 18,
