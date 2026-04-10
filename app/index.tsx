@@ -9,7 +9,6 @@ import {
   Animated,
   Easing,
   Image,
-  ImageSourcePropType,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -134,9 +133,10 @@ const DATA_LAST_COMMIT_URL =
   "https://api.github.com/repos/EsadCetin/surucu-kursu-app/commits?path=docs/students.json&sha=main&per_page=1";
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
-const STUDENTS_CACHE_KEY = "students_cache_v3";
 
-const LOGIN_LOGO: ImageSourcePropType = require("../assets/images/logo.png");
+const STUDENTS_CACHE_KEY = "students_cache_v2";
+
+const LOGIN_LOGO = require("../assets/images/logo.png");
 
 async function saveStudentSessionTc(tc: string) {
   await AsyncStorage.setItem(STUDENT_SESSION_TC_KEY, tc.trim());

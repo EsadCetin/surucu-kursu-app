@@ -1,17 +1,16 @@
 /**
  * scripts/excel-to-json.js
  *
- * Güncel sürüm.
+ * v4
  *
- * Ne değişti:
- * - E-SINAV sayfasındaki yeni "SON ÖDEME / SON ÖDEME TARİHİ" sütunu okunur
- * - E-sınav ücreti sabit 1.250₺ kabul edilir
- * - E-sınav ödemesi yapılmamışsa harç borcu 1.250₺ yazılır
- * - Son ödeme tarihi varsa esinav_son_odeme ve esinav_borc_son_odeme alanlarına yazılır
- * - Son ödeme tarihi yoksa tarih alanı boş bırakılır
- * - Saat için xlsx'in görünen değeri kullanılır
- * - Renk için ExcelJS kullanılır
- * - docs/students.json üretir
+ * Ne düzeldi:
+ * - Slash formatındaki tarihler artık doğru normalize edilir
+ * - Excel'den gelen 4/10/26 değeri 10.04.2026 olarak yazılır
+ * - docs/students.json içinde direksiyon / e-sınav son ödeme tarihleri TR formatında üretilir
+ *
+ * Not:
+ * - "/" içeren kısa tarihler Excel'in görünen metninde çoğu zaman M/D/YY gelir.
+ * - Bu yüzden slash tarihleri month/day/year kabul edilip dd.mm.yyyy formatına çevrilir.
  */
 
 const fs = require("fs");
@@ -59,6 +58,42 @@ function asDateText(day, month, year = DEFAULT_YEAR) {
   return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
 }
 
+function normalizeYear(yearValue, fallbackYear = DEFAULT_YEAR) {
+  const y = Number(yearValue);
+  if (!y || Number.isNaN(y)) return fallbackYear;
+  if (y < 100) return 2000 + y;
+  if (y <= 1901) return fallbackYear;
+  return y;
+}
+
+function formatSlashDateAsMonthDayYear(raw, fallbackYear = DEFAULT_YEAR) {
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!match) return "";
+
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const year = normalizeYear(match[3], fallbackYear);
+
+  if (!month || !day) return "";
+  if (month > 12 || day > 31) return "";
+
+  return asDateText(day, month, year);
+}
+
+function formatHyphenDateAsDayMonthYear(raw, fallbackYear = DEFAULT_YEAR) {
+  const match = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{2}|\d{4})$/);
+  if (!match) return "";
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = normalizeYear(match[3], fallbackYear);
+
+  if (!month || !day) return "";
+  if (month > 12 || day > 31) return "";
+
+  return asDateText(day, month, year);
+}
+
 function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   if (v == null || v === "") return "";
 
@@ -96,15 +131,29 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
     return asDateText(Number(d), Number(m), 2000 + Number(y2));
   }
 
-  if (/^\d{2}[/-]\d{2}[/-]\d{4}$/.test(raw)) {
-    const [d, m, y] = raw.split(/[/-]/);
-    const yy = Number(y) <= 1901 ? fallbackYear : Number(y);
-    return asDateText(Number(d), Number(m), yy);
+  if (/^\d{1,2}[.,]\d{1,2}[.,]\d{4}$/.test(raw)) {
+    const [d, m, y] = raw.replace(/,/g, ".").split(".");
+    return asDateText(Number(d), Number(m), normalizeYear(y, fallbackYear));
+  }
+
+  // Excel görüntü metni çoğu zaman slash ile M/D/YY verir.
+  if (/^\d{1,2}\/\d{1,2}\/(\d{2}|\d{4})$/.test(raw)) {
+    return formatSlashDateAsMonthDayYear(raw, fallbackYear);
+  }
+
+  if (/^\d{1,2}-\d{1,2}-(\d{2}|\d{4})$/.test(raw)) {
+    return formatHyphenDateAsDayMonthYear(raw, fallbackYear);
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     const [y, m, d] = raw.split("-");
-    const yy = Number(y) <= 1901 ? fallbackYear : Number(y);
+    const yy = normalizeYear(y, fallbackYear);
+    return asDateText(Number(d), Number(m), yy);
+  }
+
+  if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(raw)) {
+    const [y, m, d] = raw.split("/");
+    const yy = normalizeYear(y, fallbackYear);
     return asDateText(Number(d), Number(m), yy);
   }
 
@@ -221,16 +270,8 @@ function xMissing(value, label) {
   return t(value).toLocaleUpperCase("tr-TR") === "X" ? label : "";
 }
 
-function hasValue(value) {
-  return !!t(value);
-}
-
 function isPaidStatus(value) {
   return t(value) === "odendi";
-}
-
-function isUnpaidStatus(value) {
-  return t(value) === "odenmedi";
 }
 
 function syncDerivedFields(student) {
@@ -394,6 +435,10 @@ function applyEsinavFixedFee(student, dueDate) {
   }
 }
 
+function getDebtByHeader(row, headerMap, names) {
+  return money(getCellTextByHeaderExcelJS(row, headerMap, names));
+}
+
 async function main() {
   if (!fs.existsSync(EXCEL_PATH)) {
     throw new Error(`Excel dosyası bulunamadı: ${EXCEL_PATH}`);
@@ -453,6 +498,7 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, eHeaderMapJs, [
         "ADI SOYADI",
         "ADI SOYADI",
+        "AD SOYAD",
       ]),
     );
     if (!nameValue) continue;
@@ -543,9 +589,9 @@ async function main() {
     if (examTime) student.esinav_saati = examTime;
     if (dueDate) student.esinav_son_odeme = dueDate;
 
-    if (resultText.includes("gecti") || resultText.includes("gecti")) {
+    if (resultText.includes("gecti")) {
       student.esinav_sonuc = "gecti";
-    } else if (resultText.includes("kaldi") || resultText.includes("kaldi")) {
+    } else if (resultText.includes("kaldi")) {
       student.esinav_sonuc = "kaldi";
     }
 
@@ -589,11 +635,6 @@ async function main() {
     );
     setIfEmpty(
       student,
-      "sinif",
-      getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, ["SINIF"]),
-    );
-    setIfEmpty(
-      student,
       "telefonlar",
       getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "TELEFONLAR",
@@ -603,44 +644,44 @@ async function main() {
 
     student.durum = "direksiyon";
 
-    const harcCell = getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
-      "DIREKSIYON HARCI",
-      "DİREKSİYON HARCI",
-      "DIREKSIYON SINAV HARCI",
-      "DİREKSİYON SINAV HARCI",
-      "HARÇ",
-      "HARC",
-    ]);
-
     const examDate = getFormattedDateFromCells(
       getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
         "SINAV TARIHI",
         "SINAV TARİHİ",
+        "TARIH",
+        "TARİH",
       ]),
       getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "SINAV TARIHI",
         "SINAV TARİHİ",
+        "TARIH",
+        "TARİH",
       ])?.value,
     );
 
     const examTime = normalizeTimeText(
       getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
         "SINAV SAATI",
+        "SAAT",
       ]),
     );
 
     const dueDate = getFormattedDateFromCells(
       getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
         "SON ODEME",
-        "SON ODEME TARIHI",
         "SON ÖDEME",
+        "SON ODEME TARIHI",
         "SON ÖDEME TARİHİ",
+        "ODEME SON TARIHI",
+        "ÖDEME SON TARİHİ",
       ]),
       getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "SON ODEME",
-        "SON ODEME TARIHI",
         "SON ÖDEME",
+        "SON ODEME TARIHI",
         "SON ÖDEME TARİHİ",
+        "ODEME SON TARIHI",
+        "ÖDEME SON TARİHİ",
       ])?.value,
     );
 
@@ -648,44 +689,35 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, ["SONUC", "SONUÇ"]),
     );
 
-    student.direksiyon_harc = getHarcStatusByColor(harcCell);
+    const directFee = money(
+      getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, [
+        "DIREKSIYON HARCI",
+        "DİREKSİYON HARCI",
+        "HARÇ",
+        "HARC",
+      ]),
+    );
+
     if (examDate) student.direksiyon_tarih = examDate;
     if (examTime) student.direksiyon_saati = examTime;
-    if (dueDate) student.direksiyon_son_odeme = dueDate;
+    if (dueDate) {
+      student.direksiyon_son_odeme = dueDate;
+      if (!student.direksiyon_borc_son_odeme) {
+        student.direksiyon_borc_son_odeme = dueDate;
+      }
+    }
 
-    if (resultText.includes("gecti") || resultText.includes("gecti")) {
+    if (resultText.includes("gecti")) {
       student.direksiyon_sonuc = "gecti";
     } else if (resultText.includes("kaldi")) {
       student.direksiyon_sonuc = "kaldi";
     }
 
-    const lessonDate = getFormattedDateFromCells(
-      getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
-        "DERS TARIHI",
-        "DERS TARİHİ",
-        "TARIH",
-        "TARİH",
-      ]),
-      getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
-        "DERS TARIHI",
-        "DERS TARİHİ",
-        "TARIH",
-        "TARİH",
-      ])?.value,
-    );
-    const lessonTime = normalizeTimeText(
-      getDisplayedCellTextXLSX(direksiyonSheetX, r, dHeaderMapX, [
-        "DERS SAATI",
-        "SAAT",
-      ]),
-    );
-
-    if (lessonDate || lessonTime) {
-      student.direksiyon_dersleri.push({
-        tarih: lessonDate,
-        saat: lessonTime,
-        not: lessonDate || lessonTime ? "Direksiyon dersi" : "",
-      });
+    if (directFee) {
+      student.direksiyon_harc_borcu = directFee;
+      student.direksiyon_harc = "odenmedi";
+    } else if (!student.direksiyon_harc_borcu) {
+      student.direksiyon_harc = "odendi";
     }
   }
 
@@ -699,7 +731,7 @@ async function main() {
     const nameValue = t(
       getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
         "ADI SOYADI",
-        "ADI SOYADI",
+        "AD SOYAD",
       ]),
     );
     if (!nameValue) continue;
@@ -711,25 +743,7 @@ async function main() {
       nameValue,
     );
 
-    setIfEmpty(student, "ad_soyad", nameValue);
-    setIfEmpty(
-      student,
-      "tc",
-      getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["TC", "T.C.", "T C"]),
-    );
-
-    const missingList = uniqStrings([
-      xMissing(
-        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
-          "OGRENIM BELGESI",
-          "ÖĞRENİM BELGESİ",
-        ]),
-        "Öğrenim belgesi",
-      ),
-      xMissing(
-        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["SABIKA KAYDI"]),
-        "Sabıka kaydı",
-      ),
+    const missingDocs = uniqStrings([
       xMissing(
         getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
           "SAGLIK RAPORU",
@@ -738,10 +752,21 @@ async function main() {
         "Sağlık raporu",
       ),
       xMissing(
+        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["DIPLOMA", "DİPLOMA"]),
+        "Diploma",
+      ),
+      xMissing(
         getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
-          "BIYOMETRIK",
-          "BİYOMETRİK",
+          "SABIKA KAYDI",
+          "SABIKA",
+          "ADLİ SİCİL",
+        ]),
+        "Sabıka kaydı",
+      ),
+      xMissing(
+        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
           "FOTOGRAF",
+          "FOTOĞRAF",
         ]),
         "Biyometrik fotoğraf",
       ),
@@ -749,75 +774,71 @@ async function main() {
         getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
           "IKAMETGAH",
           "İKAMETGAH",
-          "ADRES BELGESI",
-          "ADRES BELGESİ",
+          "ADRES",
         ]),
-        "İkametgah / adres belgesi",
+        "İkametgah",
       ),
       xMissing(
         getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["KAN GRUBU"]),
-        "Kan grubu belgesi",
-      ),
-      xMissing(
-        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, ["DIPLOMA"]),
-        "Diploma",
-      ),
-      xMissing(
-        getCellTextByHeaderExcelJS(rowJs, xHeaderMapJs, [
-          "KIMLIK FOTOKOPISI",
-          "KİMLİK FOTOKOPİSİ",
-        ]),
-        "Kimlik fotokopisi",
+        "Kan grubu",
       ),
     ]);
 
-    if (missingList.length) {
+    if (missingDocs.length) {
+      student.eksik_evraklar = missingDocs.join(", ");
       student.evrak_durumu = "eksik";
-      student.eksik_evraklar = missingList.join(", ");
     } else if (!student.evrak_durumu) {
       student.evrak_durumu = "tamam";
     }
   }
 
   // ALACAK RAPORU
-  const aHeaderRowNo = 3;
+  const aHeaderRowNo = 2;
   const aHeaderMapJs = buildHeaderMapExcelJS(alacakSheetJs, aHeaderRowNo);
   const aHeaderMapX = buildHeaderMapXLSX(alacakSheetX, aHeaderRowNo);
   let aCount = 0;
 
   for (let r = aHeaderRowNo + 1; r <= alacakSheetJs.rowCount; r += 1) {
     const rowJs = alacakSheetJs.getRow(r);
+
     const nameValue = t(
       getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, [
         "ADI SOYADI",
         "AD SOYAD",
+        "ÖĞRENCİ",
+        "OGRENCI",
       ]),
     );
     if (!nameValue) continue;
     aCount += 1;
 
-    const student = getOrCreate(store, "", nameValue);
-    setIfEmpty(student, "ad_soyad", nameValue);
+    const student = getOrCreate(
+      store,
+      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, ["TC", "T.C.", "T C"]),
+      nameValue,
+    );
 
-    const eDebt = money(
-      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, [
-        "E SINAV HARCI",
-        "E-SINAV HARCI",
-        "E SINAV BORCU",
-        "E-SINAV BORCU",
-      ]),
-    );
-    const dDebt = money(
-      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, [
-        "DİREKSİYON SINAV HARCI",
-        "DIREKSIYON SINAV HARCI",
-        "DİREKSİYON HARCI",
-        "DIREKSIYON HARCI",
-      ]),
-    );
-    const installment = money(
-      getCellTextByHeaderExcelJS(rowJs, aHeaderMapJs, ["TAKSİT", "TAKSIT"]),
-    );
+    const eDebt = getDebtByHeader(rowJs, aHeaderMapJs, [
+      "E SINAV BORCU",
+      "E-SINAV BORCU",
+      "E SINAV HARCI",
+      "E-SINAV HARCI",
+    ]);
+
+    const dDebt = getDebtByHeader(rowJs, aHeaderMapJs, [
+      "DIREKSIYON BORCU",
+      "DİREKSİYON BORCU",
+      "DIREKSIYON HARCI",
+      "DİREKSİYON HARCI",
+    ]);
+
+    const installment = getDebtByHeader(rowJs, aHeaderMapJs, [
+      "TAKSIT",
+      "TAKSİT",
+      "TAKSIT BORCU",
+      "TAKSİT BORCU",
+    ]);
+
     const dueDate = getFormattedDateFromCells(
       getDisplayedCellTextXLSX(alacakSheetX, r, aHeaderMapX, [
         "TARİH",
