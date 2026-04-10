@@ -1,16 +1,18 @@
 /**
  * scripts/excel-to-json.js
  *
- * v4
+ * v5
  *
  * Ne düzeldi:
- * - Slash formatındaki tarihler artık doğru normalize edilir
- * - Excel'den gelen 4/10/26 değeri 10.04.2026 olarak yazılır
- * - docs/students.json içinde direksiyon / e-sınav son ödeme tarihleri TR formatında üretilir
+ * - Slash formatındaki tarihler TR formatına çevrilir
+ * - Direksiyon harcı artık varsayılan olarak "odendi" yapılmaz
+ * - Direksiyon sheet'inde son ödeme tarihi varsa ve açık bir "ödendi" işareti yoksa durum "odenmedi" kabul edilir
+ * - syncDerivedFields içindeki hatalı otomatik "odendi" ataması kaldırıldı
  *
- * Not:
- * - "/" içeren kısa tarihler Excel'in görünen metninde çoğu zaman M/D/YY gelir.
- * - Bu yüzden slash tarihleri month/day/year kabul edilip dd.mm.yyyy formatına çevrilir.
+ * Bu düzeltme neden gerekli:
+ * - Önceki sürümde öğrenci direksiyon aşamasındaysa ve direksiyon_harc_borcu boşsa
+ *   harç otomatik "odendi" yazılıyordu.
+ * - Bu yüzden Cuma Çelik gibi ödememiş bazı öğrenciler yanlışlıkla "odendi" görünüyordu.
  */
 
 const fs = require("fs");
@@ -136,7 +138,6 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
     return asDateText(Number(d), Number(m), normalizeYear(y, fallbackYear));
   }
 
-  // Excel görüntü metni çoğu zaman slash ile M/D/YY verir.
   if (/^\d{1,2}\/\d{1,2}\/(\d{2}|\d{4})$/.test(raw)) {
     return formatSlashDateAsMonthDayYear(raw, fallbackYear);
   }
@@ -179,6 +180,10 @@ function normalizeTimeText(rawValue) {
 
 function money(v) {
   return t(v);
+}
+
+function hasValue(v) {
+  return !!t(v);
 }
 
 function createStudent(tcValue = "", nameValue = "") {
@@ -307,13 +312,17 @@ function syncDerivedFields(student) {
     }
   }
 
-  if (
-    (student.durum === "direksiyon" ||
-      student.direksiyon_tarih ||
-      student.direksiyon_saati) &&
-    !student.direksiyon_harc_borcu
-  ) {
-    student.direksiyon_harc = "odendi";
+  // KRİTİK DÜZELTME:
+  // Önceki sürümde direksiyon aşamasında olup borç alanı boşsa direkt "odendi" yazılıyordu.
+  // Bu yanlış sonuç veriyordu. Artık varsayılan "odendi" ataması yok.
+  if (!student.direksiyon_harc) {
+    if (
+      student.direksiyon_harc_borcu ||
+      student.direksiyon_borc_son_odeme ||
+      student.direksiyon_son_odeme
+    ) {
+      student.direksiyon_harc = "odenmedi";
+    }
   }
 
   if (!Array.isArray(student.direksiyon_dersleri)) {
@@ -406,7 +415,7 @@ function getExcelCellArgb(cell) {
 function getHarcStatusByColor(cell) {
   const argb = getExcelCellArgb(cell);
 
-  if (!argb) return "odenmedi";
+  if (!argb) return "";
 
   if (
     argb.includes("92D050") ||
@@ -693,8 +702,30 @@ async function main() {
       getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, [
         "DIREKSIYON HARCI",
         "DİREKSİYON HARCI",
+        "DIREKSIYON BORCU",
+        "DİREKSİYON BORCU",
         "HARÇ",
         "HARC",
+      ]),
+    );
+
+    const harcCell = getCellByHeaderExcelJS(rowJs, dHeaderMapJs, [
+      "DIREKSIYON HARCI",
+      "DİREKSİYON HARCI",
+      "DIREKSIYON BORCU",
+      "DİREKSİYON BORCU",
+      "HARÇ",
+      "HARC",
+    ]);
+
+    const harcStatusByColor = getHarcStatusByColor(harcCell);
+    const explicitStatusText = normalizeHeader(
+      getCellTextByHeaderExcelJS(rowJs, dHeaderMapJs, [
+        "DIREKSIYON HARCI DURUMU",
+        "DİREKSİYON HARCI DURUMU",
+        "ODENDI",
+        "ÖDENDİ",
+        "DURUM",
       ]),
     );
 
@@ -713,11 +744,23 @@ async function main() {
       student.direksiyon_sonuc = "kaldi";
     }
 
+    // Ödeme mantığı:
+    // 1) Tutar varsa kesin borç vardır -> odenmedi
+    // 2) Açıkça ödendi bilgisi varsa -> odendi
+    // 3) Son ödeme tarihi varsa ama ödendi bilgisi yoksa -> odenmedi
     if (directFee) {
       student.direksiyon_harc_borcu = directFee;
       student.direksiyon_harc = "odenmedi";
-    } else if (!student.direksiyon_harc_borcu) {
+    } else if (
+      explicitStatusText.includes("odendi") ||
+      explicitStatusText.includes("ödendi") ||
+      isPaidStatus(harcStatusByColor)
+    ) {
       student.direksiyon_harc = "odendi";
+      student.direksiyon_harc_borcu = "";
+      student.direksiyon_borc_son_odeme = "";
+    } else if (dueDate) {
+      student.direksiyon_harc = "odenmedi";
     }
   }
 
@@ -869,9 +912,19 @@ async function main() {
 
     if (dDebt) {
       student.direksiyon_harc_borcu = dDebt;
-      student.direksiyon_borc_son_odeme = dueDate;
-      if (!student.direksiyon_son_odeme) student.direksiyon_son_odeme = dueDate;
+      if (dueDate) {
+        student.direksiyon_borc_son_odeme = dueDate;
+        if (!student.direksiyon_son_odeme)
+          student.direksiyon_son_odeme = dueDate;
+      }
       student.direksiyon_harc = "odenmedi";
+    } else if (dueDate && !student.direksiyon_harc) {
+      // ALACAK RAPORU'nda isim var ve tarih var ama tutar boşsa bile
+      // yanlışlıkla "odendi" yazmamak için temkinli davran.
+      student.direksiyon_harc = "odenmedi";
+      if (!student.direksiyon_borc_son_odeme)
+        student.direksiyon_borc_son_odeme = dueDate;
+      if (!student.direksiyon_son_odeme) student.direksiyon_son_odeme = dueDate;
     }
 
     if (installment) {
