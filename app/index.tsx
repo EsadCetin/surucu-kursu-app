@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -5,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -18,6 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 type LessonItem = {
   tarih?: string;
@@ -612,7 +616,15 @@ function StepItem({
   showTopLine = false,
   showBottomLine = false,
   lineActive = false,
-}: StepItemProps) {
+  colors,
+}: StepItemProps & {
+  colors: {
+    text: string;
+    subText: string;
+    border: string;
+    cardBg: string;
+  };
+}) {
   return (
     <TouchableOpacity
       style={styles.stepRow}
@@ -626,6 +638,7 @@ function StepItem({
               styles.stepLine,
               styles.stepLineTop,
               lineActive ? styles.stepLineActive : styles.stepLinePassive,
+              !lineActive ? { backgroundColor: colors.border } : null,
             ]}
           />
         ) : null}
@@ -633,6 +646,7 @@ function StepItem({
         <View
           style={[
             styles.stepCircle,
+            { borderColor: colors.border, backgroundColor: colors.cardBg },
             checked ? styles.stepCircleChecked : null,
             !checked && active ? styles.stepCircleActive : null,
           ]}
@@ -648,6 +662,7 @@ function StepItem({
               styles.stepLine,
               styles.stepLineBottom,
               lineActive ? styles.stepLineActive : styles.stepLinePassive,
+              !lineActive ? { backgroundColor: colors.border } : null,
             ]}
           />
         ) : null}
@@ -657,6 +672,7 @@ function StepItem({
         <Text
           style={[
             styles.stepTitle,
+            { color: checked || active ? colors.text : colors.subText },
             checked ? styles.stepTitleChecked : null,
             !checked && active ? styles.stepTitleActive : null,
           ]}
@@ -689,12 +705,122 @@ function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function InfoChip({
+  label,
+  value,
+  colors,
+}: {
+  label: string;
+  value: string;
+  colors: {
+    cardAltBg: string;
+    border: string;
+    mutedText: string;
+    text: string;
+  };
+}) {
   return (
-    <View style={styles.infoChip}>
-      <Text style={styles.infoChipLabel}>{label}</Text>
-      <Text style={styles.infoChipValue}>{normalizeValue(value)}</Text>
+    <View
+      style={[
+        styles.infoChip,
+        { backgroundColor: colors.cardAltBg, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.infoChipLabel, { color: colors.mutedText }]}>
+        {label}
+      </Text>
+      <Text style={[styles.infoChipValue, { color: colors.text }]}>
+        {normalizeValue(value)}
+      </Text>
     </View>
+  );
+}
+
+function ThemeToggle({
+  selectedTheme,
+  onToggle,
+  colors,
+}: {
+  selectedTheme: "dark" | "light";
+  onToggle: () => void;
+  colors: {
+    cardAltBg: string;
+    border: string;
+    accent: string;
+    accentContrast: string;
+    mutedText: string;
+  };
+}) {
+  const animatedValue = useRef(
+    new Animated.Value(selectedTheme === "light" ? 1 : 0),
+  ).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: selectedTheme === "light" ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [animatedValue, selectedTheme]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 35],
+  });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onToggle}
+      style={{
+        width: 72,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.cardAltBg,
+        justifyContent: "center",
+        paddingHorizontal: 3,
+        overflow: "hidden",
+      }}
+    >
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 10,
+        }}
+      >
+        <Ionicons name="moon" size={15} color={colors.mutedText} />
+        <Ionicons name="sunny" size={16} color={colors.mutedText} />
+      </View>
+
+      <Animated.View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: colors.accent,
+          alignItems: "center",
+          justifyContent: "center",
+          transform: [{ translateX }],
+        }}
+      >
+        <Ionicons
+          name={selectedTheme === "light" ? "sunny" : "moon"}
+          size={16}
+          color={colors.accentContrast}
+        />
+      </Animated.View>
+    </TouchableOpacity>
   );
 }
 
@@ -715,6 +841,7 @@ export default function Index() {
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
   const [sessionTc, setSessionTc] = useState("");
   const [restoringSession, setRestoringSession] = useState(true);
+  const { theme, colors, themeReady, toggleTheme } = useAppTheme();
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
@@ -1422,24 +1549,15 @@ export default function Index() {
 
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
 
-  if (loadingStudents && !loggedIn) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#c1121f" />
-        <Text style={styles.loadingText}>Öğrenci bilgileri yükleniyor...</Text>
-      </View>
-    );
-  }
-
   if (!loggedIn || !user) {
     return (
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           ref={loginScrollRef}
-          style={styles.container}
+          style={[styles.container, { backgroundColor: colors.screenBg }]}
           contentContainerStyle={styles.loginContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -1450,15 +1568,58 @@ export default function Index() {
             }
           }}
         >
-          <View style={{ alignItems: "center", marginTop: 100 }}>
+          <View
+            style={{
+              marginTop: 22,
+              paddingHorizontal: 18,
+              alignItems: "flex-end",
+            }}
+          >
+            {themeReady ? (
+              <ThemeToggle
+                selectedTheme={theme}
+                onToggle={toggleTheme}
+                colors={colors}
+              />
+            ) : null}
+          </View>
+
+          <View style={{ alignItems: "center", marginTop: 24 }}>
             <Image
               source={require("../assets/images/logo.png")}
               style={{ width: 270, height: 270 }}
+              resizeMode="contain"
             />
+
+            {loadingStudents ? (
+              <View style={{ marginTop: 10, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text
+                  style={{
+                    marginTop: 8,
+                    color: colors.mutedText,
+                    fontSize: 13,
+                    fontWeight: "600",
+                  }}
+                >
+                  Öğrenci bilgileri yükleniyor...
+                </Text>
+              </View>
+            ) : null}
           </View>
-          <View style={styles.loginBox}>
-            <Text style={styles.loginTitle}>Öğrenci Girişi</Text>
-            <Text style={styles.loginSub}>
+          <View
+            style={[
+              styles.loginBox,
+              {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.loginTitle, { color: colors.text }]}>
+              Öğrenci Girişi
+            </Text>
+            <Text style={[styles.loginSub, { color: colors.subText }]}>
               TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
               görüntüleyebilirsiniz.
             </Text>
@@ -1487,7 +1648,7 @@ export default function Index() {
 
             <TextInput
               placeholder="TC kimlik numaranız"
-              placeholderTextColor="#7f7f88"
+              placeholderTextColor={colors.mutedText}
               inputMode="numeric"
               keyboardType="numeric"
               showSoftInputOnFocus={true}
@@ -1498,7 +1659,14 @@ export default function Index() {
               value={tc}
               onChangeText={handleTcChange}
               onFocus={handleTcInputFocus}
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                  color: colors.inputText,
+                },
+              ]}
             />
 
             <TouchableOpacity
@@ -1520,38 +1688,74 @@ export default function Index() {
   return (
     <>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.profileCard}>
+        <View
+          style={[
+            styles.profileCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initials || "Ö"}</Text>
             </View>
 
             <View style={styles.profileTextArea}>
-              <Text style={styles.name}>{normalizeValue(user.ad_soyad)}</Text>
-              <Text style={styles.subName}>Öğrenci Paneli</Text>
+              <Text style={[styles.name, { color: colors.text }]}>
+                {normalizeValue(user.ad_soyad)}
+              </Text>
+              <Text style={[styles.subName, { color: colors.mutedText }]}>
+                Öğrenci Paneli
+              </Text>
             </View>
           </View>
 
           <View style={styles.chipsRow}>
-            <InfoChip label="TC" value={user.tc} />
-            <InfoChip label="Sınıf" value={user.sinif || "-"} />
+            <InfoChip label="TC" value={user.tc} colors={colors} />
+            <InfoChip label="Sınıf" value={user.sinif || "-"} colors={colors} />
           </View>
 
           <View style={styles.chipsRow}>
-            <InfoChip label="Telefon" value={formatPhone(user.telefonlar)} />
+            <InfoChip
+              label="Telefon"
+              value={formatPhone(user.telefonlar)}
+              colors={colors}
+            />
             {canOpenCalendar ? (
               <TouchableOpacity
-                style={styles.topCalendarButton}
+                style={[
+                  styles.topCalendarButton,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
+                ]}
                 onPress={openCalendarModal}
               >
-                <Text style={styles.topCalendarIcon}>🗓️</Text>
+                <Text style={[styles.topCalendarIcon, { color: colors.text }]}>
+                  🗓️
+                </Text>
               </TouchableOpacity>
             ) : (
-              <View style={styles.topCalendarButtonDisabled}>
-                <Text style={styles.topCalendarIconDisabled}>🗓️</Text>
+              <View
+                style={[
+                  styles.topCalendarButtonDisabled,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.topCalendarIconDisabled,
+                    { color: colors.mutedText },
+                  ]}
+                >
+                  🗓️
+                </Text>
               </View>
             )}
           </View>
@@ -1568,6 +1772,7 @@ export default function Index() {
         <View
           style={[
             styles.statusCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
             smartStatus.type === "success"
               ? styles.statusSuccess
               : smartStatus.type === "error"
@@ -1579,8 +1784,10 @@ export default function Index() {
                     : null,
           ]}
         >
-          <Text style={styles.statusTitle}>{smartStatus.title}</Text>
-          <Text style={styles.statusDescription}>
+          <Text style={[styles.statusTitle, { color: colors.text }]}>
+            {smartStatus.title}
+          </Text>
+          <Text style={[styles.statusDescription, { color: colors.subText }]}>
             {smartStatus.description}
           </Text>
 
@@ -1596,12 +1803,27 @@ export default function Index() {
           ) : null}
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>Evrak Durumu</Text>
+        <View
+          style={[
+            styles.infoCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Evrak Durumu
+          </Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Durum</Text>
-            <Text style={[styles.infoValue, styles.infoValueRight]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
+              Durum
+            </Text>
+            <Text
+              style={[
+                styles.infoValue,
+                styles.infoValueRight,
+                { color: colors.text },
+              ]}
+            >
               {user.evrak_durumu === "tamam"
                 ? "Tamamlandı"
                 : user.evrak_durumu === "eksik"
@@ -1611,18 +1833,29 @@ export default function Index() {
           </View>
 
           <View style={styles.infoRowNoBorder}>
-            <Text style={styles.infoLabel}>Eksik Evraklar</Text>
+            <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
+              Eksik Evraklar
+            </Text>
 
             {user.evrak_durumu === "eksik" && missingDocs.length ? (
               <View style={styles.missingDocsList}>
                 {missingDocs.map((item, index) => (
-                  <Text key={`${item}-${index}`} style={styles.missingDocItem}>
+                  <Text
+                    key={`${item}-${index}`}
+                    style={[styles.missingDocItem, { color: colors.text }]}
+                  >
                     • {item}
                   </Text>
                 ))}
               </View>
             ) : (
-              <Text style={[styles.infoValue, styles.infoValueRight]}>
+              <Text
+                style={[
+                  styles.infoValue,
+                  styles.infoValueRight,
+                  { color: colors.text },
+                ]}
+              >
                 Eksik evrak görünmüyor
               </Text>
             )}
@@ -1630,40 +1863,63 @@ export default function Index() {
         </View>
 
         {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Sınav ve Ödeme Bilgileri</Text>
+          <View
+            style={[
+              styles.infoCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Sınav ve Ödeme Bilgileri
+            </Text>
 
             {showEsinavPaymentCard ? (
-              <View style={styles.miniCard}>
+              <View
+                style={[
+                  styles.miniCard,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.miniCardHeader}>
-                  <Text style={styles.miniCardTitle}>E-sınav</Text>
+                  <Text style={[styles.miniCardTitle, { color: colors.text }]}>
+                    E-sınav
+                  </Text>
                   <StatusBadge
                     label={getPaymentBadge(user.esinav_harc).label}
                     tone={getPaymentBadge(user.esinav_harc).tone}
                   />
                 </View>
 
-                <Text style={styles.miniCardText}>
+                <Text style={[styles.miniCardText, { color: colors.subText }]}>
                   Tarih:{" "}
                   {hasFutureExamDate(user)
                     ? formatExamText(user.esinav_tarih, user.esinav_saati)
                     : "Yeni sınav tarihi bekleniyor"}
                 </Text>
                 {user.esinav_tarih ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Sonuç: {formatOutcome(user.esinav_sonuc)}
                   </Text>
                 ) : null}
-                <Text style={styles.miniCardText}>
+                <Text style={[styles.miniCardText, { color: colors.subText }]}>
                   Harç durumu: {formatPayment(user.esinav_harc)}
                 </Text>
                 {hasEsinavDebt ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Harç borcu: {formatDebt(getEsinavDebt(user))}
                   </Text>
                 ) : null}
                 {hasEsinavDebt ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Son ödeme:{" "}
                     {normalizeValue(
                       user.esinav_borc_son_odeme || user.esinav_son_odeme,
@@ -1685,34 +1941,50 @@ export default function Index() {
             ) : null}
 
             {showDireksiyonPaymentCard ? (
-              <View style={styles.miniCard}>
+              <View
+                style={[
+                  styles.miniCard,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.miniCardHeader}>
-                  <Text style={styles.miniCardTitle}>Direksiyon</Text>
+                  <Text style={[styles.miniCardTitle, { color: colors.text }]}>
+                    Direksiyon
+                  </Text>
                   <StatusBadge
                     label={getPaymentBadge(user.direksiyon_harc).label}
                     tone={getPaymentBadge(user.direksiyon_harc).tone}
                   />
                 </View>
 
-                <Text style={styles.miniCardText}>
+                <Text style={[styles.miniCardText, { color: colors.subText }]}>
                   Sınav tarihi:{" "}
                   {formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}
                 </Text>
                 {user.direksiyon_tarih ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Sonuç: {formatOutcome(user.direksiyon_sonuc)}
                   </Text>
                 ) : null}
-                <Text style={styles.miniCardText}>
+                <Text style={[styles.miniCardText, { color: colors.subText }]}>
                   Harç durumu: {formatPayment(user.direksiyon_harc)}
                 </Text>
                 {hasDireksiyonDebt ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Direksiyon harç borcu: {formatDebt(getDireksiyonDebt(user))}
                   </Text>
                 ) : null}
                 {hasDireksiyonDebt ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Direksiyon son ödeme:{" "}
                     {normalizeValue(
                       user.direksiyon_borc_son_odeme ||
@@ -1720,11 +1992,13 @@ export default function Index() {
                     )}
                   </Text>
                 ) : null}
-                <Text style={styles.miniCardText}>
+                <Text style={[styles.miniCardText, { color: colors.subText }]}>
                   Taksit borcu: {formatDebt(user.taksit_borcu)}
                 </Text>
                 {hasTaksitDebt ? (
-                  <Text style={styles.miniCardText}>
+                  <Text
+                    style={[styles.miniCardText, { color: colors.subText }]}
+                  >
                     Taksit son ödeme: {normalizeValue(user.taksit_son_odeme)}
                   </Text>
                 ) : null}
@@ -1744,8 +2018,15 @@ export default function Index() {
           </View>
         ) : null}
 
-        <View style={styles.stepsCard}>
-          <Text style={styles.sectionTitle}>Süreç Adımları</Text>
+        <View
+          style={[
+            styles.stepsCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Süreç Adımları
+          </Text>
 
           {stepItems.map((item, index) => {
             const showTopLine = index !== 0;
@@ -1762,13 +2043,22 @@ export default function Index() {
                 showTopLine={showTopLine}
                 showBottomLine={showBottomLine}
                 lineActive={lineActive}
+                colors={colors}
               />
             );
           })}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
+        <TouchableOpacity
+          style={[
+            styles.logoutButton,
+            { backgroundColor: colors.cardAltBg, borderColor: colors.border },
+          ]}
+          onPress={handleLogout}
+        >
+          <Text style={[styles.logoutButtonText, { color: colors.text }]}>
+            Çıkış Yap
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -1778,10 +2068,23 @@ export default function Index() {
         animationType="fade"
         onRequestClose={closeDetailModal}
       >
-        <Pressable style={styles.modalOverlay} onPress={closeDetailModal}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Detay</Text>
-            <Text style={styles.modalText}>{selectedDetail}</Text>
+        <Pressable
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
+          onPress={closeDetailModal}
+        >
+          <Pressable
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+            onPress={() => {}}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Detay
+            </Text>
+            <Text style={[styles.modalText, { color: colors.subText }]}>
+              {selectedDetail}
+            </Text>
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={closeDetailModal}
@@ -1798,24 +2101,52 @@ export default function Index() {
         animationType="slide"
         onRequestClose={closeCalendarModal}
       >
-        <View style={styles.fullScreenCalendar}>
-          <View style={styles.calendarHeader}>
-            <Text style={styles.calendarHeaderTitle}>Takvim</Text>
+        <View
+          style={[
+            styles.fullScreenCalendar,
+            { backgroundColor: colors.screenBg },
+          ]}
+        >
+          <View
+            style={[
+              styles.calendarHeader,
+              { borderBottomColor: colors.border, borderBottomWidth: 1 },
+            ]}
+          >
+            <Text style={[styles.calendarHeaderTitle, { color: colors.text }]}>
+              Takvim
+            </Text>
             <TouchableOpacity
-              style={styles.calendarHeaderClose}
+              style={[
+                styles.calendarHeaderClose,
+                {
+                  backgroundColor: colors.cardAltBg,
+                  borderColor: colors.border,
+                },
+              ]}
               onPress={closeCalendarModal}
             >
-              <Text style={styles.calendarHeaderCloseText}>Kapat</Text>
+              <Text
+                style={[styles.calendarHeaderCloseText, { color: colors.text }]}
+              >
+                Kapat
+              </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.monthNavigator}>
-            <Text style={styles.monthNavigatorTitle}>{visibleMonthLabel}</Text>
+            <Text style={[styles.monthNavigatorTitle, { color: colors.text }]}>
+              {visibleMonthLabel}
+            </Text>
 
             <View style={styles.monthNavButtons}>
               <TouchableOpacity
                 style={[
                   styles.monthNavButton,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
                   !canGoPrev ? styles.monthNavButtonDisabled : null,
                 ]}
                 onPress={() =>
@@ -1823,12 +2154,20 @@ export default function Index() {
                 }
                 disabled={!canGoPrev}
               >
-                <Text style={styles.monthNavButtonText}>▲</Text>
+                <Text
+                  style={[styles.monthNavButtonText, { color: colors.text }]}
+                >
+                  ▲
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.monthNavButton,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
                   !canGoNext ? styles.monthNavButtonDisabled : null,
                 ]}
                 onPress={() =>
@@ -1836,7 +2175,11 @@ export default function Index() {
                 }
                 disabled={!canGoNext}
               >
-                <Text style={styles.monthNavButtonText}>▼</Text>
+                <Text
+                  style={[styles.monthNavButtonText, { color: colors.text }]}
+                >
+                  ▼
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1844,24 +2187,35 @@ export default function Index() {
           <View style={styles.calendarLegendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotRed]} />
-              <Text style={styles.legendText}>Ödeme</Text>
+              <Text style={[styles.legendText, { color: colors.subText }]}>
+                Ödeme
+              </Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotBlue]} />
-              <Text style={styles.legendText}>E-sınav</Text>
+              <Text style={[styles.legendText, { color: colors.subText }]}>
+                E-sınav
+              </Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotOrange]} />
-              <Text style={styles.legendText}>Direksiyon sınavı</Text>
+              <Text style={[styles.legendText, { color: colors.subText }]}>
+                Direksiyon sınavı
+              </Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.eventDotGreen]} />
-              <Text style={styles.legendText}>Ders</Text>
+              <Text style={[styles.legendText, { color: colors.subText }]}>
+                Ders
+              </Text>
             </View>
           </View>
           <View style={styles.dayNamesRow}>
             {DAY_NAMES.map((dayName) => (
-              <Text key={dayName} style={styles.dayNameText}>
+              <Text
+                key={dayName}
+                style={[styles.dayNameText, { color: colors.text }]}
+              >
                 {dayName}
               </Text>
             ))}
@@ -1912,14 +2266,28 @@ export default function Index() {
                     <View
                       style={[
                         styles.calendarCellDayBadge,
-                        cell.isToday ? styles.calendarCellDayBadgeToday : null,
+                        cell.isToday
+                          ? [
+                              styles.calendarCellDayBadgeToday,
+                              {
+                                backgroundColor:
+                                  theme === "light"
+                                    ? colors.accentSoft
+                                    : "#686868",
+                              },
+                            ]
+                          : null,
                       ]}
                     >
                       <Text
                         style={[
                           styles.calendarCellDayText,
+                          { color: colors.text },
                           !cell.isCurrentMonth
-                            ? styles.calendarCellDayTextMuted
+                            ? [
+                                styles.calendarCellDayTextMuted,
+                                { color: colors.mutedText },
+                              ]
                             : null,
                           cell.isToday ? styles.calendarCellDayTextToday : null,
                         ]}
@@ -1949,8 +2317,12 @@ export default function Index() {
                     <Text
                       style={[
                         styles.calendarCellPreview,
+                        { color: colors.subText },
                         !cell.isCurrentMonth
-                          ? styles.calendarCellPreviewMuted
+                          ? [
+                              styles.calendarCellPreviewMuted,
+                              { color: colors.mutedText },
+                            ]
                           : null,
                       ]}
                       numberOfLines={2}
@@ -1970,12 +2342,25 @@ export default function Index() {
             onRequestClose={closeCalendarDetailModal}
           >
             <Pressable
-              style={styles.modalOverlay}
+              style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
               onPress={closeCalendarDetailModal}
             >
-              <Pressable style={styles.modalCard} onPress={() => {}}>
-                <Text style={styles.modalTitle}>Takvim Detayı</Text>
-                <Text style={styles.modalText}>{calendarSelectedDetail}</Text>
+              <Pressable
+                style={[
+                  styles.modalCard,
+                  {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={() => {}}
+              >
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  Takvim Detayı
+                </Text>
+                <Text style={[styles.modalText, { color: colors.subText }]}>
+                  {calendarSelectedDetail}
+                </Text>
                 <TouchableOpacity
                   style={styles.modalCloseButton}
                   onPress={closeCalendarDetailModal}

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 const WEBSITE_URL = "https://ayassurucukursu.com";
 const PHONE_URL = "tel:05375046984";
@@ -15,22 +16,20 @@ const MAP_URL = "https://maps.app.goo.gl/cf1G2JGZWjw9zLWeA";
 const WHATSAPP_PHONE = "905375046984";
 const WHATSAPP_MESSAGE =
   "Merhaba, Yeni Ayaş Sürücü Kursu hakkında bilgi almak istiyorum.";
-
-// Geçici yorum linki.
-// Elindeki gerçek Google yorum / placeId linkini gönderirsen bunu direkt ona çeviririm.
 const GOOGLE_REVIEW_URL = "https://g.page/r/CX1vdkMuiG-_EAI/review";
 
 export default function Iletisim() {
+  const { colors, isDarkTheme } = useAppTheme();
+
   const openUrl = async (url: string, errorMessage: string) => {
     try {
       const supported = await Linking.canOpenURL(url);
-
       if (supported) {
         await Linking.openURL(url);
       } else {
         Alert.alert("Hata", errorMessage);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Hata", errorMessage);
     }
   };
@@ -54,97 +53,157 @@ export default function Iletisim() {
   };
 
   const openGoogleReview = async () => {
-    if (GOOGLE_REVIEW_URL.includes("YOUR_PLACE_ID")) {
-      Alert.alert(
-        "Google Yorum Linki Eksik",
-        "Bu alan hazır. Çalışması için gerçek Google yorum linki veya placeId eklenmeli.",
-      );
-      return;
-    }
-
     await openUrl(GOOGLE_REVIEW_URL, "Google yorum sayfası açılamadı.");
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Yeni Ayaş Sürücü Kursu</Text>
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "#232329",
-            }}
-          />
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={styles.label}>Telefon</Text>
-            <Ionicons
-              name="call"
-              size={16}
-              color="#8f9098"
-              style={{ marginTop: 5 }}
-            />
-          </View>
-          <Text style={styles.text}>0537 504 69 84 </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={styles.label}>Web</Text>
-            <Ionicons
-              name="globe"
-              size={16}
-              color="#8f9098"
-              style={{ marginTop: 5 }}
-            />
-          </View>
-          <Text style={styles.text}>ayassurucukursu.com</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={styles.label}>Adres</Text>
-            <Ionicons name="location" size={16} color="#8f9098" />
-          </View>
-          <Text style={styles.text}>
-            Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı) Ayaş/Ankara
+    <View style={[styles.container, { backgroundColor: colors.screenBg }]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.title, { color: colors.text }]}>
+            Yeni Ayaş Sürücü Kursu
           </Text>
 
-          <TouchableOpacity style={styles.button} onPress={callPhone}>
-            <Text style={styles.buttonText}>Ara</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.buttonSecondary}
-            onPress={openWebsite}
-          >
-            <Text style={styles.buttonText}>Web Sitesine Git</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.buttonSecondary} onPress={openMap}>
-            <Text style={styles.buttonText}>Konumu Aç</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.reviewCard}>
-          <View style={styles.reviewHeader}>
-            <Ionicons name="logo-google" size={18} color="#1f8f55" />
-            <Text style={styles.reviewTitle}>Google Değerlendirme</Text>
-            <Ionicons name="star" size={16} color="#f1c40f" />
-            <Text style={{ color: "#8f9098", fontSize: 13 }}>
-              5.0 (280+ yorum)
+          <View style={styles.infoBlock}>
+            <View style={styles.labelRow}>
+              <Ionicons
+                name="call-outline"
+                size={16}
+                color={colors.mutedText}
+              />
+              <Text style={[styles.label, { color: colors.mutedText }]}>
+                Telefon
+              </Text>
+            </View>
+            <Text style={[styles.text, { color: colors.subText }]}>
+              0537 504 69 84
             </Text>
           </View>
 
-          <Text style={styles.reviewText}>
+          <View style={styles.infoBlock}>
+            <View style={styles.labelRow}>
+              <Ionicons
+                name="globe-outline"
+                size={16}
+                color={colors.mutedText}
+              />
+              <Text style={[styles.label, { color: colors.mutedText }]}>
+                Web
+              </Text>
+            </View>
+            <Text style={[styles.text, { color: colors.subText }]}>
+              ayassurucukursu.com
+            </Text>
+          </View>
+
+          <View style={styles.infoBlock}>
+            <View style={styles.labelRow}>
+              <Ionicons
+                name="location-outline"
+                size={16}
+                color={colors.mutedText}
+              />
+              <Text style={[styles.label, { color: colors.mutedText }]}>
+                Adres
+              </Text>
+            </View>
+            <Text style={[styles.text, { color: colors.subText }]}>
+              Hacıveli Mah. Ankara Cad. No:7/D (Petrol Ofisi Üst Katı)
+              Ayaş/Ankara
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.accent }]}
+            onPress={callPhone}
+          >
+            <Text style={[styles.buttonText, { color: colors.accentContrast }]}>
+              Ara
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.buttonSecondary,
+              {
+                backgroundColor: colors.cardAltBg,
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={openWebsite}
+          >
+            <Text style={[styles.buttonText, { color: colors.text }]}>
+              Web Sitesine Git
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.buttonSecondary,
+              {
+                backgroundColor: colors.cardAltBg,
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={openMap}
+          >
+            <Text style={[styles.buttonText, { color: colors.text }]}>
+              Konumu Aç
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.reviewCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <View style={styles.reviewHeader}>
+            <Ionicons name="star" size={18} color="#f4b400" />
+            <Text style={[styles.reviewTitle, { color: colors.text }]}>
+              Google Değerlendirme
+            </Text>
+          </View>
+
+          <Text style={[styles.reviewScore, { color: colors.text }]}>
+            5.0 (280+ yorum)
+          </Text>
+          <Text style={[styles.reviewText, { color: colors.subText }]}>
             Memnun kaldıysan bize Google üzerinden yorum bırakabilirsin.
           </Text>
 
           <TouchableOpacity
-            style={styles.reviewButton}
+            style={[
+              styles.reviewButton,
+              {
+                backgroundColor: isDarkTheme ? "#1f8f55" : "#17a34a",
+              },
+            ]}
             onPress={openGoogleReview}
           >
-            <Text style={styles.buttonText}>Google'da Yorum Yap</Text>
+            <Text style={[styles.buttonText, { color: "#ffffff" }]}>
+              Google'da Yorum Yap
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.whatsappButton} onPress={openWhatsApp}>
-        <Ionicons name="logo-whatsapp" size={42} color="#fff" />
+      <TouchableOpacity
+        style={styles.whatsappButton}
+        onPress={openWhatsApp}
+        activeOpacity={0.9}
+      >
+        <Ionicons name="logo-whatsapp" size={34} color="#ffffff" />
       </TouchableOpacity>
     </View>
   );
@@ -153,28 +212,23 @@ export default function Iletisim() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0e0e11",
   },
   content: {
-    marginTop: 50,
+    marginTop: 21,
     padding: 16,
     paddingBottom: 120,
   },
   card: {
     marginTop: 15,
-    backgroundColor: "#17171b",
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#232329",
   },
   reviewCard: {
     marginTop: 16,
-    backgroundColor: "#17171b",
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#232329",
   },
   reviewHeader: {
     flexDirection: "row",
@@ -183,34 +237,39 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: "#fff",
     fontSize: 22,
     fontWeight: "700",
-    marginBottom: 13,
+    marginBottom: 10,
+  },
+  infoBlock: {
+    marginTop: 10,
+  },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  text: {
+    fontSize: 15,
+    marginBottom: 4,
+    lineHeight: 22,
   },
   reviewTitle: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "700",
   },
-  label: {
-    flexDirection: "row",
-    color: "#8f9098",
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 4,
-    marginTop: 10,
-    textTransform: "uppercase",
-  },
-
-  text: {
-    color: "#d7d7dc",
-    fontSize: 15,
+  reviewScore: {
+    fontSize: 18,
+    fontWeight: "800",
     marginBottom: 8,
-    lineHeight: 22,
   },
   reviewText: {
-    color: "#d7d7dc",
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 14,
@@ -229,27 +288,24 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 12,
-    backgroundColor: "#c1121f",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
   },
   buttonSecondary: {
     marginTop: 12,
-    backgroundColor: "#2a2a31",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
+    borderWidth: 1,
   },
   reviewButton: {
     marginTop: 4,
-    backgroundColor: "#1f8f55",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
     fontSize: 15,
     fontWeight: "700",
   },

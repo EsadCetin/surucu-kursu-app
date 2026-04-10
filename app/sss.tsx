@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 const faqData = [
   {
@@ -73,20 +74,31 @@ const faqData = [
 
 export default function SSSScreen() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { colors } = useAppTheme();
 
   const toggleItem = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.screenBg }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
-        <View style={styles.iconWrapper}>
-          <Ionicons name="help-circle-outline" size={28} color="#17171b" />
+        <View style={[styles.iconWrapper, { backgroundColor: colors.accent }]}>
+          <Ionicons
+            name="help-circle"
+            size={22}
+            color={colors.accentContrast}
+          />
         </View>
-        <View>
-          <Text style={styles.title}>Sıkça Sorulan Sorular</Text>
-          <Text style={styles.subtitle}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: colors.text }]}>
+            Sıkça Sorulan Sorular
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.mutedText }]}>
             Ehliyet süreciyle ilgili en çok sorulan sorular
           </Text>
         </View>
@@ -96,25 +108,40 @@ export default function SSSScreen() {
         const isOpen = openIndex === index;
 
         return (
-          <View key={index} style={styles.card}>
+          <View
+            key={`${item.question}-${index}`}
+            style={[
+              styles.card,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+          >
             <TouchableOpacity
-              activeOpacity={0.8}
               onPress={() => toggleItem(index)}
               style={styles.questionRow}
+              activeOpacity={0.85}
             >
-              <Text style={styles.question}>{item.question}</Text>
+              <Text style={[styles.question, { color: colors.text }]}>
+                {item.question}
+              </Text>
               <Ionicons
                 name={isOpen ? "chevron-up" : "chevron-down"}
                 size={20}
-                color="#9CA3AF"
+                color={colors.mutedText}
               />
             </TouchableOpacity>
 
-            {isOpen && (
-              <View style={styles.answerWrapper}>
-                <Text style={styles.answer}>{item.answer}</Text>
+            {isOpen ? (
+              <View
+                style={[
+                  styles.answerWrapper,
+                  { borderTopColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.answer, { color: colors.subText }]}>
+                  {item.answer}
+                </Text>
               </View>
-            )}
+            ) : null}
           </View>
         );
       })}
@@ -123,12 +150,8 @@ export default function SSSScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0e0e11",
-    padding: 16,
-  },
-  content: { marginTop: 50, padding: 16, paddingBottom: 28 },
+  container: { flex: 1, padding: 16 },
+  content: { marginTop: 30, paddingBottom: 28 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -139,27 +162,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: "#c1121f",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#1F2937",
   },
-  title: {
-    color: "#F9FAFB",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: "#94A3B8",
-    fontSize: 13,
-    marginTop: 4,
-  },
+  title: { fontSize: 20, fontWeight: "700" },
+  subtitle: { fontSize: 13, marginTop: 4 },
   card: {
-    backgroundColor: "#17171b",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#232329",
     marginBottom: 12,
     overflow: "hidden",
   },
@@ -174,7 +184,6 @@ const styles = StyleSheet.create({
   },
   question: {
     flex: 1,
-    color: "#F3F4F6",
     fontSize: 15,
     fontWeight: "600",
     lineHeight: 21,
@@ -183,10 +192,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingBottom: 14,
     borderTopWidth: 1,
-    borderTopColor: "#1F2937",
   },
   answer: {
-    color: "#CBD5E1",
     fontSize: 14,
     lineHeight: 21,
     marginTop: 12,
