@@ -1,22 +1,26 @@
 /**
  * scripts/excel-to-json.js
  *
- * v13
+ * v14
  *
- * Kritik düzeltme:
- * - Sorun direksiyon dersi tarafında değil, aktif öğrenci listesini okuyan bölümdeydi
- * - "DİREKSİYON LİSTESİ" sayfasında satır renklerini şart koştuğum için
- *   ExcelJS bazı satırları aktif öğrenci olarak hiç almıyordu
- * - Bu yüzden:
- *   updatedStudentCount = 0
- *   totalLessonCount = 0
+ * Düzeltilenler:
+ * 1) Direksiyon ders saatleri yanlış okunuyordu
+ *    - Excel saat hücreleri bazen number / serial / custom format geliyor
+ *    - Artık saat okunurken önce cell.text kullanılıyor
+ *    - olmazsa numeric time fraction mantığıyla çevriliyor
  *
- * Bu sürümde:
- * - aktif öğrenci listesi renge bakmadan, TC + ad soyad olan tüm geçerli satırlardan alınır
- * - iki ayrı blok olsa da okunur
- * - direksiyon çalışma dosyasında geçmiş 1 ay + gelecek 1 ay alınır
- * - ogrenciler.xlsx ve direksiyon_calismasi.xlsx ayrı kalır
- * - tek script ile students.json üretilir
+ * 2) Direksiyon dersi ile direksiyon sınav tarihi karışıyordu
+ *    - direksiyon_tarih / direksiyon_saati alanları sınav alanı gibi davranıyor
+ *    - artık ders programı bu alanlara yazılmıyor
+ *    - bunun yerine:
+ *        direksiyon_sonraki_ders_tarih
+ *        direksiyon_sonraki_ders_saati
+ *      alanları dolduruluyor
+ *
+ * Not:
+ * - Uygulamada ders bilgisini göstermek için artık direksiyon_dersleri
+ *   veya direksiyon_sonraki_ders_tarih / saati kullanılmalı
+ * - direksiyon_tarih / direksiyon_saati sadece sınav alanı olarak boş bırakılır
  */
 
 const fs = require("fs");
@@ -205,8 +209,18 @@ function normalizeTimeText(rawValue) {
   return "";
 }
 
-function parseTimeValue(value) {
-  return normalizeTimeText(value);
+function parseTimeFromNumber(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "";
+
+  // Excel time fraction: 10:00 => 10/24
+  if (value >= 0 && value < 1) {
+    const totalMinutes = Math.round(value * 24 * 60);
+    const hh = Math.floor(totalMinutes / 60) % 24;
+    const mm = totalMinutes % 60;
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
+
+  return "";
 }
 
 function money(v) {
@@ -237,6 +251,8 @@ function createStudent(tcValue = "", nameValue = "") {
     direksiyon_toplam_ders: "",
     direksiyon_aktif_arac: "",
     direksiyon_son_egitmen: "",
+    direksiyon_sonraki_ders_tarih: "",
+    direksiyon_sonraki_ders_saati: "",
     esinav_harc_borcu: "",
     esinav_borc_son_odeme: "",
     direksiyon_harc_borcu: "",
@@ -359,6 +375,29 @@ function getCellText(cell) {
     return t(cell.value.result);
   }
   return t(cell.value);
+}
+
+function parseTimeCell(cell) {
+  if (!cell) return "";
+
+  const textValue = normalizeTimeText(cell.text);
+  if (textValue) return textValue;
+
+  const directValue = normalizeTimeText(cell.value);
+  if (directValue) return directValue;
+
+  const numericValue = parseTimeFromNumber(cell.value);
+  if (numericValue) return numericValue;
+
+  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
+    const fromResultText = normalizeTimeText(cell.value.result);
+    if (fromResultText) return fromResultText;
+
+    const fromResultNumber = parseTimeFromNumber(cell.value.result);
+    if (fromResultNumber) return fromResultNumber;
+  }
+
+  return "";
 }
 
 function buildAlacakLookup(alacakSheetJs) {
@@ -512,10 +551,6 @@ function buildActiveStudentLookup(workbook) {
     if (!tcValue || tcValue.length !== 11) continue;
     if (!nameValue) continue;
 
-    // Gerçek öğrenci satırı filtresi:
-    // - TC 11 hane olacak
-    // - isim dolu olacak
-    // - sınıf veya telefon veya araç alanlarından en az biri dolu olacak
     const vehicleValue = getCellText(row.getCell(4));
     const phoneValue = getCellText(row.getCell(5));
     const hasRealStudentSignal = !!(classValue || phoneValue || vehicleValue);
@@ -634,10 +669,8 @@ function parseLessons(workbook, activeLookup) {
           continue;
 
         for (let r = section.dateRow + 2; r <= section.endRow - 2; r += 1) {
-          const startTime = parseTimeValue(ws.getRow(r).getCell(timeCol).value);
-          const endTime = parseTimeValue(
-            ws.getRow(r + 1).getCell(timeCol).value,
-          );
+          const startTime = parseTimeCell(ws.getRow(r).getCell(timeCol));
+          const endTime = parseTimeCell(ws.getRow(r + 1).getCell(timeCol));
 
           if (!startTime || !endTime) continue;
 
@@ -811,14 +844,18 @@ async function applyDireksiyonCalismasi(store) {
 
     const nextLesson = pickNextLesson(lessons);
     if (nextLesson) {
-      student.direksiyon_tarih = nextLesson.tarih || "";
-      student.direksiyon_saati = nextLesson.saat || "";
+      student.direksiyon_sonraki_ders_tarih = nextLesson.tarih || "";
+      student.direksiyon_sonraki_ders_saati = nextLesson.saat || "";
       student.direksiyon_son_egitmen = nextLesson.egitmen || "";
     } else if (!lessons.length) {
-      student.direksiyon_tarih = "";
-      student.direksiyon_saati = "";
+      student.direksiyon_sonraki_ders_tarih = "";
+      student.direksiyon_sonraki_ders_saati = "";
       student.direksiyon_son_egitmen = "";
     }
+
+    // Kritik: ders programını sınav alanına yazmıyoruz
+    student.direksiyon_tarih = "";
+    student.direksiyon_saati = "";
 
     updatedStudentCount += 1;
   }
@@ -880,22 +917,18 @@ function syncDerivedFields(student) {
     student.direksiyon_dersleri = [];
   }
 
-  if (!student.direksiyon_tarih && student.direksiyon_dersleri.length) {
-    const nextLesson = pickNextLesson(student.direksiyon_dersleri);
-    if (nextLesson) {
-      student.direksiyon_tarih = nextLesson.tarih || "";
-      student.direksiyon_saati = nextLesson.saat || "";
-      student.direksiyon_son_egitmen =
-        nextLesson.egitmen || student.direksiyon_son_egitmen || "";
-    }
-  }
+  // Kritik: ders programı sınav tarihi alanına asla yazılmayacak
+  student.direksiyon_tarih = "";
+  student.direksiyon_saati = "";
 
-  if (!student.direksiyon_tarih) student.direksiyon_tarih = "";
-  if (!student.direksiyon_saati) student.direksiyon_saati = "";
   if (!student.direksiyon_kalan_ders) student.direksiyon_kalan_ders = "";
   if (!student.direksiyon_toplam_ders) student.direksiyon_toplam_ders = "";
   if (!student.direksiyon_aktif_arac) student.direksiyon_aktif_arac = "";
   if (!student.direksiyon_son_egitmen) student.direksiyon_son_egitmen = "";
+  if (!student.direksiyon_sonraki_ders_tarih)
+    student.direksiyon_sonraki_ders_tarih = "";
+  if (!student.direksiyon_sonraki_ders_saati)
+    student.direksiyon_sonraki_ders_saati = "";
 }
 
 async function main() {
@@ -1001,6 +1034,10 @@ async function main() {
         }
       }
     }
+
+    // Kritik: sınav tarihi girilmiyorsa boş kalacak
+    student.direksiyon_tarih = "";
+    student.direksiyon_saati = "";
   }
 
   for (let r = 2; r <= eksikSheetJs.rowCount; r += 1) {
