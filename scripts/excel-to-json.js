@@ -1,33 +1,29 @@
 /**
  * scripts/excel-to-json.js
  *
- * v16
+ * v18
  *
  * Düzeltilenler:
- * 1) Direksiyon ders saatleri yanlış okunuyordu
- *    - ExcelJS bazı saat hücrelerini Date objesine çevirirken kaydırıyor
- *    - artık önce internal raw numeric değer okunuyor: cell._value.model.value
- *    - saf Excel time fraction doğrudan saat olarak çevriliyor
- *    - Date okunursa UTC saat kullanılıyor
- *    - böylece 10:00 -> 11:56 kayması hedefli şekilde engelleniyor
+ * 1) Saat düzeltildi
+ *    - ExcelJS time-only hücrelerde tarihi 1899'a bağlayıp timezone kaydırabiliyor
+ *    - bu yüzden direksiyon_calismasi.xlsx ayrıca SheetJS (xlsx) ile de okunur
+ *    - saatler önce SheetJS'nin formatted text (w) değerinden alınır
+ *    - örn. Excelde 10:00:00 görünen hücre artık 10:00 olur
  *
- * 2) Direksiyon dersi ile direksiyon sınav tarihi karışıyordu
- *    - direksiyon_tarih / direksiyon_saati alanları sınav alanı gibi davranıyor
- *    - artık ders programı bu alanlara yazılmıyor
- *    - bunun yerine:
- *        direksiyon_sonraki_ders_tarih
- *        direksiyon_sonraki_ders_saati
- *      alanları dolduruluyor
+ * 2) Direksiyon harç rengi düzeltildi
+ *    - HARÇ hücresi dolu renkliyse (özellikle yeşil / sarı) odendi kabul edilir
+ *    - beyaz / boş ise odenmedi kabul edilir
+ *    - bazı Excel fill varyasyonlarında fgColor yerine bgColor da kontrol edilir
  *
  * Not:
- * - Uygulamada ders bilgisini göstermek için artık direksiyon_dersleri
- *   veya direksiyon_sonraki_ders_tarih / saati kullanılmalı
- * - direksiyon_tarih / direksiyon_saati sadece sınav alanı olarak boş bırakılır
+ * - direksiyon_tarih / direksiyon_saati sınav alanı olarak boş bırakılır
+ * - ders bilgisi direksiyon_dersleri ve direksiyon_sonraki_ders_* alanlarında tutulur
  */
 
 const fs = require("fs");
 const path = require("path");
 const ExcelJS = require("exceljs");
+const XLSX = require("xlsx");
 
 const ROOT = path.resolve(__dirname, "..");
 const EXCEL_PATH = path.join(ROOT, "excel", "ogrenciler.xlsx");
@@ -183,6 +179,17 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
 }
 
 function normalizeTimeText(rawValue) {
+  const raw = t(rawValue);
+  if (raw) {
+    // 10:00, 10:00:00, 2026-04-11 10:00:00 gibi formatları yakala
+    const strict = raw.match(/\b(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\b/);
+    if (strict) {
+      const hh = String(Number(strict[1])).padStart(2, "0");
+      const mm = strict[2];
+      return `${hh}:${mm}`;
+    }
+  }
+
   if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
     return `${String(rawValue.getUTCHours()).padStart(2, "0")}:${String(
       rawValue.getUTCMinutes(),
@@ -193,19 +200,6 @@ function normalizeTimeText(rawValue) {
     return `${String(rawValue.result.getUTCHours()).padStart(2, "0")}:${String(
       rawValue.result.getUTCMinutes(),
     ).padStart(2, "0")}`;
-  }
-
-  const raw = t(rawValue);
-  if (!raw) return "";
-
-  if (/^\d{1,2}:\d{2}$/.test(raw)) {
-    const [h, m] = raw.split(":");
-    return `${String(Number(h)).padStart(2, "0")}:${m}`;
-  }
-
-  const match = raw.match(/(\d{1,2})[:.](\d{2})/);
-  if (match) {
-    return `${String(Number(match[1])).padStart(2, "0")}:${match[2]}`;
   }
 
   return "";
@@ -229,6 +223,46 @@ function parseTimeFromNumber(value) {
       const mm = totalMinutes % 60;
       return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
     }
+  }
+
+  return "";
+}
+
+function parseTimeCell(cell) {
+  if (!cell) return "";
+
+  // Önce ekranda görünen metin
+  const fromText = normalizeTimeText(cell.text);
+  if (fromText) return fromText;
+
+  // En ham internal numeric/model değer
+  const internalRaw =
+    cell?._value?.model?.value ??
+    cell?._value?.model?.result ??
+    cell?.model?.value ??
+    (cell?.model && typeof cell.model === "object"
+      ? cell.model.result
+      : undefined);
+
+  const fromInternalNumber = parseTimeFromNumber(internalRaw);
+  if (fromInternalNumber) return fromInternalNumber;
+
+  // Direct numeric
+  const fromValueNumber = parseTimeFromNumber(cell.value);
+  if (fromValueNumber) return fromValueNumber;
+
+  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
+    const fromResultNumber = parseTimeFromNumber(cell.value.result);
+    if (fromResultNumber) return fromResultNumber;
+  }
+
+  // Son çare text/date çözümü
+  const fromDirect = normalizeTimeText(cell.value);
+  if (fromDirect) return fromDirect;
+
+  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
+    const fromResultText = normalizeTimeText(cell.value.result);
+    if (fromResultText) return fromResultText;
   }
 
   return "";
@@ -331,6 +365,22 @@ function getWorksheetByName(workbook, wantedName) {
   return workbook.worksheets.find((ws) => normalizeHeader(ws.name) === wanted);
 }
 
+function getSheetByNameXLSX(workbook, wantedName) {
+  const wanted = normalizeHeader(wantedName);
+  const realName = workbook.SheetNames.find(
+    (name) => normalizeHeader(name) === wanted,
+  );
+  return realName ? workbook.Sheets[realName] : null;
+}
+
+function getSheetCellFormattedText(sheet, rowNumber, colNumber) {
+  if (!sheet) return "";
+  const addr = XLSX.utils.encode_cell({ r: rowNumber - 1, c: colNumber - 1 });
+  const cell = sheet[addr];
+  if (!cell) return "";
+  return t(cell.w ?? cell.v ?? "");
+}
+
 function findWorksheetByNames(workbook, wantedNames) {
   const candidates = Array.isArray(wantedNames) ? wantedNames : [wantedNames];
   const wantedSet = new Set(
@@ -342,28 +392,45 @@ function findWorksheetByNames(workbook, wantedNames) {
   );
 }
 
-function getExcelCellArgb(cell) {
-  const fg = cell?.fill?.fgColor;
-  if (!fg) return "";
-  return t(fg.argb || fg.rgb || "").toUpperCase();
+function getCellFillCodes(cell) {
+  const fg = t(
+    cell?.fill?.fgColor?.argb || cell?.fill?.fgColor?.rgb || "",
+  ).toUpperCase();
+  const bg = t(
+    cell?.fill?.bgColor?.argb || cell?.fill?.bgColor?.rgb || "",
+  ).toUpperCase();
+  return [fg, bg].filter(Boolean);
 }
 
 function isSolid(cell) {
   return t(cell?.fill?.patternType).toLowerCase() === "solid";
 }
 
+function isWhiteLike(color) {
+  return (
+    !color ||
+    color.includes("FFFFFF") ||
+    color.includes("FFFFFE") ||
+    color.includes("FFF2F2F2") ||
+    color.includes("00000000")
+  );
+}
+
 function isPaidByFill(cell) {
-  const argb = getExcelCellArgb(cell);
   if (!isSolid(cell)) return false;
 
-  return (
-    argb.includes("FF00B050") ||
-    argb.includes("00B050") ||
-    argb.includes("FFFFFF00") ||
-    argb.includes("FFFF00") ||
-    argb.includes("FFD966") ||
-    argb.includes("FFE699")
-  );
+  const colors = getCellFillCodes(cell);
+  if (!colors.length) return false;
+
+  // Harç hücresi beyaz/boş değilse ödenmiş kabul et.
+  // Kullanıcı kuralı: yeşil/sarı dolu hücre = odendi
+  const hasNonWhite = colors.some((color) => !isWhiteLike(color));
+  return hasNonWhite;
+}
+
+function getExcelCellArgb(cell) {
+  const colors = getCellFillCodes(cell);
+  return colors.join("|");
 }
 
 function isGreen(cell) {
@@ -386,42 +453,6 @@ function getCellText(cell) {
     return t(cell.value.result);
   }
   return t(cell.value);
-}
-
-function parseTimeCell(cell) {
-  if (!cell) return "";
-
-  const internalRaw =
-    cell?._value?.model?.value ??
-    cell?._value?.model?.result ??
-    cell?.model?.value ??
-    (cell?.model && typeof cell.model === "object"
-      ? cell.model.result
-      : undefined);
-
-  const fromInternalNumber = parseTimeFromNumber(internalRaw);
-  if (fromInternalNumber) return fromInternalNumber;
-
-  const fromValueNumber = parseTimeFromNumber(cell.value);
-  if (fromValueNumber) return fromValueNumber;
-
-  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
-    const fromResultNumber = parseTimeFromNumber(cell.value.result);
-    if (fromResultNumber) return fromResultNumber;
-  }
-
-  const textValue = normalizeTimeText(cell.text);
-  if (textValue) return textValue;
-
-  const directValue = normalizeTimeText(cell.value);
-  if (directValue) return directValue;
-
-  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
-    const fromResultText = normalizeTimeText(cell.value.result);
-    if (fromResultText) return fromResultText;
-  }
-
-  return "";
 }
 
 function buildAlacakLookup(alacakSheetJs) {
@@ -655,7 +686,7 @@ function collectWeekSections(ws) {
   return sections;
 }
 
-function parseLessons(workbook, activeLookup) {
+function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
   const today = new Date();
 
   const minDate = new Date(today);
@@ -667,10 +698,11 @@ function parseLessons(workbook, activeLookup) {
   maxDate.setHours(23, 59, 59, 999);
 
   const lessonsByTc = new Map();
-  const teacherSheets = pickTeacherSheets(workbook);
+  const teacherSheets = pickTeacherSheets(exceljsWorkbook);
 
   for (const ws of teacherSheets) {
     const teacherName = getCellText(ws.getCell("A1")) || ws.name;
+    const xSheet = getSheetByNameXLSX(xlsxWorkbook, ws.name);
     const weekSections = collectWeekSections(ws);
 
     for (const section of weekSections) {
@@ -693,8 +725,13 @@ function parseLessons(workbook, activeLookup) {
           continue;
 
         for (let r = section.dateRow + 2; r <= section.endRow - 2; r += 1) {
-          const startTime = parseTimeCell(ws.getRow(r).getCell(timeCol));
-          const endTime = parseTimeCell(ws.getRow(r + 1).getCell(timeCol));
+          const startTime =
+            normalizeTimeText(getSheetCellFormattedText(xSheet, r, timeCol)) ||
+            parseTimeCell(ws.getRow(r).getCell(timeCol));
+          const endTime =
+            normalizeTimeText(
+              getSheetCellFormattedText(xSheet, r + 1, timeCol),
+            ) || parseTimeCell(ws.getRow(r + 1).getCell(timeCol));
 
           if (!startTime || !endTime) continue;
 
@@ -834,9 +871,14 @@ async function applyDireksiyonCalismasi(store) {
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(DIREKSIYON_CALISMASI_PATH);
+  const xlsxBook = XLSX.readFile(DIREKSIYON_CALISMASI_PATH, {
+    cellDates: false,
+    cellNF: true,
+    cellText: true,
+  });
 
   const activeLookup = buildActiveStudentLookup(workbook);
-  const lessonsByTc = parseLessons(workbook, activeLookup);
+  const lessonsByTc = parseLessons(workbook, xlsxBook, activeLookup);
 
   let updatedStudentCount = 0;
   let orphanActiveStudentCount = 0;
@@ -877,7 +919,6 @@ async function applyDireksiyonCalismasi(store) {
       student.direksiyon_son_egitmen = "";
     }
 
-    // Kritik: ders programını sınav alanına yazmıyoruz
     student.direksiyon_tarih = "";
     student.direksiyon_saati = "";
 
@@ -941,7 +982,6 @@ function syncDerivedFields(student) {
     student.direksiyon_dersleri = [];
   }
 
-  // Kritik: ders programı sınav tarihi alanına asla yazılmayacak
   student.direksiyon_tarih = "";
   student.direksiyon_saati = "";
 
@@ -997,7 +1037,9 @@ async function main() {
 
     const dueDate = formatDate(row.getCell(4).value);
     const examDate = formatDate(row.getCell(9).value);
-    const examTime = normalizeTimeText(row.getCell(10).value);
+    const examTime = normalizeTimeText(
+      row.getCell(10).text || row.getCell(10).value,
+    );
     const paid = isPaidByFill(row.getCell(6));
 
     if (dueDate) {
@@ -1059,7 +1101,6 @@ async function main() {
       }
     }
 
-    // Kritik: sınav tarihi girilmiyorsa boş kalacak
     student.direksiyon_tarih = "";
     student.direksiyon_saati = "";
   }
