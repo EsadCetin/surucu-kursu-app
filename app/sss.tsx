@@ -79,6 +79,13 @@ const faqData: FAQItem[] = [
     keywords: ["direksiyon dersi", "ders", "başlangıç", "planlama"],
   },
   {
+    question:
+      "Direksiyon derslerimde planlandı, katılmadı vs. yazıyor, anlamları nedir?",
+    answer:
+      "Direksiyon dersleriniz onaylandıysa kurs tarafından gün ve saat bilgisi verildiği anlamına gelir. Katıldı olarak görünüyorsa o derse katılım sağladınız demektir. Katılmadı yazıyorsa o derse gelmediğiniz anlamına gelir. Planlandı yazan dersler ön bilgi amaçlı yazılmıştır, kesin tarih ve saat bilgisi verilmeden önce değişiklik olabilir.",
+    keywords: ["direksiyon dersi", "ders", "başlangıç", "planlama"],
+  },
+  {
     question: "Direksiyon sınavını geçince süreç tamamlanıyor mu?",
     answer:
       "Evet. Direksiyon sınavından başarılı olduğunuzda eğitim süreciniz tamamlanmış olur. Sonraki aşamada sertifika ve resmi işlemler için yönlendirme yapılır.",

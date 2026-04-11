@@ -28,6 +28,10 @@
  *    - rgb/indexed/theme dolgu tipleri daha geniş kontrol edilir
  *    - solid dolgu olup beyaz/boş olmayan hücreler ödenmiş sayılır
  * 5) Direksiyon ders renk algısı düzeltildi
+ * 6) Harç ödeme algısı yeniden düzeltildi
+ *    - sadece genel dolgu var mı diye bakılmaz
+ *    - özellikle yeşil / sarı varyantları aranır
+ *    - ExcelJS + SheetJS fill/font/theme/indexed renkleri birlikte kontrol edilir
  *    - bazı hücrelerde renk dolgu değil yazı renginde tutuluyor
  *    - artık hem fill hem font color birlikte okunuyor
  *    - böylece katıldı / onaylandı / katılmadı tekrar doğru ayrılır
@@ -398,40 +402,82 @@ function getXlsxCell(sheet, rowNumber, colNumber) {
   return sheet[addr] || null;
 }
 
+function getXlsxColorCodes(color) {
+  if (!color) return [];
+  return [
+    t(color?.rgb || "").toUpperCase(),
+    t(color?.argb || "").toUpperCase(),
+    t(color?.indexed || "").toUpperCase(),
+    t(color?.theme || "").toUpperCase(),
+  ].filter(Boolean);
+}
+
 function getXlsxStyleFillCodes(cell) {
   const fill = cell?.s?.fill;
   if (!fill) return [];
-  const fg = t(
-    fill?.fgColor?.rgb ||
-      fill?.fgColor?.argb ||
-      fill?.fgColor?.indexed ||
-      fill?.fgColor?.theme ||
-      "",
-  ).toUpperCase();
-  const bg = t(
-    fill?.bgColor?.rgb ||
-      fill?.bgColor?.argb ||
-      fill?.bgColor?.indexed ||
-      fill?.bgColor?.theme ||
-      "",
-  ).toUpperCase();
-  return [fg, bg].filter(Boolean);
+  return [
+    ...getXlsxColorCodes(fill?.fgColor),
+    ...getXlsxColorCodes(fill?.bgColor),
+  ];
+}
+
+function getXlsxFontCodes(cell) {
+  const font = cell?.s?.font;
+  if (!font) return [];
+  return getXlsxColorCodes(font?.color);
+}
+
+function getAllXlsxColorCodes(cell) {
+  return [...getXlsxStyleFillCodes(cell), ...getXlsxFontCodes(cell)];
+}
+
+function xlsxCellHasColor(cell, variants) {
+  const codes = getAllXlsxColorCodes(cell);
+  return variants.some((variant) =>
+    codes.some((code) => code.includes(variant)),
+  );
 }
 
 function hasXlsxMeaningfulFill(cell) {
   const fill = cell?.s?.fill;
   if (!fill) return false;
+
   const patternType = t(fill?.patternType).toLowerCase();
   const codes = getXlsxStyleFillCodes(cell);
+
   if (patternType && patternType !== "solid") return false;
   if (!codes.length) return false;
+
   return codes.some(
     (code) => !isWhiteLikeCode(code) && code !== "64" && code !== "0",
   );
 }
 
 function isPaidByExcelCells(excelCell, xlsxCell) {
-  return isPaidByFill(excelCell) || hasXlsxMeaningfulFill(xlsxCell);
+  const paidVariants = [
+    "00B050",
+    "92D050",
+    "70AD47",
+    "00AF50",
+    "008000",
+    "FFFF00",
+    "FFFFFF00",
+    "FFD966",
+    "FFE699",
+    "FFC000",
+    "FFEB9C",
+  ];
+
+  const excelPaidColor = cellHasColor(excelCell, paidVariants);
+  const xlsxPaidColor = xlsxCellHasColor(xlsxCell, paidVariants);
+
+  // son fallback: gerçekten dolu renk varsa yine ödenmiş kabul et
+  const excelMeaningfulFill = hasMeaningfulFill(excelCell);
+  const xlsxMeaningfulFill = hasXlsxMeaningfulFill(xlsxCell);
+
+  return (
+    excelPaidColor || xlsxPaidColor || excelMeaningfulFill || xlsxMeaningfulFill
+  );
 }
 
 function findWorksheetByNames(workbook, wantedNames) {

@@ -1575,15 +1575,17 @@ export default function Index() {
     }
 
     if (lessons.length) {
-      const text = lessons.map((lesson, index) => {
-        const title = getLessonDisplayTitle(lesson, index);
-        const dateText = lesson.tarih || "Tarih bekleniyor";
-        const startTime = getLessonStartOnly(lesson);
-        const timeText = startTime ? ` / ${startTime}` : "";
-        const statusText = getLessonStatusSuffix(lesson);
+      const text = lessons
+        .map((lesson, index) => {
+          const title = getLessonDisplayTitle(lesson, index);
+          const dateText = lesson.tarih || "Tarih bekleniyor";
+          const startTime = getLessonStartOnly(lesson);
+          const timeText = startTime ? ` / ${startTime}` : "";
+          const statusText = getLessonStatusSuffix(lesson);
 
-        return `• ${title}: ${dateText}${timeText}${statusText}`;
-      }).join;
+          return `• ${title}: ${dateText}${timeText}${statusText}`;
+        })
+        .join("\n");
 
       openDetailModal(`Direksiyon ders planınız:
 ${text}`);
