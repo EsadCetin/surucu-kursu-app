@@ -1,42 +1,26 @@
 /**
  * scripts/excel-to-json.js
  *
- * v10
+ * v13
  *
- * Bu sürümde eklenen:
- * - excel/direksiyon_calismasi.xlsx dosyası da aynı script içinde okunur
- * - ikinci script çalıştırmaya gerek kalmaz
- * - aktif direksiyon öğrencileri "DİREKSİYON LİSTESİ" sayfasından alınır
- * - hoca sayfalarından geçmiş 3 ay + gelecek 3 ay dersleri çekilir
- * - dersler students.json içine direksiyon_dersleri olarak yazılır
- * - uygun öğrencilerde direksiyon_tarih / direksiyon_saati de bir sonraki derse göre doldurulur
+ * Kritik düzeltme:
+ * - Sorun direksiyon dersi tarafında değil, aktif öğrenci listesini okuyan bölümdeydi
+ * - "DİREKSİYON LİSTESİ" sayfasında satır renklerini şart koştuğum için
+ *   ExcelJS bazı satırları aktif öğrenci olarak hiç almıyordu
+ * - Bu yüzden:
+ *   updatedStudentCount = 0
+ *   totalLessonCount = 0
  *
- * Net kural:
- * 1) ogrenciler.xlsx
- *    - E-SINAV
- *    - DİREKSİYON
- *    - EKSİK BELGELER
- *    - ALACAK RAPORU
- *
- * 2) direksiyon_calismasi.xlsx
- *    - DİREKSİYON LİSTESİ
- *    - eğitmen sayfaları
- *
- * Direksiyon çalışma mantığı:
- * - "DİREKSİYON LİSTESİ" sayfasında sadece renkli aktif bölüm alınır
- * - turuncu altındaki pasif kısım alınmaz
- * - öğrenci eşleşmesi önce aktif listedeki isim + tc ile kurulur
- * - dersler hoca sayfalarından okunur
- * - renk anlamları:
- *   * plaka + ad + telefon yeşil  => katildi
- *   * plaka + ad + telefon mavi   => katilmadi
- *   * saat/blok yeşil             => teyitli
- *   * diğer durum                 => planlandi
+ * Bu sürümde:
+ * - aktif öğrenci listesi renge bakmadan, TC + ad soyad olan tüm geçerli satırlardan alınır
+ * - iki ayrı blok olsa da okunur
+ * - direksiyon çalışma dosyasında geçmiş 1 ay + gelecek 1 ay alınır
+ * - ogrenciler.xlsx ve direksiyon_calismasi.xlsx ayrı kalır
+ * - tek script ile students.json üretilir
  */
 
 const fs = require("fs");
 const path = require("path");
-const XLSX = require("xlsx");
 const ExcelJS = require("exceljs");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -50,8 +34,8 @@ const OUTPUT_PATH = path.join(ROOT, "docs", "students.json");
 
 const DEFAULT_YEAR = 2026;
 const ESINAV_FIXED_FEE = "1.250₺";
-const WINDOW_PAST_DAYS = 92;
-const WINDOW_FUTURE_DAYS = 92;
+const WINDOW_PAST_DAYS = 31;
+const WINDOW_FUTURE_DAYS = 31;
 
 const TEACHER_SHEETS = [
   "ZEYNEP HOCA",
@@ -119,99 +103,89 @@ function normalizeYear(yearValue, fallbackYear = DEFAULT_YEAR) {
   return y;
 }
 
-function formatSlashDateAsMonthDayYear(raw, fallbackYear = DEFAULT_YEAR) {
-  const match = t(raw).match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
-  if (!match) return "";
-
-  const month = Number(match[1]);
-  const day = Number(match[2]);
-  const year = normalizeYear(match[3], fallbackYear);
-
-  if (!month || !day || month > 12 || day > 31) return "";
-  return asDateText(day, month, year);
+function excelSerialToDate(serial) {
+  const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+  const jsDate = new Date(excelEpoch.getTime() + serial * 86400000);
+  return new Date(
+    jsDate.getUTCFullYear(),
+    jsDate.getUTCMonth(),
+    jsDate.getUTCDate(),
+  );
 }
 
-function formatDate(v, fallbackYear = DEFAULT_YEAR) {
-  if (v == null || v === "") return "";
+function parseExcelDate(value, fallbackYear = DEFAULT_YEAR) {
+  if (!value) return null;
 
-  if (v instanceof Date && !isNaN(v.getTime())) {
-    return asDateText(
-      v.getDate(),
-      v.getMonth() + 1,
-      normalizeYear(v.getFullYear(), fallbackYear),
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  if (typeof value === "object" && value.result instanceof Date) {
+    return new Date(
+      value.result.getFullYear(),
+      value.result.getMonth(),
+      value.result.getDate(),
     );
   }
 
-  if (typeof v === "object" && v && typeof v.text === "string") {
-    return formatDate(v.text, fallbackYear);
+  if (typeof value === "number" && !Number.isNaN(value) && value > 1000) {
+    return excelSerialToDate(value);
   }
 
-  if (typeof v === "number" && !Number.isNaN(v)) {
-    if (v > 1000) {
-      const parsed = XLSX.SSF.parse_date_code(v);
-      if (parsed && parsed.d && parsed.m) {
-        return asDateText(
-          parsed.d,
-          parsed.m,
-          normalizeYear(parsed.y, fallbackYear),
-        );
-      }
-    }
+  const raw = t(value);
+  if (!raw) return null;
 
-    const raw = String(v);
-    if (/^\d{1,2}\.\d{1,2}$/.test(raw)) {
-      const [d, m] = raw.split(".");
-      return asDateText(Number(d), Number(m), fallbackYear);
-    }
-
-    const fixed = v.toFixed(2);
-    if (/^\d{1,2}\.\d{2}$/.test(fixed)) {
-      const [d, m] = fixed.split(".");
-      return asDateText(Number(d), Number(m), fallbackYear);
-    }
+  let m = raw.match(/^(\d{1,2})[.,/](\d{1,2})[.,/](\d{4})$/);
+  if (m) {
+    return new Date(
+      normalizeYear(m[3], fallbackYear),
+      Number(m[2]) - 1,
+      Number(m[1]),
+    );
   }
 
-  const raw = t(v);
-  if (!raw) return "";
-
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(raw)) return raw;
-
-  if (/^\d{1,2}[.,]\d{1,2}$/.test(raw)) {
-    const [d, m] = raw.replace(",", ".").split(".");
-    return asDateText(Number(d), Number(m), fallbackYear);
+  m = raw.match(/^(\d{1,2})[.,/](\d{1,2})$/);
+  if (m) {
+    return new Date(fallbackYear, Number(m[2]) - 1, Number(m[1]));
   }
 
-  if (/^\d{1,2}[.,]\d{1,2}[.,]\d{2}$/.test(raw)) {
-    const [d, m, y2] = raw.replace(/,/g, ".").split(".");
-    return asDateText(Number(d), Number(m), 2000 + Number(y2));
+  m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   }
 
-  if (/^\d{1,2}[.,]\d{1,2}[.,]\d{4}$/.test(raw)) {
-    const [d, m, y] = raw.replace(/,/g, ".").split(".");
-    return asDateText(Number(d), Number(m), normalizeYear(y, fallbackYear));
+  m = raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (m) {
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   }
 
-  if (/^\d{1,2}\/\d{1,2}\/(\d{2}|\d{4})$/.test(raw)) {
-    return formatSlashDateAsMonthDayYear(raw, fallbackYear);
+  return null;
+}
+
+function formatDate(v, fallbackYear = DEFAULT_YEAR) {
+  const d = parseExcelDate(v, fallbackYear);
+  if (!d) {
+    const raw = t(v);
+    return raw || "";
   }
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    const [y, m, d] = raw.split("-");
-    return asDateText(Number(d), Number(m), normalizeYear(y, fallbackYear));
-  }
-
-  if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(raw)) {
-    const [y, m, d] = raw.split("/");
-    return asDateText(Number(d), Number(m), normalizeYear(y, fallbackYear));
-  }
-
-  return raw;
+  return asDateText(
+    d.getDate(),
+    d.getMonth() + 1,
+    normalizeYear(d.getFullYear(), fallbackYear),
+  );
 }
 
 function normalizeTimeText(rawValue) {
   if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
     return `${String(rawValue.getHours()).padStart(2, "0")}:${String(
       rawValue.getMinutes(),
+    ).padStart(2, "0")}`;
+  }
+
+  if (typeof rawValue === "object" && rawValue?.result instanceof Date) {
+    return `${String(rawValue.result.getHours()).padStart(2, "0")}:${String(
+      rawValue.result.getMinutes(),
     ).padStart(2, "0")}`;
   }
 
@@ -229,6 +203,10 @@ function normalizeTimeText(rawValue) {
   }
 
   return "";
+}
+
+function parseTimeValue(value) {
+  return normalizeTimeText(value);
 }
 
 function money(v) {
@@ -321,17 +299,20 @@ function allStudents(store) {
   return arr;
 }
 
-function getWorksheetByNameExcelJS(workbook, wantedName) {
+function getWorksheetByName(workbook, wantedName) {
   const wanted = normalizeHeader(wantedName);
   return workbook.worksheets.find((ws) => normalizeHeader(ws.name) === wanted);
 }
 
-function getSheetByNameXLSX(workbook, wantedName) {
-  const wanted = normalizeHeader(wantedName);
-  const realName = workbook.SheetNames.find(
-    (name) => normalizeHeader(name) === wanted,
+function findWorksheetByNames(workbook, wantedNames) {
+  const candidates = Array.isArray(wantedNames) ? wantedNames : [wantedNames];
+  const wantedSet = new Set(
+    candidates.map((name) => normalizePersonName(name)),
   );
-  return realName ? workbook.Sheets[realName] : null;
+
+  return workbook.worksheets.find((ws) =>
+    wantedSet.has(normalizePersonName(ws.name)),
+  );
 }
 
 function getExcelCellArgb(cell) {
@@ -340,11 +321,13 @@ function getExcelCellArgb(cell) {
   return t(fg.argb || fg.rgb || "").toUpperCase();
 }
 
-function isPaidByFill(cell) {
-  const pattern = t(cell?.fill?.patternType).toLowerCase();
-  const argb = getExcelCellArgb(cell);
+function isSolid(cell) {
+  return t(cell?.fill?.patternType).toLowerCase() === "solid";
+}
 
-  if (pattern !== "solid") return false;
+function isPaidByFill(cell) {
+  const argb = getExcelCellArgb(cell);
+  if (!isSolid(cell)) return false;
 
   return (
     argb.includes("FF00B050") ||
@@ -356,23 +339,26 @@ function isPaidByFill(cell) {
   );
 }
 
-function isSolid(cell) {
-  return t(cell?.fill?.patternType).toLowerCase() === "solid";
-}
-
 function isGreen(cell) {
-  const color = getExcelCellArgb(cell);
-  return isSolid(cell) && color.includes("00B050");
+  return isSolid(cell) && getExcelCellArgb(cell).includes("00B050");
 }
 
 function isBlue(cell) {
-  const color = getExcelCellArgb(cell);
-  return isSolid(cell) && color.includes("0070C0");
+  return isSolid(cell) && getExcelCellArgb(cell).includes("0070C0");
 }
 
 function setIfEmpty(obj, key, value) {
   const val = t(value);
   if (val && !obj[key]) obj[key] = val;
+}
+
+function getCellText(cell) {
+  if (!cell) return "";
+  if (typeof cell.text === "string" && cell.text.trim()) return t(cell.text);
+  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
+    return t(cell.value.result);
+  }
+  return t(cell.value);
 }
 
 function buildAlacakLookup(alacakSheetJs) {
@@ -425,103 +411,6 @@ function buildEksikBelgeler(student, row) {
   }
 }
 
-/* -----------------------------
- * DİREKSİYON ÇALIŞMASI YARDIMCILARI
- * ----------------------------- */
-
-function getCellText(cell) {
-  if (!cell) return "";
-  if (typeof cell.text === "string" && cell.text.trim()) return t(cell.text);
-  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
-    return t(cell.value.result);
-  }
-  return t(cell.value);
-}
-
-function rowHasAnyFill(row, startCol, endCol) {
-  for (let c = startCol; c <= endCol; c += 1) {
-    if (isSolid(row.getCell(c))) return true;
-  }
-  return false;
-}
-
-function parseExcelDate(value, fallbackYear = DEFAULT_YEAR) {
-  if (!value) return null;
-
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
-
-  if (typeof value === "object" && value.result instanceof Date) {
-    return new Date(
-      value.result.getFullYear(),
-      value.result.getMonth(),
-      value.result.getDate(),
-    );
-  }
-
-  if (typeof value === "number" && !Number.isNaN(value)) {
-    if (value > 1000) {
-      const parsed = XLSX.SSF.parse_date_code(value);
-      if (parsed && parsed.d && parsed.m) {
-        return new Date(
-          normalizeYear(parsed.y, fallbackYear),
-          parsed.m - 1,
-          parsed.d,
-        );
-      }
-    }
-  }
-
-  const raw = t(value);
-  if (!raw) return null;
-
-  let m = raw.match(/^(\d{1,2})[.,/](\d{1,2})[.,/](\d{4})$/);
-  if (m) {
-    const day = Number(m[1]);
-    const month = Number(m[2]);
-    const year = normalizeYear(m[3], fallbackYear);
-    return new Date(year, month - 1, day);
-  }
-
-  m = raw.match(/^(\d{1,2})[.,/](\d{1,2})$/);
-  if (m) {
-    const day = Number(m[1]);
-    const month = Number(m[2]);
-    return new Date(fallbackYear, month - 1, day);
-  }
-
-  m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (m) {
-    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  }
-
-  m = raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-  if (m) {
-    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  }
-
-  return null;
-}
-
-function parseTimeValue(value) {
-  if (!value) return "";
-
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return `${String(value.getHours()).padStart(2, "0")}:${String(
-      value.getMinutes(),
-    ).padStart(2, "0")}`;
-  }
-
-  if (typeof value === "object" && value.result instanceof Date) {
-    return `${String(value.result.getHours()).padStart(2, "0")}:${String(
-      value.result.getMinutes(),
-    ).padStart(2, "0")}`;
-  }
-
-  return normalizeTimeText(value);
-}
-
 function dateToIso(date) {
   return [
     date.getFullYear(),
@@ -543,12 +432,12 @@ function lessonStatusFromCells(
   timeEndCell,
   plateCell,
   nameCell,
-  phoneCell,
+  extraCell,
 ) {
-  const mainGreen = [plateCell, nameCell, phoneCell].every((cell) =>
+  const mainGreen = [plateCell, nameCell, extraCell].every((cell) =>
     isGreen(cell),
   );
-  const mainBlue = [plateCell, nameCell, phoneCell].every((cell) =>
+  const mainBlue = [plateCell, nameCell, extraCell].every((cell) =>
     isBlue(cell),
   );
 
@@ -560,7 +449,7 @@ function lessonStatusFromCells(
     isGreen(timeEndCell) ||
     isGreen(plateCell) ||
     isGreen(nameCell) ||
-    isGreen(phoneCell)
+    isGreen(extraCell)
   ) {
     return "teyitli";
   }
@@ -568,25 +457,14 @@ function lessonStatusFromCells(
   return "planlandi";
 }
 
-function findWorksheetByNames(workbook, wantedNames) {
-  const candidates = Array.isArray(wantedNames) ? wantedNames : [wantedNames];
-  const wantedSet = new Set(
-    candidates.map((name) => normalizePersonName(name)),
-  );
-
-  return workbook.worksheets.find((ws) =>
-    wantedSet.has(normalizePersonName(ws.name)),
-  );
-}
-
 function pickTeacherSheets(workbook) {
   const picked = [];
-  const used = new Set();
+  const usedNames = new Set();
 
   for (const wanted of TEACHER_SHEETS) {
     const ws = findWorksheetByNames(workbook, wanted);
-    if (ws && !used.has(ws.id)) {
-      used.add(ws.id);
+    if (ws && !usedNames.has(ws.name)) {
+      usedNames.add(ws.name);
       picked.push(ws);
     }
   }
@@ -624,27 +502,35 @@ function buildActiveStudentLookup(workbook) {
   const byTc = new Map();
   const byName = new Map();
 
-  for (let r = 1; r <= ws.rowCount; r += 1) {
+  for (let r = 3; r <= ws.rowCount; r += 1) {
     const row = ws.getRow(r);
 
     const tcValue = tc(getCellText(row.getCell(2)));
     const nameValue = getCellText(row.getCell(3));
+    const classValue = getCellText(row.getCell(8));
 
-    if (!tcValue || tcValue.length !== 11 || !nameValue) continue;
+    if (!tcValue || tcValue.length !== 11) continue;
+    if (!nameValue) continue;
 
-    // Aktif bölüm: satırda renk var.
-    // Turuncu altı / pasif bölüm: genelde renksiz.
-    if (!rowHasAnyFill(row, 2, 10)) continue;
+    // Gerçek öğrenci satırı filtresi:
+    // - TC 11 hane olacak
+    // - isim dolu olacak
+    // - sınıf veya telefon veya araç alanlarından en az biri dolu olacak
+    const vehicleValue = getCellText(row.getCell(4));
+    const phoneValue = getCellText(row.getCell(5));
+    const hasRealStudentSignal = !!(classValue || phoneValue || vehicleValue);
+
+    if (!hasRealStudentSignal) continue;
 
     const activeStudent = {
       tc: tcValue,
       ad_soyad: nameValue,
       name_key: normalizePersonName(nameValue),
-      arac_kodu: getCellText(row.getCell(4)),
-      telefon: getCellText(row.getCell(5)),
+      arac_kodu: vehicleValue,
+      telefon: phoneValue,
       kalan_ders: getCellText(row.getCell(6)),
       toplam_ders: getCellText(row.getCell(7)),
-      sinif: getCellText(row.getCell(8)),
+      sinif: classValue,
       d_bitis: getCellText(row.getCell(9)),
     };
 
@@ -653,6 +539,61 @@ function buildActiveStudentLookup(workbook) {
   }
 
   return { byTc, byName };
+}
+
+function isWeekHeaderRow(row) {
+  const first = normalizeHeader(getCellText(row.getCell(1)));
+  return first === "gunler" || first === "günler";
+}
+
+function findDateRow(ws, weekHeaderRowNumber) {
+  for (
+    let r = weekHeaderRowNumber + 1;
+    r <= Math.min(ws.rowCount, weekHeaderRowNumber + 3);
+    r += 1
+  ) {
+    let hitCount = 0;
+
+    for (
+      let detailCol = 2;
+      detailCol <= Math.min(ws.columnCount, 16);
+      detailCol += 2
+    ) {
+      const d = parseExcelDate(
+        ws.getRow(r).getCell(detailCol).value,
+        DEFAULT_YEAR,
+      );
+      if (d) hitCount += 1;
+    }
+
+    if (hitCount >= 2) return r;
+  }
+
+  return 0;
+}
+
+function collectWeekSections(ws) {
+  const sections = [];
+
+  for (let r = 1; r <= ws.rowCount; r += 1) {
+    if (!isWeekHeaderRow(ws.getRow(r))) continue;
+
+    const dateRow = findDateRow(ws, r);
+    if (!dateRow) continue;
+
+    sections.push({
+      headerRow: r,
+      dateRow,
+    });
+  }
+
+  for (let i = 0; i < sections.length; i += 1) {
+    const current = sections[i];
+    const next = sections[i + 1];
+    current.endRow = next ? next.headerRow - 1 : ws.rowCount;
+  }
+
+  return sections;
 }
 
 function parseLessons(workbook, activeLookup) {
@@ -671,17 +612,19 @@ function parseLessons(workbook, activeLookup) {
 
   for (const ws of teacherSheets) {
     const teacherName = getCellText(ws.getCell("A1")) || ws.name;
+    const weekSections = collectWeekSections(ws);
 
-    for (let r = 1; r <= ws.rowCount; r += 1) {
-      const dateColumns = [];
-
+    for (const section of weekSections) {
       for (
-        let baseCol = 1;
-        baseCol <= Math.min(ws.columnCount, 20);
-        baseCol += 2
+        let detailCol = 2;
+        detailCol <= Math.min(ws.columnCount, 16);
+        detailCol += 2
       ) {
-        const rawDate = ws.getRow(r).getCell(baseCol).value;
-        const lessonDate = parseExcelDate(rawDate, today.getFullYear());
+        const timeCol = detailCol - 1;
+        const lessonDate = parseExcelDate(
+          ws.getRow(section.dateRow).getCell(detailCol).value,
+          today.getFullYear(),
+        );
 
         if (!lessonDate) continue;
         if (
@@ -690,30 +633,29 @@ function parseLessons(workbook, activeLookup) {
         )
           continue;
 
-        dateColumns.push({ baseCol, detailCol: baseCol + 1, lessonDate });
-      }
+        for (let r = section.dateRow + 2; r <= section.endRow - 2; r += 1) {
+          const startTime = parseTimeValue(ws.getRow(r).getCell(timeCol).value);
+          const endTime = parseTimeValue(
+            ws.getRow(r + 1).getCell(timeCol).value,
+          );
 
-      if (!dateColumns.length) continue;
+          if (!startTime || !endTime) continue;
 
-      for (const dateColumn of dateColumns) {
-        const { baseCol, detailCol, lessonDate } = dateColumn;
+          const plateCell = ws.getRow(r - 1).getCell(detailCol);
+          const nameCell1 = ws.getRow(r).getCell(detailCol);
+          const nameCell2 = ws.getRow(r + 1).getCell(detailCol);
+          const extraCell = ws.getRow(r + 2).getCell(detailCol);
 
-        for (
-          let plateRow = r + 2;
-          plateRow <= Math.min(ws.rowCount, r + 25);
-          plateRow += 4
-        ) {
-          if (plateRow + 3 > ws.rowCount) continue;
+          const name1 = getCellText(nameCell1);
+          const name2 = getCellText(nameCell2);
 
-          const plateCell = ws.getRow(plateRow).getCell(detailCol);
-          const nameCell = ws.getRow(plateRow + 1).getCell(detailCol);
-          const phoneCell = ws.getRow(plateRow + 2).getCell(detailCol);
-          const noteCell = ws.getRow(plateRow + 3).getCell(detailCol);
+          let studentName = "";
+          if (name1 && name2) {
+            studentName = name1.length >= name2.length ? name1 : name2;
+          } else {
+            studentName = name1 || name2 || "";
+          }
 
-          const startTimeCell = ws.getRow(plateRow + 1).getCell(baseCol);
-          const endTimeCell = ws.getRow(plateRow + 2).getCell(baseCol);
-
-          const studentName = getCellText(nameCell);
           if (!studentName) continue;
 
           const activeStudent = activeLookup.byName.get(
@@ -721,16 +663,16 @@ function parseLessons(workbook, activeLookup) {
           );
           if (!activeStudent) continue;
 
-          const startTime = parseTimeValue(startTimeCell.value);
-          const endTime = parseTimeValue(endTimeCell.value);
-          const noteText = getCellText(noteCell);
           const status = lessonStatusFromCells(
-            startTimeCell,
-            endTimeCell,
+            ws.getRow(r).getCell(timeCol),
+            ws.getRow(r + 1).getCell(timeCol),
             plateCell,
-            nameCell,
-            phoneCell,
+            name1 ? nameCell1 : nameCell2,
+            extraCell,
           );
+
+          const extraText = getCellText(extraCell);
+          const plateText = getCellText(plateCell);
 
           const lesson = {
             tarih: asDateText(
@@ -739,21 +681,20 @@ function parseLessons(workbook, activeLookup) {
               lessonDate.getFullYear(),
             ),
             tarih_iso: dateToIso(lessonDate),
-            saat:
-              startTime && endTime
-                ? `${startTime}-${endTime}`
-                : startTime || endTime || "",
+            saat: `${startTime}-${endTime}`,
             baslangic_saati: startTime,
             bitis_saati: endTime,
             egitmen: teacherName,
             ogrenci: activeStudent.ad_soyad,
             tc: activeStudent.tc,
-            telefon: getCellText(phoneCell) || activeStudent.telefon,
-            arac_plaka: getCellText(plateCell) || activeStudent.arac_kodu,
+            telefon: /^\d|^0/.test(extraText.replace(/\s+/g, ""))
+              ? extraText
+              : activeStudent.telefon,
+            arac_plaka: plateText || activeStudent.arac_kodu,
             kalan_ders: activeStudent.kalan_ders,
             toplam_ders: activeStudent.toplam_ders,
             sinif: activeStudent.sinif,
-            not: noteText,
+            not: /^\d|^0/.test(extraText.replace(/\s+/g, "")) ? "" : extraText,
             durum: status,
             teyitli_mi: status === "teyitli" || status === "katildi",
             katilim:
@@ -803,78 +744,6 @@ function parseLessons(workbook, activeLookup) {
   return lessonsByTc;
 }
 
-function applyDireksiyonCalismasi(store) {
-  if (!fs.existsSync(DIREKSIYON_CALISMASI_PATH)) {
-    console.log(
-      "ℹ️ direksiyon_calismasi.xlsx bulunamadı, direksiyon dersleri atlandı.",
-    );
-    return {
-      updatedStudentCount: 0,
-      orphanActiveStudentCount: 0,
-      totalLessonCount: 0,
-    };
-  }
-
-  const workbook = new ExcelJS.Workbook();
-
-  return workbook.xlsx.readFile(DIREKSIYON_CALISMASI_PATH).then(() => {
-    const activeLookup = buildActiveStudentLookup(workbook);
-    const lessonsByTc = parseLessons(workbook, activeLookup);
-
-    let updatedStudentCount = 0;
-    let orphanActiveStudentCount = 0;
-    let totalLessonCount = 0;
-
-    for (const [activeTc, activeStudent] of activeLookup.byTc.entries()) {
-      const student =
-        (activeTc ? store.byTc.get(activeTc) : null) ||
-        store.byName.get(activeStudent.name_key) ||
-        getOrCreate(store, activeStudent.tc, activeStudent.ad_soyad);
-
-      if (!student) {
-        orphanActiveStudentCount += 1;
-        continue;
-      }
-
-      setIfEmpty(student, "tc", activeStudent.tc);
-      setIfEmpty(student, "ad_soyad", activeStudent.ad_soyad);
-      setIfEmpty(student, "sinif", activeStudent.sinif);
-      setIfEmpty(student, "telefonlar", activeStudent.telefon);
-
-      student.durum = "direksiyon";
-      student.direksiyon_kalan_ders = activeStudent.kalan_ders || "";
-      student.direksiyon_toplam_ders = activeStudent.toplam_ders || "";
-      student.direksiyon_aktif_arac = activeStudent.arac_kodu || "";
-
-      const lessons = lessonsByTc.get(activeTc) || [];
-      student.direksiyon_dersleri = lessons;
-      totalLessonCount += lessons.length;
-
-      if (lessons.length) {
-        const nextLesson = pickNextLesson(lessons);
-        if (nextLesson) {
-          student.direksiyon_tarih = nextLesson.tarih || "";
-          student.direksiyon_saati = nextLesson.saat || "";
-          student.direksiyon_son_egitmen = nextLesson.egitmen || "";
-        } else {
-          student.direksiyon_son_egitmen =
-            lessons[lessons.length - 1]?.egitmen ||
-            student.direksiyon_son_egitmen ||
-            "";
-        }
-      }
-
-      updatedStudentCount += 1;
-    }
-
-    return {
-      updatedStudentCount,
-      orphanActiveStudentCount,
-      totalLessonCount,
-    };
-  });
-}
-
 function pickNextLesson(lessons) {
   const now = new Date();
 
@@ -891,6 +760,75 @@ function pickNextLesson(lessons) {
   }
 
   return lessons[lessons.length - 1] || null;
+}
+
+async function applyDireksiyonCalismasi(store) {
+  if (!fs.existsSync(DIREKSIYON_CALISMASI_PATH)) {
+    console.log(
+      "ℹ️ direksiyon_calismasi.xlsx bulunamadı, direksiyon dersleri atlandı.",
+    );
+    return {
+      updatedStudentCount: 0,
+      orphanActiveStudentCount: 0,
+      totalLessonCount: 0,
+      activeStudentCount: 0,
+    };
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(DIREKSIYON_CALISMASI_PATH);
+
+  const activeLookup = buildActiveStudentLookup(workbook);
+  const lessonsByTc = parseLessons(workbook, activeLookup);
+
+  let updatedStudentCount = 0;
+  let orphanActiveStudentCount = 0;
+  let totalLessonCount = 0;
+
+  for (const [activeTc, activeStudent] of activeLookup.byTc.entries()) {
+    const student =
+      (activeTc ? store.byTc.get(activeTc) : null) ||
+      store.byName.get(activeStudent.name_key);
+
+    if (!student) {
+      orphanActiveStudentCount += 1;
+      continue;
+    }
+
+    setIfEmpty(student, "tc", activeStudent.tc);
+    setIfEmpty(student, "ad_soyad", activeStudent.ad_soyad);
+    setIfEmpty(student, "sinif", activeStudent.sinif);
+    setIfEmpty(student, "telefonlar", activeStudent.telefon);
+
+    student.durum = "direksiyon";
+    student.direksiyon_kalan_ders = activeStudent.kalan_ders || "";
+    student.direksiyon_toplam_ders = activeStudent.toplam_ders || "";
+    student.direksiyon_aktif_arac = activeStudent.arac_kodu || "";
+
+    const lessons = lessonsByTc.get(activeTc) || [];
+    student.direksiyon_dersleri = lessons;
+    totalLessonCount += lessons.length;
+
+    const nextLesson = pickNextLesson(lessons);
+    if (nextLesson) {
+      student.direksiyon_tarih = nextLesson.tarih || "";
+      student.direksiyon_saati = nextLesson.saat || "";
+      student.direksiyon_son_egitmen = nextLesson.egitmen || "";
+    } else if (!lessons.length) {
+      student.direksiyon_tarih = "";
+      student.direksiyon_saati = "";
+      student.direksiyon_son_egitmen = "";
+    }
+
+    updatedStudentCount += 1;
+  }
+
+  return {
+    updatedStudentCount,
+    orphanActiveStudentCount,
+    totalLessonCount,
+    activeStudentCount: activeLookup.byTc.size,
+  };
 }
 
 function syncDerivedFields(student) {
@@ -965,34 +903,21 @@ async function main() {
     throw new Error(`Excel dosyası bulunamadı: ${EXCEL_PATH}`);
   }
 
-  const xlsxBook = XLSX.readFile(EXCEL_PATH, { cellStyles: true });
-  const exceljsBook = new ExcelJS.Workbook();
-  await exceljsBook.xlsx.readFile(EXCEL_PATH);
+  const excelBook = new ExcelJS.Workbook();
+  await excelBook.xlsx.readFile(EXCEL_PATH);
 
-  const esinavSheetJs = getWorksheetByNameExcelJS(exceljsBook, "E-SINAV");
-  const direksiyonSheetJs = getWorksheetByNameExcelJS(
-    exceljsBook,
-    "DİREKSİYON",
-  );
-  const eksikSheetJs = getWorksheetByNameExcelJS(exceljsBook, "EKSİK BELGELER");
-  const alacakSheetJs = getWorksheetByNameExcelJS(exceljsBook, "ALACAK RAPORU");
-
-  const esinavSheetX = getSheetByNameXLSX(xlsxBook, "E-SINAV");
-  const direksiyonSheetX = getSheetByNameXLSX(xlsxBook, "DİREKSİYON");
-  const alacakSheetX = getSheetByNameXLSX(xlsxBook, "ALACAK RAPORU");
+  const esinavSheetJs = getWorksheetByName(excelBook, "E-SINAV");
+  const direksiyonSheetJs = getWorksheetByName(excelBook, "DİREKSİYON");
+  const eksikSheetJs = getWorksheetByName(excelBook, "EKSİK BELGELER");
+  const alacakSheetJs = getWorksheetByName(excelBook, "ALACAK RAPORU");
 
   if (!esinavSheetJs || !direksiyonSheetJs || !eksikSheetJs || !alacakSheetJs) {
     throw new Error("Gerekli sayfalardan biri bulunamadı.");
   }
 
-  if (!esinavSheetX || !direksiyonSheetX || !alacakSheetX) {
-    throw new Error("xlsx tarafında gerekli sayfalardan biri bulunamadı.");
-  }
-
   const store = buildStore();
   const alacakLookup = buildAlacakLookup(alacakSheetJs);
 
-  // E-SINAV
   for (let r = 3; r <= esinavSheetJs.rowCount; r += 1) {
     const row = esinavSheetJs.getRow(r);
 
@@ -1035,7 +960,6 @@ async function main() {
     }
   }
 
-  // DİREKSİYON
   for (let r = 3; r <= direksiyonSheetJs.rowCount; r += 1) {
     const row = direksiyonSheetJs.getRow(r);
 
@@ -1079,7 +1003,6 @@ async function main() {
     }
   }
 
-  // EKSİK BELGELER
   for (let r = 2; r <= eksikSheetJs.rowCount; r += 1) {
     const row = eksikSheetJs.getRow(r);
 
@@ -1094,7 +1017,6 @@ async function main() {
     buildEksikBelgeler(student, row);
   }
 
-  // ALACAK RAPORU
   for (let r = 4; r <= alacakSheetJs.rowCount; r += 1) {
     const row = alacakSheetJs.getRow(r);
 
@@ -1151,6 +1073,9 @@ async function main() {
 
   console.log("✅ students.json oluşturuldu");
   console.log(`👤 Toplam benzersiz öğrenci: ${result.length}`);
+  console.log(
+    `📋 Aktif direksiyon listesi öğrenci sayısı: ${direksiyonCalismasiStats.activeStudentCount}`,
+  );
   console.log(
     `🚗 Direksiyon çalışma dosyasından güncellenen öğrenci: ${direksiyonCalismasiStats.updatedStudentCount}`,
   );
