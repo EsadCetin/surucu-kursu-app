@@ -551,10 +551,8 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
         date: lesson.tarih || "",
         time: lesson.saat,
-        title: lesson.not?.trim() || `${index + 1}. Direksiyon dersi`,
-        description: lesson.saat
-          ? `Ders saati: ${lesson.saat} / ${statusText}`
-          : `Durum: ${statusText}`,
+        title: lesson.saat || "Direksiyon dersi",
+        description: `Durum: ${statusText}`,
         type: "lesson",
         isPast: isPastDate(lesson.tarih),
         isToday: isTodayDate(lesson.tarih),

@@ -1,7 +1,7 @@
 /**
  * scripts/excel-to-json.js
  *
- * v21
+ * v22
  *
  * Düzeltilenler:
  * 1) Saat düzeltildi
@@ -52,16 +52,7 @@ const ESINAV_FIXED_FEE = "1.250₺";
 const WINDOW_PAST_DAYS = 31;
 const WINDOW_FUTURE_DAYS = 31;
 
-const TEACHER_SHEETS = [
-  "ZEYNEP HOCA",
-  "LEYLA HOCA",
-  "LEYLA BEĞDE",
-  "RÜMEYSA",
-  "KEMAL HOCA",
-  "FATMA AŞÇI",
-  "CANAN HOCA",
-  "MERVE HOCA",
-];
+const TEACHER_SHEETS = ["ZEYNEP HOCA", "LEYLA BEĞDE", "RÜMEYSA", "KEMAL HOCA"];
 
 function t(v) {
   return String(v ?? "")
@@ -392,6 +383,40 @@ function getSheetCellFormattedText(sheet, rowNumber, colNumber) {
   const cell = sheet[addr];
   if (!cell) return "";
   return t(cell.w ?? cell.v ?? "");
+}
+
+function isPaidByFillXLSX(sheet, rowNumber, colNumber) {
+  if (!sheet) return false;
+  const addr = XLSX.utils.encode_cell({ r: rowNumber - 1, c: colNumber - 1 });
+  const cell = sheet[addr];
+  if (!cell || !cell.s || !cell.s.fill) return false;
+
+  const fill = cell.s.fill;
+  const patternType = t(fill.patternType).toLowerCase();
+  if (patternType && patternType !== "solid") return false;
+
+  const color = t(
+    fill.fgColor?.rgb ||
+      fill.fgColor?.argb ||
+      fill.bgColor?.rgb ||
+      fill.bgColor?.argb ||
+      fill.fgColor?.indexed ||
+      fill.bgColor?.indexed ||
+      "",
+  ).toUpperCase();
+
+  if (!color) return false;
+  if (
+    color.includes("FFFFFF") ||
+    color.includes("FFFFFE") ||
+    color.includes("F2F2F2") ||
+    color === "64" ||
+    color === "0"
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function findWorksheetByNames(workbook, wantedNames) {
@@ -904,7 +929,12 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
       return aKey.localeCompare(bKey, "tr");
     });
 
-    lessonsByTc.set(studentTc, sorted);
+    const renumbered = sorted.map((lesson, index) => ({
+      ...lesson,
+      not: `${index + 1}. dersi`,
+    }));
+
+    lessonsByTc.set(studentTc, renumbered);
   }
 
   return lessonsByTc;
@@ -1074,11 +1104,20 @@ async function main() {
 
   const excelBook = new ExcelJS.Workbook();
   await excelBook.xlsx.readFile(EXCEL_PATH);
+  const xlsxBook = XLSX.readFile(EXCEL_PATH, {
+    cellStyles: true,
+    cellDates: false,
+    cellNF: true,
+    cellText: true,
+  });
 
   const esinavSheetJs = getWorksheetByName(excelBook, "E-SINAV");
   const direksiyonSheetJs = getWorksheetByName(excelBook, "DİREKSİYON");
   const eksikSheetJs = getWorksheetByName(excelBook, "EKSİK BELGELER");
   const alacakSheetJs = getWorksheetByName(excelBook, "ALACAK RAPORU");
+
+  const esinavSheetX = getSheetByNameXLSX(xlsxBook, "E-SINAV");
+  const direksiyonSheetX = getSheetByNameXLSX(xlsxBook, "DİREKSİYON");
 
   if (!esinavSheetJs || !direksiyonSheetJs || !eksikSheetJs || !alacakSheetJs) {
     throw new Error("Gerekli sayfalardan biri bulunamadı.");
@@ -1112,7 +1151,8 @@ async function main() {
     const examTime = normalizeTimeText(
       row.getCell(10).text || row.getCell(10).value,
     );
-    const paid = isPaidByFill(row.getCell(6));
+    const paid =
+      isPaidByFill(row.getCell(6)) || isPaidByFillXLSX(esinavSheetX, r, 6);
 
     if (dueDate) {
       student.esinav_son_odeme = dueDate;
@@ -1151,7 +1191,8 @@ async function main() {
 
     student.durum = "direksiyon";
 
-    const paid = isPaidByFill(row.getCell(6));
+    const paid =
+      isPaidByFill(row.getCell(6)) || isPaidByFillXLSX(direksiyonSheetX, r, 6);
 
     if (paid) {
       student.direksiyon_harc = "odendi";
