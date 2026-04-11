@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -23,6 +24,10 @@ import {
   View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import {
+  getNotificationSummary,
+  syncStudentNotificationState,
+} from "../utils/notification-center";
 
 type LessonItem = {
   tarih?: string;
@@ -1000,7 +1005,10 @@ export default function Index() {
   const [calendarSelectedDetail, setCalendarSelectedDetail] = useState("");
   const [sessionTc, setSessionTc] = useState("");
   const [restoringSession, setRestoringSession] = useState(true);
+  const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
+  const [latestNotificationText, setLatestNotificationText] = useState("");
   const { theme, colors, themeReady, toggleTheme } = useAppTheme();
+  const router = useRouter();
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
@@ -1171,6 +1179,53 @@ export default function Index() {
     setCalendarVisible(false);
     setCalendarDetailVisible(false);
   }, [restoringSession, loadingStudents, loggedIn, sessionTc, students]);
+
+  useEffect(() => {
+    if (!loggedIn || !user) return;
+
+    const latestUser = students.find((student) => student.tc === user.tc);
+    if (!latestUser) return;
+
+    if (JSON.stringify(latestUser) !== JSON.stringify(user)) {
+      setUser(latestUser);
+    }
+  }, [loggedIn, students, user]);
+
+  useEffect(() => {
+    if (!loggedIn || !user) {
+      setNotificationUnreadCount(0);
+      setLatestNotificationText("");
+      return;
+    }
+
+    const syncNotifications = async () => {
+      try {
+        const summary = await syncStudentNotificationState(user);
+        setNotificationUnreadCount(summary.unreadCount);
+        setLatestNotificationText(summary.items[0]?.message || "");
+      } catch (error) {
+        console.log("Bildirimler senkronize edilemedi:", error);
+      }
+    };
+
+    syncNotifications();
+  }, [loggedIn, user]);
+
+  useEffect(() => {
+    if (!loggedIn || !sessionTc) return;
+
+    const loadNotificationSummary = async () => {
+      try {
+        const summary = await getNotificationSummary(sessionTc);
+        setNotificationUnreadCount(summary.unreadCount);
+        setLatestNotificationText(summary.items[0]?.message || "");
+      } catch (error) {
+        console.log("Bildirim özeti yüklenemedi:", error);
+      }
+    };
+
+    loadNotificationSummary();
+  }, [loggedIn, sessionTc]);
 
   useEffect(() => {
     if (calendarVisible && calendarScrollRef.current) {
@@ -1515,6 +1570,10 @@ export default function Index() {
     } catch {
       Alert.alert("Hata", "Ödeme sayfası açılamadı.");
     }
+  };
+
+  const openNotificationCenter = () => {
+    router.push("/bildirimler");
   };
 
   const showBasvuruDetay = () => {
@@ -2016,6 +2075,65 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
+        <View
+          style={[
+            styles.notificationCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <View style={styles.notificationCardHeader}>
+            <View style={styles.notificationCardTitleWrap}>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  styles.notificationSectionTitle,
+                  { color: colors.text },
+                ]}
+              >
+                Bildirim Merkezi
+              </Text>
+              <Text
+                style={[styles.notificationSubtitle, { color: colors.subText }]}
+              >
+                Evrak, ödeme, ders ve sınav uyarıların burada toplanır.
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.notificationCountBadge,
+                {
+                  backgroundColor: colors.cardAltBg,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.notificationCountBadgeText,
+                  { color: colors.text },
+                ]}
+              >
+                {notificationUnreadCount} yeni
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.notificationPreview, { color: colors.subText }]}>
+            {latestNotificationText ||
+              "Şu an yeni bir uyarı görünmüyor. Yeni bildirimler oluştuğunda burada özetleri göreceksiniz."}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.notificationOpenButton}
+            onPress={openNotificationCenter}
+          >
+            <Text style={styles.notificationOpenButtonText}>
+              Bildirim Merkezini Aç
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View
           style={[
             styles.infoCard,
@@ -2931,6 +3049,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mainActionButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
+  notificationCard: {
+    backgroundColor: "#151519",
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#232329",
+  },
+  notificationCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 10,
+  },
+  notificationCardTitleWrap: {
+    flex: 1,
+  },
+  notificationSectionTitle: {
+    marginBottom: 6,
+  },
+  notificationSubtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  notificationCountBadge: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  notificationCountBadgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  notificationPreview: {
+    color: "#d8d8dd",
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  notificationOpenButton: {
+    backgroundColor: "#26262d",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  notificationOpenButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
   infoCard: {
     backgroundColor: "#151519",
     borderRadius: 22,

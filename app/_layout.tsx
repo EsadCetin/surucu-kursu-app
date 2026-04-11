@@ -35,11 +35,20 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="bildirimler"
+        options={{
+          title: "Bildirimler",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="duyurular"
         options={{
           title: "Duyurular",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications" size={size} color={color} />
+            <Ionicons name="megaphone" size={size} color={color} />
           ),
         }}
       />
