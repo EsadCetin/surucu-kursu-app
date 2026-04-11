@@ -140,7 +140,7 @@ const DATA_LAST_COMMIT_URL =
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
 
-const STUDENTS_CACHE_KEY = "students_cache_v3";
+const STUDENTS_CACHE_KEY = "students_cache_v4";
 
 const LOGIN_LOGO = require("../assets/images/logo.png");
 
