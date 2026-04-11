@@ -1,7 +1,7 @@
 /**
  * scripts/excel-to-json.js
  *
- * v19
+ * v20
  *
  * Düzeltilenler:
  * 1) Saat düzeltildi
@@ -12,10 +12,14 @@
  *
  * 2) Direksiyon harç rengi düzeltildi
  * 3) Direksiyon ders durum mantığı düzeltildi
+ *    - durum kontrolünde note satırı değil telefon satırı baz alınır
  *    - saatler yeşilse => onaylandı
- *    - isim + plaka + telefon/not satırı yeşilse => ders yapıldı
- *    - saat yeşil ama isim/plaka/telefon-not mavi ise => derse katılmadı
+ *    - isim + plaka + telefon satırı yeşilse => ders yapıldı
+ *    - saat yeşil ama isim/plaka/telefon satırı mavi ise => derse katılmadı
  *    - boş/beyaz ise => netleşmedi
+ * 4) Direksiyon harç renk algısı güçlendirildi
+ *    - rgb/indexed/theme dolgu tipleri daha geniş kontrol edilir
+ *    - solid dolgu olup beyaz/boş olmayan hücreler ödenmiş sayılır
  *    - HARÇ hücresi dolu renkliyse (özellikle yeşil / sarı) odendi kabul edilir
  *    - beyaz / boş ise odenmedi kabul edilir
  *    - bazı Excel fill varyasyonlarında fgColor yerine bgColor da kontrol edilir
@@ -397,40 +401,68 @@ function findWorksheetByNames(workbook, wantedNames) {
   );
 }
 
+function getCellFillColorObjects(cell) {
+  return [cell?.fill?.fgColor || null, cell?.fill?.bgColor || null].filter(
+    Boolean,
+  );
+}
+
 function getCellFillCodes(cell) {
-  const fg = t(
-    cell?.fill?.fgColor?.argb || cell?.fill?.fgColor?.rgb || "",
-  ).toUpperCase();
-  const bg = t(
-    cell?.fill?.bgColor?.argb || cell?.fill?.bgColor?.rgb || "",
-  ).toUpperCase();
-  return [fg, bg].filter(Boolean);
+  return getCellFillColorObjects(cell)
+    .map((color) =>
+      t(
+        color?.argb || color?.rgb || color?.indexed || color?.theme || "",
+      ).toUpperCase(),
+    )
+    .filter(Boolean);
 }
 
 function isSolid(cell) {
   return t(cell?.fill?.patternType).toLowerCase() === "solid";
 }
 
-function isWhiteLike(color) {
+function isWhiteLikeCode(code) {
   return (
-    !color ||
-    color.includes("FFFFFF") ||
-    color.includes("FFFFFE") ||
-    color.includes("FFF2F2F2") ||
-    color.includes("00000000")
+    !code ||
+    code === "0" ||
+    code === "64" ||
+    code.includes("FFFFFF") ||
+    code.includes("FFFFFE") ||
+    code.includes("F2F2F2") ||
+    code.includes("00000000")
   );
 }
 
-function isPaidByFill(cell) {
+function hasMeaningfulFill(cell) {
   if (!isSolid(cell)) return false;
 
-  const colors = getCellFillCodes(cell);
-  if (!colors.length) return false;
+  const colorObjects = getCellFillColorObjects(cell);
+  if (!colorObjects.length) return false;
 
-  // Harç hücresi beyaz/boş değilse ödenmiş kabul et.
-  // Kullanıcı kuralı: yeşil/sarı dolu hücre = odendi
-  const hasNonWhite = colors.some((color) => !isWhiteLike(color));
-  return hasNonWhite;
+  return colorObjects.some((color) => {
+    const type = t(color?.type).toLowerCase();
+    const code = t(
+      color?.argb || color?.rgb || color?.indexed || color?.theme || "",
+    ).toUpperCase();
+
+    if (type === "rgb") {
+      return !isWhiteLikeCode(code);
+    }
+
+    if (type === "indexed") {
+      return code && code !== "64" && code !== "0";
+    }
+
+    if (type === "theme") {
+      return true;
+    }
+
+    return !!code && !isWhiteLikeCode(code);
+  });
+}
+
+function isPaidByFill(cell) {
+  return hasMeaningfulFill(cell);
 }
 
 function getExcelCellArgb(cell) {
@@ -439,11 +471,19 @@ function getExcelCellArgb(cell) {
 }
 
 function isGreen(cell) {
-  return isSolid(cell) && getExcelCellArgb(cell).includes("00B050");
+  if (!hasMeaningfulFill(cell)) return false;
+  const code = getExcelCellArgb(cell);
+  return (
+    code.includes("00B050") ||
+    code.includes("92D050") ||
+    code.includes("70AD47")
+  );
 }
 
 function isBlue(cell) {
-  return isSolid(cell) && getExcelCellArgb(cell).includes("0070C0");
+  if (!hasMeaningfulFill(cell)) return false;
+  const code = getExcelCellArgb(cell);
+  return code.includes("0070C0") || code.includes("5B9BD5");
 }
 
 function setIfEmpty(obj, key, value) {
@@ -531,7 +571,7 @@ function lessonStatusFromCells(
   timeEndCell,
   plateCell,
   nameCell,
-  extraCell,
+  phoneCell,
   secondNameCell,
 ) {
   const timeGreen = isGreen(timeStartCell) || isGreen(timeEndCell);
@@ -542,29 +582,21 @@ function lessonStatusFromCells(
   const plateGreen = isGreen(plateCell);
   const plateBlue = isBlue(plateCell);
 
-  const extraGreen = isGreen(extraCell);
-  const extraBlue = isBlue(extraCell);
+  const phoneGreen = isGreen(phoneCell);
+  const phoneBlue = isBlue(phoneCell);
 
-  // Kural 1:
-  // isim + plaka + telefon/not satırı yeşilse => ders yapıldı
-  if (nameGreen && plateGreen && extraGreen) {
+  if (nameGreen && plateGreen && phoneGreen) {
     return "katildi";
   }
 
-  // Kural 2:
-  // saat yeşil ama isim/plaka/telefon-not tarafı mavi ise => derse katılmadı
-  if (timeGreen && (nameBlue || plateBlue || extraBlue)) {
+  if (timeGreen && (nameBlue || plateBlue || phoneBlue)) {
     return "katilmadi";
   }
 
-  // Kural 3:
-  // saatler yeşilse => onaylandı
   if (timeGreen) {
     return "teyitli";
   }
 
-  // Kural 4:
-  // hiçbir net renk yoksa => netleşmedi / planlandı
   return "planlandi";
 }
 
@@ -754,18 +786,14 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
 
           const plateCell = ws.getRow(r - 1).getCell(detailCol);
           const nameCell1 = ws.getRow(r).getCell(detailCol);
-          const nameCell2 = ws.getRow(r + 1).getCell(detailCol);
-          const extraCell = ws.getRow(r + 2).getCell(detailCol);
+          const phoneCell = ws.getRow(r + 1).getCell(detailCol);
+          const noteCell = ws.getRow(r + 2).getCell(detailCol);
+
+          const nameCell2 = undefined;
 
           const name1 = getCellText(nameCell1);
-          const name2 = getCellText(nameCell2);
 
-          let studentName = "";
-          if (name1 && name2) {
-            studentName = name1.length >= name2.length ? name1 : name2;
-          } else {
-            studentName = name1 || name2 || "";
-          }
+          const studentName = name1 || "";
 
           if (!studentName) continue;
 
@@ -779,11 +807,12 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
             ws.getRow(r + 1).getCell(timeCol),
             plateCell,
             nameCell1,
-            extraCell,
+            phoneCell,
             nameCell2,
           );
 
-          const extraText = getCellText(extraCell);
+          const phoneText = getCellText(phoneCell);
+          const noteText = getCellText(noteCell);
           const plateText = getCellText(plateCell);
 
           const lesson = {
@@ -799,14 +828,14 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
             egitmen: teacherName,
             ogrenci: activeStudent.ad_soyad,
             tc: activeStudent.tc,
-            telefon: /^\d|^0/.test(extraText.replace(/\s+/g, ""))
-              ? extraText
+            telefon: /^\d|^0/.test(phoneText.replace(/\s+/g, ""))
+              ? phoneText
               : activeStudent.telefon,
             arac_plaka: plateText || activeStudent.arac_kodu,
             kalan_ders: activeStudent.kalan_ders,
             toplam_ders: activeStudent.toplam_ders,
             sinif: activeStudent.sinif,
-            not: /^\d|^0/.test(extraText.replace(/\s+/g, "")) ? "" : extraText,
+            not: noteText,
             durum: status,
             teyitli_mi: status === "teyitli" || status === "katildi",
             katilim:
