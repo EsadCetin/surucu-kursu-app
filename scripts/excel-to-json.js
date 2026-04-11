@@ -1,13 +1,14 @@
 /**
  * scripts/excel-to-json.js
  *
- * v14
+ * v15
  *
  * Düzeltilenler:
  * 1) Direksiyon ders saatleri yanlış okunuyordu
- *    - Excel saat hücreleri bazen number / serial / custom format geliyor
- *    - Artık saat okunurken önce cell.text kullanılıyor
- *    - olmazsa numeric time fraction mantığıyla çevriliyor
+ *    - ExcelJS time-only hücreleri bazen timezone kaymasıyla Date objesine çeviriyor
+ *    - artık önce hücrenin raw/model numeric değeri okunuyor
+ *    - 0.416666... gibi Excel time fraction doğrudan 10:00'a çevriliyor
+ *    - böylece 10:00 -> 11:56 kayması engelleniyor
  *
  * 2) Direksiyon dersi ile direksiyon sınav tarihi karışıyordu
  *    - direksiyon_tarih / direksiyon_saati alanları sınav alanı gibi davranıyor
@@ -380,21 +381,32 @@ function getCellText(cell) {
 function parseTimeCell(cell) {
   if (!cell) return "";
 
+  const modelValue = cell.model?.value;
+  const fromModelNumber = parseTimeFromNumber(modelValue);
+  if (fromModelNumber) return fromModelNumber;
+
+  if (modelValue && typeof modelValue === "object" && "result" in modelValue) {
+    const fromModelResultNumber = parseTimeFromNumber(modelValue.result);
+    if (fromModelResultNumber) return fromModelResultNumber;
+  }
+
   const textValue = normalizeTimeText(cell.text);
   if (textValue) return textValue;
-
-  const directValue = normalizeTimeText(cell.value);
-  if (directValue) return directValue;
 
   const numericValue = parseTimeFromNumber(cell.value);
   if (numericValue) return numericValue;
 
   if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
-    const fromResultText = normalizeTimeText(cell.value.result);
-    if (fromResultText) return fromResultText;
-
     const fromResultNumber = parseTimeFromNumber(cell.value.result);
     if (fromResultNumber) return fromResultNumber;
+  }
+
+  const directValue = normalizeTimeText(cell.value);
+  if (directValue) return directValue;
+
+  if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
+    const fromResultText = normalizeTimeText(cell.value.result);
+    if (fromResultText) return fromResultText;
   }
 
   return "";

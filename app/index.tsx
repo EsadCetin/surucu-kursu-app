@@ -377,7 +377,7 @@ function parseLessonText(value?: string): LessonItem[] {
       return {
         tarih: dateMatch?.[0],
         saat: timeMatch?.[0],
-        not: clean || `Direksiyon dersi ${index + 1}`,
+        not: clean || `${index + 1}. Direksiyon dersi`,
       };
     });
 }
@@ -516,7 +516,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
         date: lesson.tarih || "",
         time: lesson.saat,
-        title: lesson.not?.trim() || `Direksiyon dersi ${index + 1}`,
+        title: lesson.not?.trim() || `${index + 1}. Direksiyon dersi`,
         description: lesson.saat
           ? `Ders saati ${lesson.saat}`
           : "Ders saati henüz eklenmemiş.",
@@ -1532,7 +1532,7 @@ export default function Index() {
     if (lessons.length) {
       const text = lessons
         .map((lesson, index) => {
-          const title = lesson.not?.trim() || `Direksiyon dersi ${index + 1}`;
+          const title = lesson.not?.trim() || `${index + 1}. Direksiyon dersi`;
           const dateText = lesson.tarih || "Tarih bekleniyor";
           const timeText = lesson.saat ? ` / ${lesson.saat}` : "";
           return `• ${title}: ${dateText}${timeText}`;
