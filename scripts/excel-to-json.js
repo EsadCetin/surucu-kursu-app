@@ -103,7 +103,11 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
   if (v == null || v === "") return "";
 
   if (v instanceof Date && !isNaN(v.getTime())) {
-    return asDateText(v.getDate(), v.getMonth() + 1, normalizeYear(v.getFullYear(), fallbackYear));
+    return asDateText(
+      v.getDate(),
+      v.getMonth() + 1,
+      normalizeYear(v.getFullYear(), fallbackYear),
+    );
   }
 
   if (typeof v === "object" && v && typeof v.text === "string") {
@@ -114,7 +118,11 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
     if (v > 1000) {
       const parsed = XLSX.SSF.parse_date_code(v);
       if (parsed && parsed.d && parsed.m) {
-        return asDateText(parsed.d, parsed.m, normalizeYear(parsed.y, fallbackYear));
+        return asDateText(
+          parsed.d,
+          parsed.m,
+          normalizeYear(parsed.y, fallbackYear),
+        );
       }
     }
 
@@ -282,7 +290,9 @@ function getWorksheetByNameExcelJS(workbook, wantedName) {
 
 function getSheetByNameXLSX(workbook, wantedName) {
   const wanted = normalizeHeader(wantedName);
-  const realName = workbook.SheetNames.find((name) => normalizeHeader(name) === wanted);
+  const realName = workbook.SheetNames.find(
+    (name) => normalizeHeader(name) === wanted,
+  );
   return realName ? workbook.Sheets[realName] : null;
 }
 
@@ -347,7 +357,12 @@ function buildEksikBelgeler(student, row) {
   ];
 
   const missing = labels
-    .filter(({ col }) => t(row.getCell(col).text || row.getCell(col).value).toLocaleUpperCase("tr-TR") === "X")
+    .filter(
+      ({ col }) =>
+        t(row.getCell(col).text || row.getCell(col).value).toLocaleUpperCase(
+          "tr-TR",
+        ) === "X",
+    )
     .map(({ label }) => label);
 
   if (missing.length) {
@@ -368,7 +383,11 @@ function syncDerivedFields(student) {
   }
 
   if (!student.direksiyon_harc) {
-    if (student.direksiyon_harc_borcu || student.direksiyon_borc_son_odeme || student.direksiyon_son_odeme) {
+    if (
+      student.direksiyon_harc_borcu ||
+      student.direksiyon_borc_son_odeme ||
+      student.direksiyon_son_odeme
+    ) {
       student.direksiyon_harc = "odenmedi";
     }
   }
@@ -384,7 +403,12 @@ function syncDerivedFields(student) {
   if (!student.durum) {
     if (student.direksiyon_harc || student.direksiyon_harc_borcu) {
       student.durum = "direksiyon";
-    } else if (student.esinav_tarih || student.esinav_saati || student.esinav_harc || student.esinav_harc_borcu) {
+    } else if (
+      student.esinav_tarih ||
+      student.esinav_saati ||
+      student.esinav_harc ||
+      student.esinav_harc_borcu
+    ) {
       student.durum = "esinav";
     }
   }
@@ -408,7 +432,10 @@ async function main() {
   await exceljsBook.xlsx.readFile(EXCEL_PATH);
 
   const esinavSheetJs = getWorksheetByNameExcelJS(exceljsBook, "E-SINAV");
-  const direksiyonSheetJs = getWorksheetByNameExcelJS(exceljsBook, "DİREKSİYON");
+  const direksiyonSheetJs = getWorksheetByNameExcelJS(
+    exceljsBook,
+    "DİREKSİYON",
+  );
   const eksikSheetJs = getWorksheetByNameExcelJS(exceljsBook, "EKSİK BELGELER");
   const alacakSheetJs = getWorksheetByNameExcelJS(exceljsBook, "ALACAK RAPORU");
 
@@ -440,7 +467,11 @@ async function main() {
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "sinif", row.getCell(5).text || row.getCell(5).value);
-    setIfEmpty(student, "telefonlar", row.getCell(8).text || row.getCell(8).value);
+    setIfEmpty(
+      student,
+      "telefonlar",
+      row.getCell(8).text || row.getCell(8).value,
+    );
 
     student.durum = "esinav";
 
@@ -479,7 +510,11 @@ async function main() {
     setIfEmpty(student, "ad_soyad", nameValue);
     setIfEmpty(student, "tc", tcValue);
     setIfEmpty(student, "sinif", row.getCell(5).text || row.getCell(5).value);
-    setIfEmpty(student, "telefonlar", row.getCell(8).text || row.getCell(8).value);
+    setIfEmpty(
+      student,
+      "telefonlar",
+      row.getCell(8).text || row.getCell(8).value,
+    );
 
     student.durum = "direksiyon";
 
@@ -542,8 +577,10 @@ async function main() {
     if (esinavDebt && !student.esinav_harc_borcu) {
       student.esinav_harc = "odenmedi";
       student.esinav_harc_borcu = esinavDebt;
-      if (dueDate && !student.esinav_borc_son_odeme) student.esinav_borc_son_odeme = dueDate;
-      if (dueDate && !student.esinav_son_odeme) student.esinav_son_odeme = dueDate;
+      if (dueDate && !student.esinav_borc_son_odeme)
+        student.esinav_borc_son_odeme = dueDate;
+      if (dueDate && !student.esinav_son_odeme)
+        student.esinav_son_odeme = dueDate;
     }
 
     if (student.direksiyon_harc === "odenmedi") {
@@ -577,7 +614,10 @@ async function main() {
   console.log("✅ students.json oluşturuldu");
   console.log(`👤 Toplam benzersiz öğrenci: ${result.length}`);
 
-  const cuma = result.find((item) => normalizePersonName(item.ad_soyad) === normalizePersonName("CUMA ÇELİK"));
+  const cuma = result.find(
+    (item) =>
+      normalizePersonName(item.ad_soyad) === normalizePersonName("CUMA ÇELİK"),
+  );
   if (cuma) {
     console.log("🧪 CUMA ÇELİK kontrol:", {
       ad_soyad: cuma.ad_soyad,
