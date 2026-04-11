@@ -1,14 +1,15 @@
 /**
  * scripts/excel-to-json.js
  *
- * v15
+ * v16
  *
  * Düzeltilenler:
  * 1) Direksiyon ders saatleri yanlış okunuyordu
- *    - ExcelJS time-only hücreleri bazen timezone kaymasıyla Date objesine çeviriyor
- *    - artık önce hücrenin raw/model numeric değeri okunuyor
- *    - 0.416666... gibi Excel time fraction doğrudan 10:00'a çevriliyor
- *    - böylece 10:00 -> 11:56 kayması engelleniyor
+ *    - ExcelJS bazı saat hücrelerini Date objesine çevirirken kaydırıyor
+ *    - artık önce internal raw numeric değer okunuyor: cell._value.model.value
+ *    - saf Excel time fraction doğrudan saat olarak çevriliyor
+ *    - Date okunursa UTC saat kullanılıyor
+ *    - böylece 10:00 -> 11:56 kayması hedefli şekilde engelleniyor
  *
  * 2) Direksiyon dersi ile direksiyon sınav tarihi karışıyordu
  *    - direksiyon_tarih / direksiyon_saati alanları sınav alanı gibi davranıyor
@@ -183,14 +184,14 @@ function formatDate(v, fallbackYear = DEFAULT_YEAR) {
 
 function normalizeTimeText(rawValue) {
   if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
-    return `${String(rawValue.getHours()).padStart(2, "0")}:${String(
-      rawValue.getMinutes(),
+    return `${String(rawValue.getUTCHours()).padStart(2, "0")}:${String(
+      rawValue.getUTCMinutes(),
     ).padStart(2, "0")}`;
   }
 
   if (typeof rawValue === "object" && rawValue?.result instanceof Date) {
-    return `${String(rawValue.result.getHours()).padStart(2, "0")}:${String(
-      rawValue.result.getMinutes(),
+    return `${String(rawValue.result.getUTCHours()).padStart(2, "0")}:${String(
+      rawValue.result.getUTCMinutes(),
     ).padStart(2, "0")}`;
   }
 
@@ -213,12 +214,21 @@ function normalizeTimeText(rawValue) {
 function parseTimeFromNumber(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "";
 
-  // Excel time fraction: 10:00 => 10/24
   if (value >= 0 && value < 1) {
     const totalMinutes = Math.round(value * 24 * 60);
     const hh = Math.floor(totalMinutes / 60) % 24;
     const mm = totalMinutes % 60;
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
+
+  if (value >= 1 && value < 60000) {
+    const fraction = value - Math.floor(value);
+    if (fraction >= 0 && fraction < 1) {
+      const totalMinutes = Math.round(fraction * 24 * 60);
+      const hh = Math.floor(totalMinutes / 60) % 24;
+      const mm = totalMinutes % 60;
+      return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    }
   }
 
   return "";
@@ -381,25 +391,27 @@ function getCellText(cell) {
 function parseTimeCell(cell) {
   if (!cell) return "";
 
-  const modelValue = cell.model?.value;
-  const fromModelNumber = parseTimeFromNumber(modelValue);
-  if (fromModelNumber) return fromModelNumber;
+  const internalRaw =
+    cell?._value?.model?.value ??
+    cell?._value?.model?.result ??
+    cell?.model?.value ??
+    (cell?.model && typeof cell.model === "object"
+      ? cell.model.result
+      : undefined);
 
-  if (modelValue && typeof modelValue === "object" && "result" in modelValue) {
-    const fromModelResultNumber = parseTimeFromNumber(modelValue.result);
-    if (fromModelResultNumber) return fromModelResultNumber;
-  }
+  const fromInternalNumber = parseTimeFromNumber(internalRaw);
+  if (fromInternalNumber) return fromInternalNumber;
 
-  const textValue = normalizeTimeText(cell.text);
-  if (textValue) return textValue;
-
-  const numericValue = parseTimeFromNumber(cell.value);
-  if (numericValue) return numericValue;
+  const fromValueNumber = parseTimeFromNumber(cell.value);
+  if (fromValueNumber) return fromValueNumber;
 
   if (cell.value && typeof cell.value === "object" && "result" in cell.value) {
     const fromResultNumber = parseTimeFromNumber(cell.value.result);
     if (fromResultNumber) return fromResultNumber;
   }
+
+  const textValue = normalizeTimeText(cell.text);
+  if (textValue) return textValue;
 
   const directValue = normalizeTimeText(cell.value);
   if (directValue) return directValue;

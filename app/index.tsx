@@ -518,7 +518,7 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
         time: lesson.saat,
         title: lesson.not?.trim() || `${index + 1}. Direksiyon dersi`,
         description: lesson.saat
-          ? `Ders saati ${lesson.saat}`
+          ? `Ders saati: ${lesson.saat}`
           : "Ders saati henüz eklenmemiş.",
         type: "lesson",
         isPast: isPastDate(lesson.tarih),
@@ -1646,7 +1646,7 @@ export default function Index() {
     const detail = cell.events
       .map((event) => {
         const datetime = event.time
-          ? `Sınav tarihi: ${event.date} `
+          ? `Ders tarihi: ${event.date} `
           : event.date;
         return `• ${event.title}\n${datetime}${event.description ? `\n${event.description}` : ""}`;
       })
