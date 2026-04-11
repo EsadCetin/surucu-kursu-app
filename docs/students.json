@@ -193,9 +193,9 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "07.04.2026",
@@ -212,9 +212,9 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "10.04.2026",
@@ -231,8 +231,8 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -519,9 +519,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "29.03.2026",
@@ -538,9 +538,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "18.04.2026",
@@ -609,8 +609,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -628,8 +628,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -808,9 +808,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "07.04.2026",
@@ -827,9 +827,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -846,9 +846,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "13.04.2026",
@@ -987,9 +987,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "25.03.2026",
@@ -1006,9 +1006,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "26.03.2026",
@@ -1025,9 +1025,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "27.03.2026",
@@ -1044,9 +1044,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "30.03.2026",
@@ -1063,9 +1063,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "22.04.2026",
@@ -1134,8 +1134,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -1250,8 +1250,8 @@
         "toplam_ders": "",
         "sinif": "B MUAF",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -1269,8 +1269,8 @@
         "toplam_ders": "",
         "sinif": "B MUAF",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -1321,8 +1321,8 @@
         "toplam_ders": "",
         "sinif": "B OTOMATİK",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -1405,9 +1405,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "07.04.2026",
@@ -1424,9 +1424,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -1443,9 +1443,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -1462,8 +1462,8 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -1571,9 +1571,9 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "12.04.2026",
@@ -1590,8 +1590,8 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -1744,8 +1744,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -1815,9 +1815,9 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "16.04.2026",
@@ -1924,9 +1924,9 @@
         "toplam_ders": "4",
         "sinif": "B OTOMATİK",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -1943,9 +1943,9 @@
         "toplam_ders": "4",
         "sinif": "B OTOMATİK",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "13.04.2026",
@@ -2116,9 +2116,9 @@
         "toplam_ders": "18",
         "sinif": "B OTOMATİK",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "26.03.2026",
@@ -2135,9 +2135,9 @@
         "toplam_ders": "18",
         "sinif": "B OTOMATİK",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "31.03.2026",
@@ -2154,9 +2154,9 @@
         "toplam_ders": "18",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "22.04.2026",
@@ -2353,9 +2353,9 @@
         "toplam_ders": "2",
         "sinif": "E",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "13.04.2026",
@@ -2443,8 +2443,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -2462,8 +2462,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -2712,9 +2712,9 @@
         "toplam_ders": "12",
         "sinif": "B OTOMATİK",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "26.03.2026",
@@ -2731,9 +2731,9 @@
         "toplam_ders": "12",
         "sinif": "B OTOMATİK",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "02.04.2026",
@@ -2750,9 +2750,9 @@
         "toplam_ders": "12",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "20.04.2026",
@@ -2859,9 +2859,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "07.04.2026",
@@ -2878,9 +2878,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -2897,9 +2897,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -2916,8 +2916,8 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -3121,9 +3121,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "27.03.2026",
@@ -3140,9 +3140,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "30.03.2026",
@@ -3159,9 +3159,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "01.04.2026",
@@ -3178,9 +3178,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "02.04.2026",
@@ -3197,9 +3197,9 @@
         "toplam_ders": "10",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       }
     ],
     "direksiyon_kalan_ders": "",
@@ -3409,8 +3409,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -3588,8 +3588,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -3736,8 +3736,8 @@
         "toplam_ders": "",
         "sinif": "B OTOMATİK",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -3755,8 +3755,8 @@
         "toplam_ders": "",
         "sinif": "B OTOMATİK",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -3807,9 +3807,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -3826,9 +3826,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -3845,9 +3845,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "15.04.2026",
@@ -3954,9 +3954,9 @@
         "toplam_ders": "5",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "26.03.2026",
@@ -3973,9 +3973,9 @@
         "toplam_ders": "5",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "01.04.2026",
@@ -3992,9 +3992,9 @@
         "toplam_ders": "5",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -4011,8 +4011,8 @@
         "toplam_ders": "5",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -4146,8 +4146,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -4165,8 +4165,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -4377,9 +4377,9 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "07.04.2026",
@@ -4396,9 +4396,9 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "10.04.2026",
@@ -4415,8 +4415,8 @@
         "toplam_ders": "4",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -4543,9 +4543,9 @@
         "toplam_ders": "4",
         "sinif": "B OTOMATİK",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -4562,9 +4562,9 @@
         "toplam_ders": "4",
         "sinif": "B OTOMATİK",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -4581,8 +4581,8 @@
         "toplam_ders": "4",
         "sinif": "B OTOMATİK",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -4722,9 +4722,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "24.03.2026",
@@ -4741,9 +4741,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "27.03.2026",
@@ -4760,9 +4760,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "27.03.2026",
@@ -4779,9 +4779,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "31.03.2026",
@@ -4798,9 +4798,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "22.04.2026",
@@ -4920,8 +4920,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -4939,8 +4939,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -4991,9 +4991,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "24.03.2026",
@@ -5010,9 +5010,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "26.03.2026",
@@ -5029,9 +5029,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "27.03.2026",
@@ -5048,9 +5048,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "28.03.2026",
@@ -5067,9 +5067,9 @@
         "toplam_ders": "10",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "22.04.2026",
@@ -5138,9 +5138,9 @@
         "toplam_ders": "18",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "23.04.2026",
@@ -5209,8 +5209,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -5350,9 +5350,9 @@
         "toplam_ders": "44",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "12.03.2026",
@@ -5369,9 +5369,9 @@
         "toplam_ders": "44",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "02.04.2026",
@@ -5388,9 +5388,9 @@
         "toplam_ders": "44",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       }
     ],
     "direksiyon_kalan_ders": "",
@@ -5440,9 +5440,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "19.04.2026",
@@ -5543,9 +5543,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -5562,9 +5562,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -5581,9 +5581,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "14.04.2026",
@@ -5754,9 +5754,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "25.03.2026",
@@ -5773,9 +5773,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "28.03.2026",
@@ -5792,9 +5792,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "29.03.2026",
@@ -5811,9 +5811,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "01.04.2026",
@@ -5830,9 +5830,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "01.04.2026",
@@ -5849,9 +5849,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "02.04.2026",
@@ -5868,9 +5868,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "23.04.2026",
@@ -5939,9 +5939,9 @@
         "toplam_ders": "2",
         "sinif": "B OTOMATİK",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -5958,8 +5958,8 @@
         "toplam_ders": "2",
         "sinif": "B OTOMATİK",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -6099,9 +6099,9 @@
         "toplam_ders": "8",
         "sinif": "B MUAF",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "28.03.2026",
@@ -6118,9 +6118,9 @@
         "toplam_ders": "8",
         "sinif": "B MUAF",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "29.03.2026",
@@ -6137,9 +6137,9 @@
         "toplam_ders": "8",
         "sinif": "B MUAF",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "29.03.2026",
@@ -6156,9 +6156,9 @@
         "toplam_ders": "8",
         "sinif": "B MUAF",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "18.04.2026",
@@ -6310,9 +6310,9 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "07.04.2026",
@@ -6329,9 +6329,9 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -6348,9 +6348,9 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -6367,9 +6367,9 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -6386,8 +6386,8 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -6405,8 +6405,8 @@
         "toplam_ders": "8",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -6521,9 +6521,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -6540,9 +6540,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -6559,9 +6559,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "14.04.2026",
@@ -6732,9 +6732,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "28.03.2026",
@@ -6751,9 +6751,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "29.03.2026",
@@ -6770,9 +6770,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "19.04.2026",
@@ -6841,9 +6841,9 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "15.04.2026",
@@ -6982,8 +6982,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7001,8 +7001,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7091,9 +7091,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "24.03.2026",
@@ -7110,9 +7110,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "25.03.2026",
@@ -7129,9 +7129,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "27.03.2026",
@@ -7148,9 +7148,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "30.03.2026",
@@ -7167,9 +7167,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "01.04.2026",
@@ -7186,9 +7186,9 @@
         "toplam_ders": "12",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "23.04.2026",
@@ -7289,9 +7289,9 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "10.04.2026",
@@ -7308,8 +7308,8 @@
         "toplam_ders": "2",
         "sinif": "B",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7475,9 +7475,9 @@
         "toplam_ders": "8",
         "sinif": "B OTOMATİK-MUAF",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "07.04.2026",
@@ -7494,9 +7494,9 @@
         "toplam_ders": "8",
         "sinif": "B OTOMATİK-MUAF",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -7513,9 +7513,9 @@
         "toplam_ders": "8",
         "sinif": "B OTOMATİK-MUAF",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -7532,9 +7532,9 @@
         "toplam_ders": "8",
         "sinif": "B OTOMATİK-MUAF",
         "not": "2 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "10.04.2026",
@@ -7551,8 +7551,8 @@
         "toplam_ders": "8",
         "sinif": "B OTOMATİK-MUAF",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7654,8 +7654,8 @@
         "toplam_ders": "",
         "sinif": "B MUAF",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -7706,8 +7706,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7725,8 +7725,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7853,8 +7853,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -7872,8 +7872,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -7924,9 +7924,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -7943,9 +7943,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -7962,9 +7962,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "15.04.2026",
@@ -8167,9 +8167,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "12.04.2026",
@@ -8186,8 +8186,8 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -8257,9 +8257,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -8276,9 +8276,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -8295,9 +8295,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "14.04.2026",
@@ -8404,9 +8404,9 @@
         "toplam_ders": "14",
         "sinif": "B",
         "not": "SON DERSİ",
-        "durum": "planlandi",
+        "durum": "katilmadi",
         "teyitli_mi": false,
-        "katilim": ""
+        "katilim": "katilmadi"
       },
       {
         "tarih": "18.04.2026",
@@ -8475,8 +8475,8 @@
         "toplam_ders": "",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       }
     ],
@@ -8623,9 +8623,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "GİRMEYECEK",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "12.04.2026",
@@ -8642,8 +8642,8 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "1 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
+        "durum": "teyitli",
+        "teyitli_mi": true,
         "katilim": ""
       },
       {
@@ -8887,9 +8887,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "İLK DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "08.04.2026",
@@ -8906,9 +8906,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "4 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "09.04.2026",
@@ -8925,9 +8925,9 @@
         "toplam_ders": "6",
         "sinif": "B",
         "not": "3 DERSİ KALDI",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "14.04.2026",
@@ -9066,9 +9066,9 @@
         "toplam_ders": "14",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "02.04.2026",
@@ -9085,9 +9085,9 @@
         "toplam_ders": "14",
         "sinif": "B OTOMATİK",
         "not": "SON DERSİ",
-        "durum": "planlandi",
-        "teyitli_mi": false,
-        "katilim": ""
+        "durum": "katildi",
+        "teyitli_mi": true,
+        "katilim": "katildi"
       },
       {
         "tarih": "22.04.2026",

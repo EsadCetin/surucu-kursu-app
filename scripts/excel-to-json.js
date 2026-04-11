@@ -1,7 +1,7 @@
 /**
  * scripts/excel-to-json.js
  *
- * v20
+ * v21
  *
  * Düzeltilenler:
  * 1) Saat düzeltildi
@@ -20,6 +20,10 @@
  * 4) Direksiyon harç renk algısı güçlendirildi
  *    - rgb/indexed/theme dolgu tipleri daha geniş kontrol edilir
  *    - solid dolgu olup beyaz/boş olmayan hücreler ödenmiş sayılır
+ * 5) Direksiyon ders renk algısı düzeltildi
+ *    - bazı hücrelerde renk dolgu değil yazı renginde tutuluyor
+ *    - artık hem fill hem font color birlikte okunuyor
+ *    - böylece katıldı / onaylandı / katılmadı tekrar doğru ayrılır
  *    - HARÇ hücresi dolu renkliyse (özellikle yeşil / sarı) odendi kabul edilir
  *    - beyaz / boş ise odenmedi kabul edilir
  *    - bazı Excel fill varyasyonlarında fgColor yerine bgColor da kontrol edilir
@@ -401,20 +405,36 @@ function findWorksheetByNames(workbook, wantedNames) {
   );
 }
 
+function getColorCodes(color) {
+  if (!color) return [];
+  return [
+    t(color?.argb || "").toUpperCase(),
+    t(color?.rgb || "").toUpperCase(),
+    t(color?.indexed || "").toUpperCase(),
+    t(color?.theme || "").toUpperCase(),
+  ].filter(Boolean);
+}
+
 function getCellFillColorObjects(cell) {
   return [cell?.fill?.fgColor || null, cell?.fill?.bgColor || null].filter(
     Boolean,
   );
 }
 
+function getCellFontColorObjects(cell) {
+  return [cell?.font?.color || null].filter(Boolean);
+}
+
 function getCellFillCodes(cell) {
-  return getCellFillColorObjects(cell)
-    .map((color) =>
-      t(
-        color?.argb || color?.rgb || color?.indexed || color?.theme || "",
-      ).toUpperCase(),
-    )
-    .filter(Boolean);
+  return getCellFillColorObjects(cell).flatMap(getColorCodes);
+}
+
+function getCellFontCodes(cell) {
+  return getCellFontColorObjects(cell).flatMap(getColorCodes);
+}
+
+function getAllCellColorCodes(cell) {
+  return [...getCellFillCodes(cell), ...getCellFontCodes(cell)];
 }
 
 function isSolid(cell) {
@@ -441,24 +461,29 @@ function hasMeaningfulFill(cell) {
 
   return colorObjects.some((color) => {
     const type = t(color?.type).toLowerCase();
-    const code = t(
-      color?.argb || color?.rgb || color?.indexed || color?.theme || "",
-    ).toUpperCase();
+    const codes = getColorCodes(color);
+    if (!codes.length) return false;
 
     if (type === "rgb") {
-      return !isWhiteLikeCode(code);
+      return codes.some((code) => !isWhiteLikeCode(code));
     }
 
     if (type === "indexed") {
-      return code && code !== "64" && code !== "0";
+      return codes.some((code) => code && code !== "64" && code !== "0");
     }
 
     if (type === "theme") {
       return true;
     }
 
-    return !!code && !isWhiteLikeCode(code);
+    return codes.some((code) => code && !isWhiteLikeCode(code));
   });
+}
+
+function hasMeaningfulFontColor(cell) {
+  const codes = getCellFontCodes(cell);
+  if (!codes.length) return false;
+  return codes.some((code) => !isWhiteLikeCode(code));
 }
 
 function isPaidByFill(cell) {
@@ -466,24 +491,24 @@ function isPaidByFill(cell) {
 }
 
 function getExcelCellArgb(cell) {
-  const colors = getCellFillCodes(cell);
-  return colors.join("|");
+  return getAllCellColorCodes(cell).join("|");
 }
 
-function isGreen(cell) {
-  if (!hasMeaningfulFill(cell)) return false;
-  const code = getExcelCellArgb(cell);
-  return (
-    code.includes("00B050") ||
-    code.includes("92D050") ||
-    code.includes("70AD47")
+function cellHasColor(cell, variants) {
+  const codes = getAllCellColorCodes(cell);
+  return variants.some((variant) =>
+    codes.some((code) => code.includes(variant)),
   );
 }
 
+function isGreen(cell) {
+  const greenVariants = ["00B050", "92D050", "70AD47", "00AF50", "008000"];
+  return cellHasColor(cell, greenVariants);
+}
+
 function isBlue(cell) {
-  if (!hasMeaningfulFill(cell)) return false;
-  const code = getExcelCellArgb(cell);
-  return code.includes("0070C0") || code.includes("5B9BD5");
+  const blueVariants = ["0070C0", "5B9BD5", "4F81BD", "0000FF"];
+  return cellHasColor(cell, blueVariants);
 }
 
 function setIfEmpty(obj, key, value) {
