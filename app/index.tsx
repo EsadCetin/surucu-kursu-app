@@ -392,7 +392,7 @@ function getLessonStatusText(lesson?: LessonItem) {
   if (!lesson) return "Netleşmedi";
 
   if (lesson.katilim === "katildi" || lesson.durum === "katildi") {
-    return "Ders yapıldı";
+    return "Derse katıldı";
   }
 
   if (lesson.katilim === "katilmadi" || lesson.durum === "katilmadi") {
