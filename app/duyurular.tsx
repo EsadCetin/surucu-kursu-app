@@ -62,7 +62,7 @@ const announcements: AnnouncementItem[] = [
   },
   {
     title: "Uygulama Üzerinden Bilgi Takibi",
-    text: "Sınav, evrak ve ödeme süreçlerinizi uygulama içinden düzenli takip etmeniz önerilir.",
+    text: "Sınav, ders, evrak ve ödeme süreçlerinizi uygulama içinden düzenli takip etmeniz önerilir.",
     category: "Genel",
     priority: "Normal",
   },

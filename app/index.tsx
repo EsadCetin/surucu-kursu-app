@@ -410,6 +410,28 @@ function getLessonStatusText(lesson?: LessonItem) {
   return "Netleşmedi";
 }
 
+function getLessonStatusColor(lesson?: LessonItem) {
+  if (!lesson) return "#6B7280";
+
+  if (lesson.katilim === "katildi" || lesson.durum === "katildi") {
+    return "#16A34A";
+  }
+
+  if (lesson.katilim === "katilmadi" || lesson.durum === "katilmadi") {
+    return "#DC2626";
+  }
+
+  if (lesson.teyitli_mi || lesson.durum === "teyitli") {
+    return "#F59E0B";
+  }
+
+  if (lesson.durum === "planlandi") {
+    return "#6B7280";
+  }
+
+  return "#6B7280";
+}
+
 function getLessonStatusSuffix(lesson?: LessonItem) {
   return ` / ${getLessonStatusText(lesson)}`;
 }
@@ -971,6 +993,7 @@ export default function Index() {
     null,
   );
   const [selectedDetail, setSelectedDetail] = useState("");
+  const [detailLessons, setDetailLessons] = useState<LessonItem[]>([]);
   const [detailVisible, setDetailVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarDetailVisible, setCalendarDetailVisible] = useState(false);
@@ -1156,13 +1179,21 @@ export default function Index() {
   }, [monthOffset, calendarVisible]);
 
   const openDetailModal = (text: string) => {
+    setDetailLessons([]);
     setSelectedDetail(text);
+    setDetailVisible(true);
+  };
+
+  const openLessonDetailModal = (lessons: LessonItem[]) => {
+    setSelectedDetail("");
+    setDetailLessons(lessons);
     setDetailVisible(true);
   };
 
   const closeDetailModal = () => {
     setDetailVisible(false);
     setSelectedDetail("");
+    setDetailLessons([]);
   };
 
   const openCalendarModal = () => {
@@ -1574,34 +1605,21 @@ export default function Index() {
       return;
     }
 
+    if (user.direksiyon_harc === "odenmedi") {
+      openDetailModal(
+        "Direksiyon dersleri ve sınavı için ödeme yapmanız gerekmektedir.",
+      );
+      return;
+    }
+
     if (lessons.length) {
-      const text = lessons
-        .map((lesson, index) => {
-          const title = getLessonDisplayTitle(lesson, index);
-          const dateText = lesson.tarih || "Tarih bekleniyor";
-          const startTime = getLessonStartOnly(lesson);
-          const timeText = startTime ? ` / ${startTime}` : "";
-          const statusText = getLessonStatusSuffix(lesson);
-
-          return `• ${title}: ${dateText}${timeText}${statusText}`;
-        })
-        .join("\n");
-
-      openDetailModal(`Direksiyon ders planınız:
-${text}`);
+      openLessonDetailModal(lessons);
       return;
     }
 
     if (user.direksiyon_tarih) {
       openDetailModal(
         `Direksiyon sınav bilginiz:\n${formatExamText(user.direksiyon_tarih, user.direksiyon_saati)}`,
-      );
-      return;
-    }
-
-    if (user.direksiyon_harc === "odenmedi") {
-      openDetailModal(
-        "Ödeme için kurs tarafından gönderilen SMS'i kontrol edin.",
       );
       return;
     }
@@ -1957,10 +1975,12 @@ ${text}`);
 
           <View style={styles.badgesRow}>
             <StatusBadge label={processBadge.label} tone={processBadge.tone} />
-            <StatusBadge
-              label={documentBadge.label}
-              tone={documentBadge.tone}
-            />
+            {user?.evrak_durumu === "eksik" ? (
+              <StatusBadge
+                label={documentBadge.label}
+                tone={documentBadge.tone}
+              />
+            ) : null}
           </View>
         </View>
         <View
@@ -2311,9 +2331,40 @@ ${text}`);
             <Text style={[styles.modalTitle, { color: colors.text }]}>
               Detay
             </Text>
-            <Text style={[styles.modalText, { color: colors.subText }]}>
-              {selectedDetail}
-            </Text>
+
+            {detailLessons.length ? (
+              <View style={{ width: "100%", gap: 10 }}>
+                <Text style={[styles.modalText, { color: colors.subText }]}>
+                  Direksiyon ders planınız:
+                </Text>
+
+                {detailLessons.map((lesson, index) => {
+                  const title = getLessonDisplayTitle(lesson, index);
+                  const dateText = lesson.tarih || "Tarih bekleniyor";
+                  const startTime = getLessonStartOnly(lesson);
+                  const timeText = startTime ? ` - ${startTime}` : "";
+                  const statusText = getLessonStatusText(lesson);
+                  const statusColor = getLessonStatusColor(lesson);
+
+                  return (
+                    <Text
+                      key={`${title}-${lesson.tarih || ""}-${lesson.saat || ""}-${index}`}
+                      style={[styles.modalText, { color: colors.subText }]}
+                    >
+                      {`• ${title}: ${dateText}${timeText} / `}
+                      <Text style={{ color: statusColor, fontWeight: "700" }}>
+                        {statusText}
+                      </Text>
+                    </Text>
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={[styles.modalText, { color: colors.subText }]}>
+                {selectedDetail}
+              </Text>
+            )}
+
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={closeDetailModal}
