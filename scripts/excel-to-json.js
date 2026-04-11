@@ -613,21 +613,6 @@ async function main() {
 
   console.log("✅ students.json oluşturuldu");
   console.log(`👤 Toplam benzersiz öğrenci: ${result.length}`);
-
-  const cuma = result.find(
-    (item) =>
-      normalizePersonName(item.ad_soyad) === normalizePersonName("CUMA ÇELİK"),
-  );
-  if (cuma) {
-    console.log("🧪 CUMA ÇELİK kontrol:", {
-      ad_soyad: cuma.ad_soyad,
-      direksiyon_harc: cuma.direksiyon_harc,
-      direksiyon_harc_borcu: cuma.direksiyon_harc_borcu,
-      direksiyon_borc_son_odeme: cuma.direksiyon_borc_son_odeme,
-      direksiyon_tarih: cuma.direksiyon_tarih,
-      direksiyon_saati: cuma.direksiyon_saati,
-    });
-  }
 }
 
 main().catch((err) => {
