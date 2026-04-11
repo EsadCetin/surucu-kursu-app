@@ -28,6 +28,12 @@ type LessonItem = {
   tarih?: string;
   saat?: string;
   not?: string;
+  durum?: "planlandi" | "teyitli" | "katildi" | "katilmadi";
+  teyitli_mi?: boolean;
+  katilim?: "katildi" | "katilmadi" | "";
+  arac_plaka?: string;
+  telefon?: string;
+  egitmen?: string;
 };
 
 type Student = {
@@ -382,6 +388,28 @@ function parseLessonText(value?: string): LessonItem[] {
     });
 }
 
+function getLessonStatusText(lesson?: LessonItem) {
+  if (!lesson) return "Netleşmedi";
+
+  if (lesson.katilim === "katildi" || lesson.durum === "katildi") {
+    return "Ders yapıldı";
+  }
+
+  if (lesson.katilim === "katilmadi" || lesson.durum === "katilmadi") {
+    return "Derse katılmadı";
+  }
+
+  if (lesson.teyitli_mi || lesson.durum === "teyitli") {
+    return "Onaylandı";
+  }
+
+  return "Netleşmedi";
+}
+
+function getLessonStatusSuffix(lesson?: LessonItem) {
+  return ` / ${getLessonStatusText(lesson)}`;
+}
+
 function getLessons(user: Student) {
   if (Array.isArray(user.direksiyon_dersleri)) {
     return user.direksiyon_dersleri.filter(
@@ -512,14 +540,17 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
 
     getLessons(user).forEach((lesson, index) => {
       if (!lesson.tarih && !lesson.saat && !lesson.not) return;
+
+      const statusText = getLessonStatusText(lesson);
+
       events.push({
         key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
         date: lesson.tarih || "",
         time: lesson.saat,
         title: lesson.not?.trim() || `${index + 1}. Direksiyon dersi`,
         description: lesson.saat
-          ? `Ders saati: ${lesson.saat}`
-          : "Ders saati henüz eklenmemiş.",
+          ? `Ders saati: ${lesson.saat} / ${statusText}`
+          : `Durum: ${statusText}`,
         type: "lesson",
         isPast: isPastDate(lesson.tarih),
         isToday: isTodayDate(lesson.tarih),
@@ -1535,11 +1566,14 @@ export default function Index() {
           const title = lesson.not?.trim() || `${index + 1}. Direksiyon dersi`;
           const dateText = lesson.tarih || "Tarih bekleniyor";
           const timeText = lesson.saat ? ` / ${lesson.saat}` : "";
-          return `• ${title}: ${dateText}${timeText}`;
+          const statusText = getLessonStatusSuffix(lesson);
+
+          return `• ${title}: ${dateText}${timeText}${statusText}`;
         })
         .join("\n");
 
-      openDetailModal(`Direksiyon ders planınız:\n${text}`);
+      openDetailModal(`Direksiyon ders planınız:
+${text}`);
       return;
     }
 

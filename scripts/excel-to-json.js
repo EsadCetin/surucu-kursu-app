@@ -1,7 +1,7 @@
 /**
  * scripts/excel-to-json.js
  *
- * v18
+ * v19
  *
  * Düzeltilenler:
  * 1) Saat düzeltildi
@@ -11,6 +11,11 @@
  *    - örn. Excelde 10:00:00 görünen hücre artık 10:00 olur
  *
  * 2) Direksiyon harç rengi düzeltildi
+ * 3) Direksiyon ders durum mantığı düzeltildi
+ *    - saatler yeşilse => onaylandı
+ *    - isim + plaka + telefon/not satırı yeşilse => ders yapıldı
+ *    - saat yeşil ama isim/plaka/telefon-not mavi ise => derse katılmadı
+ *    - boş/beyaz ise => netleşmedi
  *    - HARÇ hücresi dolu renkliyse (özellikle yeşil / sarı) odendi kabul edilir
  *    - beyaz / boş ise odenmedi kabul edilir
  *    - bazı Excel fill varyasyonlarında fgColor yerine bgColor da kontrol edilir
@@ -527,27 +532,39 @@ function lessonStatusFromCells(
   plateCell,
   nameCell,
   extraCell,
+  secondNameCell,
 ) {
-  const mainGreen = [plateCell, nameCell, extraCell].every((cell) =>
-    isGreen(cell),
-  );
-  const mainBlue = [plateCell, nameCell, extraCell].every((cell) =>
-    isBlue(cell),
-  );
+  const timeGreen = isGreen(timeStartCell) || isGreen(timeEndCell);
 
-  if (mainGreen) return "katildi";
-  if (mainBlue) return "katilmadi";
+  const nameGreen = isGreen(nameCell) || isGreen(secondNameCell);
+  const nameBlue = isBlue(nameCell) || isBlue(secondNameCell);
 
-  if (
-    isGreen(timeStartCell) ||
-    isGreen(timeEndCell) ||
-    isGreen(plateCell) ||
-    isGreen(nameCell) ||
-    isGreen(extraCell)
-  ) {
+  const plateGreen = isGreen(plateCell);
+  const plateBlue = isBlue(plateCell);
+
+  const extraGreen = isGreen(extraCell);
+  const extraBlue = isBlue(extraCell);
+
+  // Kural 1:
+  // isim + plaka + telefon/not satırı yeşilse => ders yapıldı
+  if (nameGreen && plateGreen && extraGreen) {
+    return "katildi";
+  }
+
+  // Kural 2:
+  // saat yeşil ama isim/plaka/telefon-not tarafı mavi ise => derse katılmadı
+  if (timeGreen && (nameBlue || plateBlue || extraBlue)) {
+    return "katilmadi";
+  }
+
+  // Kural 3:
+  // saatler yeşilse => onaylandı
+  if (timeGreen) {
     return "teyitli";
   }
 
+  // Kural 4:
+  // hiçbir net renk yoksa => netleşmedi / planlandı
   return "planlandi";
 }
 
@@ -761,8 +778,9 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
             ws.getRow(r).getCell(timeCol),
             ws.getRow(r + 1).getCell(timeCol),
             plateCell,
-            name1 ? nameCell1 : nameCell2,
+            nameCell1,
             extraCell,
+            nameCell2,
           );
 
           const extraText = getCellText(extraCell);
