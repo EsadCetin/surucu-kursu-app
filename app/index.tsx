@@ -140,7 +140,7 @@ const DATA_LAST_COMMIT_URL =
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
 
-const STUDENTS_CACHE_KEY = "students_cache_v2";
+const STUDENTS_CACHE_KEY = "students_cache_v3";
 
 const LOGIN_LOGO = require("../assets/images/logo.png");
 
@@ -401,6 +401,10 @@ function getLessonStatusText(lesson?: LessonItem) {
 
   if (lesson.teyitli_mi || lesson.durum === "teyitli") {
     return "Onaylandı";
+  }
+
+  if (lesson.durum === "planlandi") {
+    return "Planlandı";
   }
 
   return "Netleşmedi";
