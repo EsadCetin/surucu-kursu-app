@@ -11,6 +11,13 @@
  *    - örn. Excelde 10:00:00 görünen hücre artık 10:00 olur
  *
  * 2) Direksiyon harç rengi düzeltildi
+ * 6) Ders başlıkları sıralı hale getirildi
+ *    - not alanı Excel notuna göre değil ders sırasına göre yazılır
+ *    - 1. dersi, 2. dersi, 3. dersi...
+ * 7) Ders saatleri sadeleştirildi
+ *    - lesson.saat artık sadece başlangıç saatidir
+ * 8) Direksiyon harç kontrolü güçlendirildi
+ *    - ogrenciler.xlsx DİREKSİYON sheet HARÇ sütunu hem ExcelJS hem SheetJS ile kontrol edilir
  * 3) Direksiyon ders durum mantığı düzeltildi
  *    - durum kontrolünde note satırı değil telefon satırı baz alınır
  *    - saatler yeşilse => onaylandı
@@ -385,38 +392,46 @@ function getSheetCellFormattedText(sheet, rowNumber, colNumber) {
   return t(cell.w ?? cell.v ?? "");
 }
 
-function isPaidByFillXLSX(sheet, rowNumber, colNumber) {
-  if (!sheet) return false;
+function getXlsxCell(sheet, rowNumber, colNumber) {
+  if (!sheet) return null;
   const addr = XLSX.utils.encode_cell({ r: rowNumber - 1, c: colNumber - 1 });
-  const cell = sheet[addr];
-  if (!cell || !cell.s || !cell.s.fill) return false;
+  return sheet[addr] || null;
+}
 
-  const fill = cell.s.fill;
-  const patternType = t(fill.patternType).toLowerCase();
-  if (patternType && patternType !== "solid") return false;
-
-  const color = t(
-    fill.fgColor?.rgb ||
-      fill.fgColor?.argb ||
-      fill.bgColor?.rgb ||
-      fill.bgColor?.argb ||
-      fill.fgColor?.indexed ||
-      fill.bgColor?.indexed ||
+function getXlsxStyleFillCodes(cell) {
+  const fill = cell?.s?.fill;
+  if (!fill) return [];
+  const fg = t(
+    fill?.fgColor?.rgb ||
+      fill?.fgColor?.argb ||
+      fill?.fgColor?.indexed ||
+      fill?.fgColor?.theme ||
       "",
   ).toUpperCase();
+  const bg = t(
+    fill?.bgColor?.rgb ||
+      fill?.bgColor?.argb ||
+      fill?.bgColor?.indexed ||
+      fill?.bgColor?.theme ||
+      "",
+  ).toUpperCase();
+  return [fg, bg].filter(Boolean);
+}
 
-  if (!color) return false;
-  if (
-    color.includes("FFFFFF") ||
-    color.includes("FFFFFE") ||
-    color.includes("F2F2F2") ||
-    color === "64" ||
-    color === "0"
-  ) {
-    return false;
-  }
+function hasXlsxMeaningfulFill(cell) {
+  const fill = cell?.s?.fill;
+  if (!fill) return false;
+  const patternType = t(fill?.patternType).toLowerCase();
+  const codes = getXlsxStyleFillCodes(cell);
+  if (patternType && patternType !== "solid") return false;
+  if (!codes.length) return false;
+  return codes.some(
+    (code) => !isWhiteLikeCode(code) && code !== "64" && code !== "0",
+  );
+}
 
-  return true;
+function isPaidByExcelCells(excelCell, xlsxCell) {
+  return isPaidByFill(excelCell) || hasXlsxMeaningfulFill(xlsxCell);
 }
 
 function findWorksheetByNames(workbook, wantedNames) {
@@ -872,7 +887,7 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
               lessonDate.getFullYear(),
             ),
             tarih_iso: dateToIso(lessonDate),
-            saat: `${startTime}-${endTime}`,
+            saat: startTime,
             baslangic_saati: startTime,
             bitis_saati: endTime,
             egitmen: teacherName,
@@ -923,18 +938,18 @@ function parseLessons(exceljsWorkbook, xlsxWorkbook, activeLookup) {
       }
     }
 
-    const sorted = Array.from(unique.values()).sort((a, b) => {
-      const aKey = `${a.tarih_iso} ${a.baslangic_saati || "99:99"}`;
-      const bKey = `${b.tarih_iso} ${b.baslangic_saati || "99:99"}`;
-      return aKey.localeCompare(bKey, "tr");
-    });
+    const sorted = Array.from(unique.values())
+      .sort((a, b) => {
+        const aKey = `${a.tarih_iso} ${a.baslangic_saati || "99:99"}`;
+        const bKey = `${b.tarih_iso} ${b.baslangic_saati || "99:99"}`;
+        return aKey.localeCompare(bKey, "tr");
+      })
+      .map((lesson, index) => ({
+        ...lesson,
+        not: `${index + 1}. dersi`,
+      }));
 
-    const renumbered = sorted.map((lesson, index) => ({
-      ...lesson,
-      not: `${index + 1}. dersi`,
-    }));
-
-    lessonsByTc.set(studentTc, renumbered);
+    lessonsByTc.set(studentTc, sorted);
   }
 
   return lessonsByTc;
@@ -1115,8 +1130,6 @@ async function main() {
   const direksiyonSheetJs = getWorksheetByName(excelBook, "DİREKSİYON");
   const eksikSheetJs = getWorksheetByName(excelBook, "EKSİK BELGELER");
   const alacakSheetJs = getWorksheetByName(excelBook, "ALACAK RAPORU");
-
-  const esinavSheetX = getSheetByNameXLSX(xlsxBook, "E-SINAV");
   const direksiyonSheetX = getSheetByNameXLSX(xlsxBook, "DİREKSİYON");
 
   if (!esinavSheetJs || !direksiyonSheetJs || !eksikSheetJs || !alacakSheetJs) {
@@ -1151,8 +1164,7 @@ async function main() {
     const examTime = normalizeTimeText(
       row.getCell(10).text || row.getCell(10).value,
     );
-    const paid =
-      isPaidByFill(row.getCell(6)) || isPaidByFillXLSX(esinavSheetX, r, 6);
+    const paid = isPaidByFill(row.getCell(6));
 
     if (dueDate) {
       student.esinav_son_odeme = dueDate;
@@ -1191,8 +1203,10 @@ async function main() {
 
     student.durum = "direksiyon";
 
-    const paid =
-      isPaidByFill(row.getCell(6)) || isPaidByFillXLSX(direksiyonSheetX, r, 6);
+    const paid = isPaidByExcelCells(
+      row.getCell(6),
+      getXlsxCell(direksiyonSheetX, r, 6),
+    );
 
     if (paid) {
       student.direksiyon_harc = "odendi";

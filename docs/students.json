@@ -181,7 +181,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -200,7 +200,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -219,7 +219,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -238,7 +238,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -257,7 +257,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -276,7 +276,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -295,7 +295,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -317,7 +317,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -347,7 +347,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -366,7 +366,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -385,7 +385,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -404,7 +404,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -423,7 +423,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -445,7 +445,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -507,7 +507,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -526,7 +526,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -545,7 +545,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -567,7 +567,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "18.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -597,7 +597,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "KEMAL YAMAN",
@@ -616,7 +616,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "KEMAL YAMAN",
@@ -638,7 +638,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "KEMAL YAMAN",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -796,7 +796,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -815,7 +815,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -834,7 +834,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -853,7 +853,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -872,7 +872,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -891,7 +891,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -913,7 +913,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
@@ -975,7 +975,7 @@
       {
         "tarih": "23.03.2026",
         "tarih_iso": "2026-03-23",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -994,7 +994,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1013,7 +1013,7 @@
       {
         "tarih": "26.03.2026",
         "tarih_iso": "2026-03-26",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1032,7 +1032,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1051,7 +1051,7 @@
       {
         "tarih": "30.03.2026",
         "tarih_iso": "2026-03-30",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1070,7 +1070,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1092,7 +1092,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -1122,7 +1122,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -1144,7 +1144,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1238,7 +1238,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1257,7 +1257,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1279,7 +1279,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
@@ -1309,7 +1309,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -1331,7 +1331,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1393,7 +1393,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1412,7 +1412,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1431,7 +1431,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1450,7 +1450,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1469,7 +1469,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1488,7 +1488,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1507,7 +1507,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1529,7 +1529,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1559,7 +1559,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1578,7 +1578,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "KEMAL YAMAN",
@@ -1597,7 +1597,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1616,7 +1616,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1638,7 +1638,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "KEMAL YAMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1732,7 +1732,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1751,7 +1751,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1773,7 +1773,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "17.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1803,7 +1803,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -1822,7 +1822,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -1841,7 +1841,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -1860,7 +1860,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -1882,7 +1882,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "16.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -1912,7 +1912,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1931,7 +1931,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1950,7 +1950,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1969,7 +1969,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -1988,7 +1988,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2010,7 +2010,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -2104,7 +2104,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2123,7 +2123,7 @@
       {
         "tarih": "26.03.2026",
         "tarih_iso": "2026-03-26",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2142,7 +2142,7 @@
       {
         "tarih": "31.03.2026",
         "tarih_iso": "2026-03-31",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2161,7 +2161,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2183,7 +2183,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "4.500 TL",
@@ -2213,7 +2213,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2232,7 +2232,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2251,7 +2251,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2270,7 +2270,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2289,7 +2289,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2311,7 +2311,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -2341,7 +2341,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2360,7 +2360,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2379,7 +2379,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2401,7 +2401,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -2431,7 +2431,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -2450,7 +2450,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -2469,7 +2469,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -2488,7 +2488,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -2507,7 +2507,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -2526,7 +2526,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -2548,7 +2548,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -2578,7 +2578,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -2597,7 +2597,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -2616,7 +2616,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -2638,7 +2638,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -2700,7 +2700,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2719,7 +2719,7 @@
       {
         "tarih": "26.03.2026",
         "tarih_iso": "2026-03-26",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2738,7 +2738,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2757,7 +2757,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -2776,7 +2776,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2795,7 +2795,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -2817,7 +2817,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "20.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -2847,7 +2847,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2866,7 +2866,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2885,7 +2885,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2904,7 +2904,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2923,7 +2923,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2942,7 +2942,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2961,7 +2961,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -2983,7 +2983,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -3109,7 +3109,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -3128,7 +3128,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -3147,7 +3147,7 @@
       {
         "tarih": "30.03.2026",
         "tarih_iso": "2026-03-30",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -3166,7 +3166,7 @@
       {
         "tarih": "01.04.2026",
         "tarih_iso": "2026-04-01",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -3185,7 +3185,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -3207,7 +3207,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "02.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -3397,7 +3397,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3416,7 +3416,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3435,7 +3435,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3454,7 +3454,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3473,7 +3473,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3492,7 +3492,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3514,7 +3514,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -3576,7 +3576,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3598,7 +3598,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -3724,7 +3724,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3743,7 +3743,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -3765,7 +3765,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -3795,7 +3795,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3814,7 +3814,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3833,7 +3833,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3852,7 +3852,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -3871,7 +3871,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -3890,7 +3890,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -3912,7 +3912,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "15.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -3942,7 +3942,7 @@
       {
         "tarih": "23.03.2026",
         "tarih_iso": "2026-03-23",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -3961,7 +3961,7 @@
       {
         "tarih": "26.03.2026",
         "tarih_iso": "2026-03-26",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -3980,7 +3980,7 @@
       {
         "tarih": "01.04.2026",
         "tarih_iso": "2026-04-01",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -3999,7 +3999,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4018,7 +4018,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4040,7 +4040,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "23.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -4134,7 +4134,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "KEMAL YAMAN",
@@ -4153,7 +4153,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "KEMAL YAMAN",
@@ -4175,7 +4175,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "KEMAL YAMAN",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -4365,7 +4365,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -4384,7 +4384,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -4403,7 +4403,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4422,7 +4422,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -4441,7 +4441,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -4460,7 +4460,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -4479,7 +4479,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4501,7 +4501,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -4531,7 +4531,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4550,7 +4550,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4569,7 +4569,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4588,7 +4588,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4607,7 +4607,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4626,7 +4626,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -4648,7 +4648,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -4710,7 +4710,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4729,7 +4729,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4748,7 +4748,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4767,7 +4767,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4786,7 +4786,7 @@
       {
         "tarih": "31.03.2026",
         "tarih_iso": "2026-03-31",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4805,7 +4805,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4824,7 +4824,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -4846,7 +4846,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -4908,7 +4908,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "KEMAL YAMAN",
@@ -4927,7 +4927,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "KEMAL YAMAN",
@@ -4949,7 +4949,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "KEMAL YAMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -4979,7 +4979,7 @@
       {
         "tarih": "23.03.2026",
         "tarih_iso": "2026-03-23",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -4998,7 +4998,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5017,7 +5017,7 @@
       {
         "tarih": "26.03.2026",
         "tarih_iso": "2026-03-26",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5036,7 +5036,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5055,7 +5055,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5074,7 +5074,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5096,7 +5096,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -5126,7 +5126,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5145,7 +5145,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5167,7 +5167,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "23.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -5197,7 +5197,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -5216,7 +5216,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -5235,7 +5235,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -5254,7 +5254,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -5276,7 +5276,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -5338,7 +5338,7 @@
       {
         "tarih": "11.03.2026",
         "tarih_iso": "2026-03-11",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "KEMAL YAMAN",
@@ -5357,7 +5357,7 @@
       {
         "tarih": "12.03.2026",
         "tarih_iso": "2026-03-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "KEMAL YAMAN",
@@ -5376,7 +5376,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -5398,7 +5398,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "02.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -5428,7 +5428,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5447,7 +5447,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5469,7 +5469,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "19.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -5531,7 +5531,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5550,7 +5550,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5569,7 +5569,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5588,7 +5588,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5607,7 +5607,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5626,7 +5626,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5648,7 +5648,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -5742,7 +5742,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -5761,7 +5761,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5780,7 +5780,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5799,7 +5799,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5818,7 +5818,7 @@
       {
         "tarih": "01.04.2026",
         "tarih_iso": "2026-04-01",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5837,7 +5837,7 @@
       {
         "tarih": "01.04.2026",
         "tarih_iso": "2026-04-01",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5856,7 +5856,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5875,7 +5875,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -5897,7 +5897,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "23.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -5927,7 +5927,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -5946,7 +5946,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -5965,7 +5965,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -5984,7 +5984,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6003,7 +6003,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6025,7 +6025,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "15.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -6087,7 +6087,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6106,7 +6106,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6125,7 +6125,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6144,7 +6144,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6163,7 +6163,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6182,7 +6182,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6204,7 +6204,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "18.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -6298,7 +6298,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6317,7 +6317,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6336,7 +6336,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6355,7 +6355,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6374,7 +6374,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6393,7 +6393,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -6415,7 +6415,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -6509,7 +6509,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6528,7 +6528,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6547,7 +6547,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6566,7 +6566,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6585,7 +6585,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6604,7 +6604,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -6626,7 +6626,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -6720,7 +6720,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6739,7 +6739,7 @@
       {
         "tarih": "28.03.2026",
         "tarih_iso": "2026-03-28",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6758,7 +6758,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6777,7 +6777,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -6799,7 +6799,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "19.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -6829,7 +6829,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -6848,7 +6848,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -6867,7 +6867,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -6886,7 +6886,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -6908,7 +6908,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "15.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -6970,7 +6970,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -6989,7 +6989,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -7008,7 +7008,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -7027,7 +7027,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -7049,7 +7049,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -7079,7 +7079,7 @@
       {
         "tarih": "23.03.2026",
         "tarih_iso": "2026-03-23",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7098,7 +7098,7 @@
       {
         "tarih": "24.03.2026",
         "tarih_iso": "2026-03-24",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -7117,7 +7117,7 @@
       {
         "tarih": "25.03.2026",
         "tarih_iso": "2026-03-25",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7136,7 +7136,7 @@
       {
         "tarih": "27.03.2026",
         "tarih_iso": "2026-03-27",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -7155,7 +7155,7 @@
       {
         "tarih": "30.03.2026",
         "tarih_iso": "2026-03-30",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -7174,7 +7174,7 @@
       {
         "tarih": "01.04.2026",
         "tarih_iso": "2026-04-01",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7193,7 +7193,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -7215,7 +7215,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "23.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -7277,7 +7277,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7296,7 +7296,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -7315,7 +7315,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -7337,7 +7337,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -7463,7 +7463,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -7482,7 +7482,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -7501,7 +7501,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -7520,7 +7520,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -7539,7 +7539,7 @@
       {
         "tarih": "10.04.2026",
         "tarih_iso": "2026-04-10",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -7558,7 +7558,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -7580,7 +7580,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "23.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -7642,7 +7642,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7664,7 +7664,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
@@ -7694,7 +7694,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7713,7 +7713,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7732,7 +7732,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7751,7 +7751,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7770,7 +7770,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7789,7 +7789,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "LEYLA BEĞDE",
@@ -7811,7 +7811,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "11.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -7841,7 +7841,7 @@
       {
         "tarih": "11.04.2026",
         "tarih_iso": "2026-04-11",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -7860,7 +7860,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -7882,7 +7882,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
@@ -7912,7 +7912,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7931,7 +7931,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7950,7 +7950,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7969,7 +7969,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -7988,7 +7988,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8007,7 +8007,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -8029,7 +8029,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "15.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8155,7 +8155,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8174,7 +8174,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8193,7 +8193,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -8215,7 +8215,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8245,7 +8245,7 @@
       {
         "tarih": "07.04.2026",
         "tarih_iso": "2026-04-07",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8264,7 +8264,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8283,7 +8283,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8302,7 +8302,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8321,7 +8321,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8340,7 +8340,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "ZEYNEP SALMAN",
@@ -8362,7 +8362,7 @@
     "direksiyon_aktif_arac": "DOF",
     "direksiyon_son_egitmen": "ZEYNEP SALMAN",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8392,7 +8392,7 @@
       {
         "tarih": "12.03.2026",
         "tarih_iso": "2026-03-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "ZEYNEP SALMAN",
@@ -8411,7 +8411,7 @@
       {
         "tarih": "18.04.2026",
         "tarih_iso": "2026-04-18",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8433,7 +8433,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "18.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8463,7 +8463,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "LEYLA BEĞDE",
@@ -8485,7 +8485,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "14:30-16:30",
+    "direksiyon_sonraki_ders_saati": "14:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8611,7 +8611,7 @@
       {
         "tarih": "29.03.2026",
         "tarih_iso": "2026-03-29",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -8630,7 +8630,7 @@
       {
         "tarih": "12.04.2026",
         "tarih_iso": "2026-04-12",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "KEMAL YAMAN",
@@ -8649,7 +8649,7 @@
       {
         "tarih": "19.04.2026",
         "tarih_iso": "2026-04-19",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -8671,7 +8671,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "KEMAL YAMAN",
     "direksiyon_sonraki_ders_tarih": "12.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8701,7 +8701,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -8720,7 +8720,7 @@
       {
         "tarih": "23.04.2026",
         "tarih_iso": "2026-04-23",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -8742,7 +8742,7 @@
     "direksiyon_aktif_arac": "BRM",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -8772,7 +8772,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "16:30-18:30",
+        "saat": "16:30",
         "baslangic_saati": "16:30",
         "bitis_saati": "18:30",
         "egitmen": "RÜMEYSA",
@@ -8791,7 +8791,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -8813,7 +8813,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "15.04.2026",
-    "direksiyon_sonraki_ders_saati": "16:30-18:30",
+    "direksiyon_sonraki_ders_saati": "16:30",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "2.000 TL",
@@ -8875,7 +8875,7 @@
       {
         "tarih": "06.04.2026",
         "tarih_iso": "2026-04-06",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8894,7 +8894,7 @@
       {
         "tarih": "08.04.2026",
         "tarih_iso": "2026-04-08",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8913,7 +8913,7 @@
       {
         "tarih": "09.04.2026",
         "tarih_iso": "2026-04-09",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8932,7 +8932,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8951,7 +8951,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8970,7 +8970,7 @@
       {
         "tarih": "20.04.2026",
         "tarih_iso": "2026-04-20",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "LEYLA BEĞDE",
@@ -8992,7 +8992,7 @@
     "direksiyon_aktif_arac": "SF",
     "direksiyon_son_egitmen": "LEYLA BEĞDE",
     "direksiyon_sonraki_ders_tarih": "14.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",
@@ -9054,7 +9054,7 @@
       {
         "tarih": "12.03.2026",
         "tarih_iso": "2026-03-12",
-        "saat": "14:30-16:30",
+        "saat": "14:30",
         "baslangic_saati": "14:30",
         "bitis_saati": "16:30",
         "egitmen": "RÜMEYSA",
@@ -9073,7 +9073,7 @@
       {
         "tarih": "02.04.2026",
         "tarih_iso": "2026-04-02",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9092,7 +9092,7 @@
       {
         "tarih": "22.04.2026",
         "tarih_iso": "2026-04-22",
-        "saat": "12:00-14:00",
+        "saat": "12:00",
         "baslangic_saati": "12:00",
         "bitis_saati": "14:00",
         "egitmen": "RÜMEYSA",
@@ -9114,7 +9114,7 @@
     "direksiyon_aktif_arac": "ETL",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "22.04.2026",
-    "direksiyon_sonraki_ders_saati": "12:00-14:00",
+    "direksiyon_sonraki_ders_saati": "12:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "5.750 TL",
@@ -9144,7 +9144,7 @@
       {
         "tarih": "13.04.2026",
         "tarih_iso": "2026-04-13",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9163,7 +9163,7 @@
       {
         "tarih": "14.04.2026",
         "tarih_iso": "2026-04-14",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9182,7 +9182,7 @@
       {
         "tarih": "15.04.2026",
         "tarih_iso": "2026-04-15",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9201,7 +9201,7 @@
       {
         "tarih": "16.04.2026",
         "tarih_iso": "2026-04-16",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9220,7 +9220,7 @@
       {
         "tarih": "17.04.2026",
         "tarih_iso": "2026-04-17",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9239,7 +9239,7 @@
       {
         "tarih": "21.04.2026",
         "tarih_iso": "2026-04-21",
-        "saat": "10:00-12:00",
+        "saat": "10:00",
         "baslangic_saati": "10:00",
         "bitis_saati": "12:00",
         "egitmen": "RÜMEYSA",
@@ -9261,7 +9261,7 @@
     "direksiyon_aktif_arac": "ESU",
     "direksiyon_son_egitmen": "RÜMEYSA",
     "direksiyon_sonraki_ders_tarih": "13.04.2026",
-    "direksiyon_sonraki_ders_saati": "10:00-12:00",
+    "direksiyon_sonraki_ders_saati": "10:00",
     "esinav_harc_borcu": "",
     "esinav_borc_son_odeme": "",
     "direksiyon_harc_borcu": "",

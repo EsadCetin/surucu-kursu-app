@@ -414,6 +414,15 @@ function getLessonStatusSuffix(lesson?: LessonItem) {
   return ` / ${getLessonStatusText(lesson)}`;
 }
 
+function getLessonDisplayTitle(lesson: LessonItem, index: number) {
+  return `${index + 1}. dersi`;
+}
+
+function getLessonStartOnly(lesson?: LessonItem) {
+  if (!lesson?.saat) return "";
+  return lesson.saat.split("-")[0]?.trim() || lesson.saat.trim();
+}
+
 function getLessons(user: Student) {
   if (Array.isArray(user.direksiyon_dersleri)) {
     return user.direksiyon_dersleri.filter(
@@ -546,13 +555,16 @@ function buildCalendarEvents(user: Student): CalendarEvent[] {
       if (!lesson.tarih && !lesson.saat && !lesson.not) return;
 
       const statusText = getLessonStatusText(lesson);
+      const startTime = getLessonStartOnly(lesson);
 
       events.push({
         key: `lesson-${index}-${lesson.tarih || ""}-${lesson.saat || ""}`,
         date: lesson.tarih || "",
-        time: lesson.saat,
-        title: lesson.saat || "Direksiyon dersi",
-        description: `Durum: ${statusText}`,
+        time: startTime || undefined,
+        title: "Direksiyon dersi",
+        description: startTime
+          ? `Ders saati: ${startTime} / ${statusText}`
+          : `Durum: ${statusText}`,
         type: "lesson",
         isPast: isPastDate(lesson.tarih),
         isToday: isTodayDate(lesson.tarih),
@@ -1563,16 +1575,15 @@ export default function Index() {
     }
 
     if (lessons.length) {
-      const text = lessons
-        .map((lesson, index) => {
-          const title = lesson.not?.trim() || `${index + 1}. Direksiyon dersi`;
-          const dateText = lesson.tarih || "Tarih bekleniyor";
-          const timeText = lesson.saat ? ` / ${lesson.saat}` : "";
-          const statusText = getLessonStatusSuffix(lesson);
+      const text = lessons.map((lesson, index) => {
+        const title = getLessonDisplayTitle(lesson, index);
+        const dateText = lesson.tarih || "Tarih bekleniyor";
+        const startTime = getLessonStartOnly(lesson);
+        const timeText = startTime ? ` / ${startTime}` : "";
+        const statusText = getLessonStatusSuffix(lesson);
 
-          return `• ${title}: ${dateText}${timeText}${statusText}`;
-        })
-        .join("\n");
+        return `• ${title}: ${dateText}${timeText}${statusText}`;
+      }).join;
 
       openDetailModal(`Direksiyon ders planınız:
 ${text}`);
@@ -2460,10 +2471,13 @@ ${text}`);
                   ? cell.events
                       .slice(0, 2)
                       .map((event) =>
-                        event.time
-                          ? `${event.title} ${event.time}`
-                          : event.title,
+                        event.type === "lesson"
+                          ? event.time || ""
+                          : event.time
+                            ? `${event.title} ${event.time}`
+                            : event.title,
                       )
+                      .filter(Boolean)
                       .join("\n")
                   : "";
 
