@@ -2915,10 +2915,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
   },
-  loginLogo: {
-    width: 270,
-    height: 270,
-  },
+  loginLogo: { marginTop: 55, width: 270, height: 270 },
   loginStatusText: { color: "#d8d8dd", fontSize: 14, lineHeight: 22 },
   loginStatusSuccess: { borderColor: "#1f8f55" },
   loginStatusError: { borderColor: "#a62d2d" },
