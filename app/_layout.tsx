@@ -81,7 +81,7 @@ function MenuCloseButton() {
 
   return (
     <HeaderIconButton
-      onPress={() => router.back()}
+      onPress={() => router.navigate("/")}
       icon="close"
       colors={colors}
     />
@@ -158,13 +158,18 @@ export default function Layout() {
         name="bildirimler"
         options={{
           title: "Bildirimler",
+          headerLeft: () => <MenuCloseButton />,
           headerTitle: () => <HeaderTitle title="Bildirimler" />,
+          headerRight: () => null,
         }}
       />
       <Tabs.Screen
         name="duyurular"
         options={{
           title: "Duyurular",
+          href: null,
+          headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
           headerTitle: () => <HeaderTitle title="Duyurular" />,
         }}
       />
@@ -172,6 +177,9 @@ export default function Layout() {
         name="iletisim"
         options={{
           title: "İletişim",
+          href: null,
+          headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
           headerTitle: () => <HeaderTitle title="İletişim" />,
         }}
       />
@@ -179,6 +187,9 @@ export default function Layout() {
         name="sss"
         options={{
           title: "SSS",
+          href: null,
+          headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
           headerTitle: () => <HeaderTitle title="Sıkça Sorulan Sorular" />,
         }}
       />
@@ -187,7 +198,7 @@ export default function Layout() {
         options={{
           title: "Menü",
           href: null,
-          headerLeft: () => <MenuCloseButton />,
+          headerLeft: () => null,
           headerRight: () => null,
           headerTitle: () => <HeaderTitle title="Menü" />,
         }}
@@ -208,6 +219,7 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   iconButton: {
+    marginTop: 8,
     width: 42,
     height: 42,
     borderRadius: 14,

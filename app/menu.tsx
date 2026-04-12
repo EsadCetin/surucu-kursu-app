@@ -32,7 +32,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "announcements",
     title: "Duyurular",
-    subtitle: "Güncel bilgilendirmeleri aç",
+    subtitle: "Güncel duyuruları görüntüle",
     icon: "megaphone-outline",
     route: "/duyurular",
   },
@@ -46,7 +46,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "faq",
     title: "SSS",
-    subtitle: "Sık sorulan sorular ekranını aç",
+    subtitle: "Sıkça sorulan sorular ",
     icon: "help-circle-outline",
     route: "/sss",
   },

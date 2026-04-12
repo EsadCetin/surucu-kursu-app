@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -1032,6 +1033,20 @@ export default function Index() {
     setMonthOffset((prev) => Math.min(prev + 1, 2));
   };
 
+  const resetStudentSessionState = useCallback(() => {
+    setSessionTc("");
+    setLoggedIn(false);
+    setUser(null);
+    setTc("");
+    setSelectedDetail("");
+    setDetailVisible(false);
+    setCalendarVisible(false);
+    setCalendarDetailVisible(false);
+    setLoginFeedback(null);
+    setNotificationUnreadCount(0);
+    setLatestNotificationText("");
+  }, []);
+
   const handleCalendarMonthChangeGesture = (deltaY: number) => {
     if (Math.abs(deltaY) < 40) return;
 
@@ -1165,8 +1180,7 @@ export default function Index() {
       clearStudentSessionTc().catch((error) => {
         console.log("Geçersiz kayıtlı oturum temizlenemedi:", error);
       });
-      setSessionTc("");
-      setTc("");
+      resetStudentSessionState();
       return;
     }
 
@@ -1179,6 +1193,39 @@ export default function Index() {
     setCalendarVisible(false);
     setCalendarDetailVisible(false);
   }, [restoringSession, loadingStudents, loggedIn, sessionTc, students]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      const syncSessionOnFocus = async () => {
+        try {
+          const storedTc = await getStudentSessionTc();
+          if (!active) return;
+
+          if (!storedTc) {
+            if (loggedIn || sessionTc) {
+              resetStudentSessionState();
+            }
+            return;
+          }
+
+          if (storedTc !== sessionTc) {
+            setSessionTc(storedTc);
+            setTc(storedTc);
+          }
+        } catch (error) {
+          console.log("Odaklanınca oturum kontrolü yapılamadı:", error);
+        }
+      };
+
+      syncSessionOnFocus();
+
+      return () => {
+        active = false;
+      };
+    }, [loggedIn, resetStudentSessionState, sessionTc]),
+  );
 
   useEffect(() => {
     if (!loggedIn || !user) return;
@@ -1376,16 +1423,7 @@ export default function Index() {
       console.log("Kayıtlı oturum temizlenemedi:", error);
     }
 
-    setSessionTc("");
-
-    setLoggedIn(false);
-    setUser(null);
-    setTc("");
-    setSelectedDetail("");
-    setDetailVisible(false);
-    setCalendarVisible(false);
-    setCalendarDetailVisible(false);
-    setLoginFeedback(null);
+    resetStudentSessionState();
   };
 
   const initials = useMemo(() => {
