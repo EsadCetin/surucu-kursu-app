@@ -14,7 +14,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -1068,9 +1067,7 @@ export default function Index() {
       });
     };
   }, [navigation, loggedIn, colors.cardBg, colors.text]);
-  const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
-  const scrollStartYRef = useRef(0);
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
   const [monthOffset, setMonthOffset] = useState(0);
@@ -1082,14 +1079,6 @@ export default function Index() {
 
   const canGoPrev = monthOffset > -3;
   const canGoNext = monthOffset < 2;
-
-  const goToPrevMonth = () => {
-    setMonthOffset((prev) => Math.max(prev - 1, -3));
-  };
-
-  const goToNextMonth = () => {
-    setMonthOffset((prev) => Math.min(prev + 1, 2));
-  };
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener(
@@ -1139,35 +1128,6 @@ export default function Index() {
     setNotificationUnreadCount(0);
     setLatestNotificationText("");
   }, []);
-
-  const handleCalendarMonthChangeGesture = (deltaY: number) => {
-    if (Math.abs(deltaY) < 40) return;
-
-    if (deltaY > 0 && canGoNext) {
-      goToNextMonth();
-      return;
-    }
-
-    if (deltaY < 0 && canGoPrev) {
-      goToPrevMonth();
-    }
-  };
-
-  const calendarPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          Math.abs(gestureState.dy) > 12 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
-        onPanResponderRelease: (_, gestureState) => {
-          handleCalendarMonthChangeGesture(gestureState.dy);
-        },
-        onPanResponderTerminate: (_, gestureState) => {
-          handleCalendarMonthChangeGesture(gestureState.dy);
-        },
-      }),
-    [canGoPrev, canGoNext],
-  );
 
   const loadStudents = async () => {
     try {
@@ -1366,12 +1326,6 @@ export default function Index() {
 
     loadNotificationSummary();
   }, [loggedIn, sessionTc]);
-
-  useEffect(() => {
-    if (calendarVisible && calendarScrollRef.current) {
-      calendarScrollRef.current.scrollTo({ y: 0, animated: false });
-    }
-  }, [monthOffset, calendarVisible]);
 
   const openDetailModal = (text: string) => {
     setDetailLessons([]);
@@ -1910,17 +1864,6 @@ export default function Index() {
       .join("\n\n");
 
     openCalendarDetailModal(detail);
-  };
-
-  const handleCalendarScrollBeginDrag = (event: any) => {
-    scrollStartYRef.current = event.nativeEvent.contentOffset.y;
-  };
-
-  const handleCalendarScrollEndDrag = (event: any) => {
-    const endY = event.nativeEvent.contentOffset.y;
-    const diff = endY - scrollStartYRef.current;
-
-    handleCalendarMonthChangeGesture(diff);
   };
 
   const handleTcInputFocus = () => {
@@ -2671,122 +2614,118 @@ export default function Index() {
             ))}
           </View>
 
-          <ScrollView
-            ref={calendarScrollRef}
-            style={styles.calendarPageScroll}
-            contentContainerStyle={styles.calendarPageContent}
-            onScrollBeginDrag={handleCalendarScrollBeginDrag}
-            onScrollEndDrag={handleCalendarScrollEndDrag}
-            scrollEventThrottle={16}
-            {...calendarPanResponder.panHandlers}
-          >
-            <View style={styles.monthGrid}>
-              {visibleMonthCells.map((cell) => {
-                const hasEvents = cell.events.length > 0;
-                const eventTones = Array.from(
-                  new Set(
-                    cell.events.map((event) =>
-                      getCalendarBadgeTone(event.type),
+          <View style={styles.calendarPageScroll}>
+            <View style={styles.calendarPageContent}>
+              <View style={styles.monthGrid}>
+                {visibleMonthCells.map((cell) => {
+                  const hasEvents = cell.events.length > 0;
+                  const eventTones = Array.from(
+                    new Set(
+                      cell.events.map((event) =>
+                        getCalendarBadgeTone(event.type),
+                      ),
                     ),
-                  ),
-                );
-                const previewText = hasEvents
-                  ? cell.events
-                      .slice(0, 2)
-                      .map((event) =>
-                        event.type === "lesson"
-                          ? event.time || ""
-                          : event.time
-                            ? `${event.title} ${event.time}`
-                            : event.title,
-                      )
-                      .filter(Boolean)
-                      .join("\n")
-                  : "";
+                  );
+                  const previewText = hasEvents
+                    ? cell.events
+                        .slice(0, 2)
+                        .map((event) =>
+                          event.type === "lesson"
+                            ? event.time || ""
+                            : event.time
+                              ? `${event.title} ${event.time}`
+                              : event.title,
+                        )
+                        .filter(Boolean)
+                        .join("\n")
+                    : "";
 
-                return (
-                  <TouchableOpacity
-                    key={cell.key}
-                    style={[
-                      styles.calendarCell,
-                      !cell.isCurrentMonth ? styles.calendarCellMuted : null,
-                      cell.isToday ? styles.calendarCellToday : null,
-                    ]}
-                    activeOpacity={hasEvents ? 0.85 : 1}
-                    onPress={() => handleCalendarCellPress(cell)}
-                    disabled={!hasEvents}
-                  >
-                    <View
+                  return (
+                    <TouchableOpacity
+                      key={cell.key}
                       style={[
-                        styles.calendarCellDayBadge,
-                        cell.isToday
-                          ? [
-                              styles.calendarCellDayBadgeToday,
-                              {
-                                backgroundColor:
-                                  theme === "light"
-                                    ? colors.accentSoft
-                                    : "#686868",
-                              },
-                            ]
-                          : null,
+                        styles.calendarCell,
+                        !cell.isCurrentMonth ? styles.calendarCellMuted : null,
+                        cell.isToday ? styles.calendarCellToday : null,
                       ]}
+                      activeOpacity={hasEvents ? 0.85 : 1}
+                      onPress={() => handleCalendarCellPress(cell)}
+                      disabled={!hasEvents}
                     >
+                      <View
+                        style={[
+                          styles.calendarCellDayBadge,
+                          cell.isToday
+                            ? [
+                                styles.calendarCellDayBadgeToday,
+                                {
+                                  backgroundColor:
+                                    theme === "light"
+                                      ? colors.accentSoft
+                                      : "#686868",
+                                },
+                              ]
+                            : null,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.calendarCellDayText,
+                            { color: colors.text },
+                            !cell.isCurrentMonth
+                              ? [
+                                  styles.calendarCellDayTextMuted,
+                                  { color: colors.mutedText },
+                                ]
+                              : null,
+                            cell.isToday
+                              ? styles.calendarCellDayTextToday
+                              : null,
+                          ]}
+                        >
+                          {cell.dayNumber}
+                        </Text>
+                      </View>
+
+                      <View style={styles.cellDotsRow}>
+                        {eventTones.slice(0, 3).map((tone, idx) => (
+                          <View
+                            key={`${cell.key}-${tone}-${idx}`}
+                            style={[
+                              styles.cellDot,
+                              tone === "red"
+                                ? styles.eventDotRed
+                                : tone === "blue"
+                                  ? styles.eventDotBlue
+                                  : tone === "orange"
+                                    ? styles.eventDotOrange
+                                    : styles.eventDotGreen,
+                            ]}
+                          />
+                        ))}
+                      </View>
+
                       <Text
                         style={[
-                          styles.calendarCellDayText,
-                          { color: colors.text },
+                          styles.calendarCellPreview,
+                          { color: colors.subText },
                           !cell.isCurrentMonth
                             ? [
-                                styles.calendarCellDayTextMuted,
+                                styles.calendarCellPreviewMuted,
                                 { color: colors.mutedText },
                               ]
                             : null,
-                          cell.isToday ? styles.calendarCellDayTextToday : null,
                         ]}
+                        numberOfLines={2}
                       >
-                        {cell.dayNumber}
+                        {previewText}
                       </Text>
-                    </View>
-
-                    <View style={styles.cellDotsRow}>
-                      {eventTones.slice(0, 3).map((tone, idx) => (
-                        <View
-                          key={`${cell.key}-${tone}-${idx}`}
-                          style={[
-                            styles.cellDot,
-                            tone === "red"
-                              ? styles.eventDotRed
-                              : tone === "blue"
-                                ? styles.eventDotBlue
-                                : tone === "orange"
-                                  ? styles.eventDotOrange
-                                  : styles.eventDotGreen,
-                          ]}
-                        />
-                      ))}
-                    </View>
-
-                    <Text
-                      style={[
-                        styles.calendarCellPreview,
-                        { color: colors.subText },
-                        !cell.isCurrentMonth
-                          ? [
-                              styles.calendarCellPreviewMuted,
-                              { color: colors.mutedText },
-                            ]
-                          : null,
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {previewText}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </ScrollView>
+          </View>
 
           <Modal
             visible={calendarDetailVisible}

@@ -2,10 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { Tabs, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
-import { getNotificationSummary } from "../utils/notification-center";
+import {
+  getNotificationSummary,
+  subscribeNotificationCenterChanges,
+} from "../utils/notification-center";
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
 
@@ -114,6 +117,20 @@ function NotificationButton() {
     }, [loadUnreadCount]),
   );
 
+  useEffect(() => {
+    const unsubscribe = subscribeNotificationCenterChanges(() => {
+      loadUnreadCount().catch((error) => {
+        console.log("Header bildirim rozeti güncellenemedi:", error);
+      });
+    });
+
+    loadUnreadCount().catch((error) => {
+      console.log("Header bildirim sayısı ilk yüklemede alınamadı:", error);
+    });
+
+    return unsubscribe;
+  }, [loadUnreadCount]);
+
   return (
     <HeaderIconButton
       onPress={() => router.push("/bildirimler")}
@@ -161,6 +178,15 @@ export default function Layout() {
           title: "Bildirimler",
           headerLeft: () => <MenuCloseButton />,
           headerTitle: () => <HeaderTitle title="Bildirimler" />,
+          headerRight: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="bilgilendirme"
+        options={{
+          title: "Bilgilendirme",
+          headerLeft: () => <MenuCloseButton />,
+          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
           headerRight: () => null,
         }}
       />

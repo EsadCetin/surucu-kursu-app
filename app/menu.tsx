@@ -3,14 +3,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import {
-    Alert,
-    Animated,
-    Easing,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Easing,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 
@@ -19,7 +19,7 @@ type MenuItem = {
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
-  route: "/" | "/duyurular" | "/iletisim" | "/sss";
+  route: "/" | "/duyurular" | "/iletisim" | "/sss" | "/bilgilendirme";
 };
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
@@ -31,6 +31,13 @@ const MENU_ITEMS: MenuItem[] = [
     subtitle: "Öğrenci süreç ekranına dön",
     icon: "home-outline",
     route: "/",
+  },
+  {
+    key: "info",
+    title: "Bilgilendirme",
+    subtitle: "Kayıt ve süreç detaylarını görüntüle",
+    icon: "document-text-outline",
+    route: "/bilgilendirme",
   },
   {
     key: "announcements",

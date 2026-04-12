@@ -88,6 +88,25 @@ const STORAGE_KEY = "app_notification_center_v1";
 const SNAPSHOT_STORAGE_KEY = "app_notification_snapshot_v1";
 const MAX_NOTIFICATIONS = 60;
 
+const notificationCenterListeners = new Set<() => void>();
+
+function emitNotificationCenterChange() {
+  notificationCenterListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch (error) {
+      console.log("Bildirim merkezi dinleyicisi çalıştırılamadı:", error);
+    }
+  });
+}
+
+export function subscribeNotificationCenterChanges(listener: () => void) {
+  notificationCenterListeners.add(listener);
+  return () => {
+    notificationCenterListeners.delete(listener);
+  };
+}
+
 function normalizeValue(value?: string | null) {
   if (!value) return "";
   return String(value).trim();
@@ -410,6 +429,7 @@ async function writeNotifications(items: AppNotificationItem[]) {
     STORAGE_KEY,
     JSON.stringify(items.slice(0, MAX_NOTIFICATIONS)),
   );
+  emitNotificationCenterChange();
 }
 
 async function readSnapshots() {
@@ -583,59 +603,61 @@ export async function syncStudentNotifications(
   const currentPlannedLessonScheduleKey =
     buildPendingPlannedLessonScheduleKey(user);
 
-  if (lessons.length > prev.lessonCount && prev.lessonCount > 0) {
-    const sourceKey = `${prev.lessonCount}->${lessons.length}:${currentLessonPlanKey}`;
-
+  if (prev.lessonCount === 0 && lessons.length > 0) {
     await pushNotification({
-      id: buildNotificationId(user.tc, "new-lessons", sourceKey),
+      id: buildNotificationId(user.tc, "new-lessons", currentLessonPlanKey),
       studentTc: user.tc,
       type: "new-lessons",
-      title: "Yeni ders planı yapıldı",
-      message: `Direksiyon dersi sayın ${prev.lessonCount} iken ${lessons.length} oldu.`,
-      createdAt: now,
-      read: false,
-      sourceKey,
-    });
-  } else if (
-    prev.lessonCount > 0 &&
-    lessons.length === prev.lessonCount &&
-    prev.plannedLessonScheduleKey &&
-    prev.plannedLessonScheduleKey !== currentPlannedLessonScheduleKey
-  ) {
-    await pushNotification({
-      id: buildNotificationId(
-        user.tc,
-        "lesson-plan-changed",
-        `planned:${currentPlannedLessonScheduleKey}`,
-      ),
-      studentTc: user.tc,
-      type: "lesson-plan-changed",
-      title: "Ders planın güncellendi",
-      message:
-        "Planlanan direksiyon dersinin gün veya saat bilgisi güncellendi.",
-      createdAt: now,
-      read: false,
-      sourceKey: `planned:${currentPlannedLessonScheduleKey}`,
-    });
-  } else if (
-    prev.lessonCount > 0 &&
-    lessons.length === prev.lessonCount &&
-    prev.lessonPlanKey &&
-    prev.lessonPlanKey !== currentLessonPlanKey
-  ) {
-    await pushNotification({
-      id: buildNotificationId(
-        user.tc,
-        "lesson-plan-changed",
-        currentLessonPlanKey,
-      ),
-      studentTc: user.tc,
-      type: "lesson-plan-changed",
-      title: "Ders planın güncellendi",
-      message: "Direksiyon ders planındaki bilgiler güncellendi.",
+      title: "Ders planı yapıldı",
+      message: `Direksiyon dersin planlandı. Toplam ders sayısı: ${lessons.length}.`,
       createdAt: now,
       read: false,
       sourceKey: currentLessonPlanKey,
+    });
+  } else if (
+    prev.lessonCount > 0 &&
+    (lessons.length !== prev.lessonCount ||
+      prev.lessonPlanKey !== currentLessonPlanKey ||
+      prev.plannedLessonScheduleKey !== currentPlannedLessonScheduleKey)
+  ) {
+    const changeParts: string[] = [];
+
+    if (lessons.length > prev.lessonCount) {
+      changeParts.push("Yeni ders eklendi.");
+    } else if (lessons.length < prev.lessonCount) {
+      changeParts.push("Planlı derslerden biri kaldırıldı.");
+    }
+
+    if (
+      prev.lessonCount === lessons.length &&
+      prev.plannedLessonScheduleKey &&
+      prev.plannedLessonScheduleKey !== currentPlannedLessonScheduleKey
+    ) {
+      changeParts.push("Planlanan dersin gün veya saat bilgisi değişti.");
+    } else if (
+      prev.lessonCount === lessons.length &&
+      prev.lessonPlanKey &&
+      prev.lessonPlanKey !== currentLessonPlanKey
+    ) {
+      changeParts.push("Ders planındaki bilgiler güncellendi.");
+    }
+
+    const sourceKey = [
+      `${prev.lessonCount}->${lessons.length}`,
+      currentLessonPlanKey,
+      currentPlannedLessonScheduleKey,
+    ].join("|");
+
+    await pushNotification({
+      id: buildNotificationId(user.tc, "lesson-plan-changed", sourceKey),
+      studentTc: user.tc,
+      type: "lesson-plan-changed",
+      title: "Ders planında değişiklik yapıldı",
+      message:
+        changeParts.join(" ") || "Direksiyon ders planında değişiklik yapıldı.",
+      createdAt: now,
+      read: false,
+      sourceKey,
     });
   }
 
@@ -651,6 +673,7 @@ export async function syncStudentNotifications(
   };
 
   await writeSnapshots(snapshots);
+  emitNotificationCenterChange();
 
   return getNotificationSummary(user.tc);
 }
