@@ -20,23 +20,29 @@ export type Student = {
   durum: string;
   evrak_durumu: string;
   eksik_evraklar?: string;
+
   esinav_harc: string;
   esinav_son_odeme?: string;
   esinav_tarih?: string;
   esinav_saati?: string;
   esinav_sonuc: string;
+
   direksiyon_harc: string;
   direksiyon_son_odeme?: string;
   direksiyon_tarih?: string;
   direksiyon_saati?: string;
   direksiyon_sonuc: string;
+
   direksiyon_dersleri?: LessonItem[] | string;
+
   esinav_harc_borcu?: string;
   esinav_harc_borc?: string;
   esinav_borc_son_odeme?: string;
+
   direksiyon_harc_borcu?: string;
   direksiyon_harc_borc?: string;
   direksiyon_borc_son_odeme?: string;
+
   taksit_borcu?: string;
   taksit_son_odeme?: string;
 };
@@ -44,6 +50,7 @@ export type Student = {
 export type AppNotificationType =
   | "missing-documents"
   | "payment-due"
+  | "payment-overdue"
   | "lesson-tomorrow"
   | "exam-today"
   | "new-lessons"
@@ -63,10 +70,11 @@ export type AppNotificationItem = {
 type StudentNotificationSnapshot = {
   missingDocumentsKey: string;
   paymentKey: string;
+  overduePaymentKey: string;
   tomorrowLessonKey: string;
   todayExamKey: string;
-  lessonCount: number;
   lessonPlanKey: string;
+  lessonCount: number;
 };
 
 export type NotificationSummary = {
@@ -82,6 +90,10 @@ const MAX_NOTIFICATIONS = 60;
 function normalizeValue(value?: string | null) {
   if (!value) return "";
   return String(value).trim();
+}
+
+function normalizeLower(value?: string | null) {
+  return normalizeValue(value).toLocaleLowerCase("tr-TR");
 }
 
 function formatDebt(value?: string) {
@@ -111,6 +123,7 @@ function getMissingDocumentsList(value?: string) {
 
 function parseLessonText(value?: string): LessonItem[] {
   if (!value || !value.trim()) return [];
+
   return value
     .split(/\n+/)
     .map((line) => line.trim())
@@ -144,6 +157,7 @@ function getLessons(user: Student) {
 
 function parseAppDate(dateStr?: string) {
   if (!dateStr) return null;
+
   const normalized = dateStr.trim();
   const parts = normalized.split(".");
   if (parts.length !== 3) return null;
@@ -151,9 +165,10 @@ function parseAppDate(dateStr?: string) {
   const day = Number(parts[0]);
   const month = Number(parts[1]) - 1;
   const year = Number(parts[2]);
-  const date = new Date(year, month, day);
 
+  const date = new Date(year, month, day);
   if (Number.isNaN(date.getTime())) return null;
+
   date.setHours(0, 0, 0, 0);
   return date;
 }
@@ -167,6 +182,7 @@ function getTodayDate() {
 function getDaysDiffFromToday(dateStr?: string) {
   const target = parseAppDate(dateStr);
   if (!target) return null;
+
   const diff = target.getTime() - getTodayDate().getTime();
   return Math.round(diff / (1000 * 60 * 60 * 24));
 }
@@ -184,24 +200,46 @@ function isUpcomingPaymentDate(dateStr?: string, maxDays = 3) {
   return diff !== null ? diff >= 0 && diff <= maxDays : false;
 }
 
+function isOverduePaymentDate(dateStr?: string) {
+  const diff = getDaysDiffFromToday(dateStr);
+  return diff !== null ? diff < 0 : false;
+}
+
 function isLessonConfirmed(lesson?: LessonItem) {
   if (!lesson) return false;
 
-  if (lesson.teyitli_mi === true) return true;
+  const durum = normalizeLower(lesson.durum);
+  const katilim = normalizeLower(lesson.katilim);
 
-  const durum = normalizeValue(lesson.durum).toLocaleLowerCase("tr-TR");
-  if (durum === "teyitli" || durum === "katildi") return true;
+  if (katilim === "katildi" || katilim === "katilmadi") {
+    return false;
+  }
 
-  const katilim = normalizeValue(lesson.katilim).toLocaleLowerCase("tr-TR");
-  if (katilim === "katildi") return true;
-
-  return false;
+  return Boolean(lesson.teyitli_mi) || durum === "teyitli";
 }
 
-function getNearestConfirmedTomorrowLesson(user: Student) {
+function isLessonAttended(lesson?: LessonItem) {
+  if (!lesson) return false;
+
+  const durum = normalizeLower(lesson.durum);
+  const katilim = normalizeLower(lesson.katilim);
+
+  return katilim === "katildi" || durum === "katildi";
+}
+
+function isLessonMissed(lesson?: LessonItem) {
+  if (!lesson) return false;
+
+  const durum = normalizeLower(lesson.durum);
+  const katilim = normalizeLower(lesson.katilim);
+
+  return katilim === "katilmadi" || durum === "katilmadi";
+}
+
+function getNearestTomorrowConfirmedLesson(user: Student) {
   return getLessons(user)
     .filter(
-      (lesson) => isLessonConfirmed(lesson) && isTomorrowDate(lesson.tarih),
+      (lesson) => isTomorrowDate(lesson.tarih) && isLessonConfirmed(lesson),
     )
     .sort((a, b) => {
       const first = `${a.tarih || ""} ${a.saat || ""}`;
@@ -211,25 +249,24 @@ function getNearestConfirmedTomorrowLesson(user: Student) {
 }
 
 function buildLessonPlanKey(user: Student) {
-  const lessons = getLessons(user);
-
-  return lessons
+  return getLessons(user)
     .map((lesson, index) => {
-      const tarih = normalizeValue(lesson.tarih);
-      const saat = normalizeValue(lesson.saat);
-      const notText = normalizeValue(lesson.not);
-      const egitmen = normalizeValue(lesson.egitmen);
-      const aracPlaka = normalizeValue(lesson.arac_plaka);
-      const telefon = normalizeValue(lesson.telefon);
-
-      return [index, tarih, saat, notText, egitmen, aracPlaka, telefon].join(
-        "~",
-      );
+      return [
+        index,
+        normalizeValue(lesson.tarih),
+        normalizeValue(lesson.saat),
+        normalizeLower(lesson.durum),
+        normalizeLower(lesson.katilim),
+        lesson.teyitli_mi ? "1" : "0",
+        normalizeValue(lesson.not),
+        normalizeValue(lesson.egitmen),
+        normalizeValue(lesson.arac_plaka),
+      ].join(":");
     })
     .join("|");
 }
 
-function buildPaymentEntries(user: Student) {
+function buildUpcomingPaymentEntries(user: Student) {
   const entries: Array<{
     key: string;
     label: string;
@@ -266,6 +303,55 @@ function buildPaymentEntries(user: Student) {
   if (
     hasDebtValue(user.taksit_borcu) &&
     isUpcomingPaymentDate(user.taksit_son_odeme)
+  ) {
+    entries.push({
+      key: `taksit:${user.taksit_son_odeme}:${formatDebt(user.taksit_borcu)}`,
+      label: "Taksit ödemesi",
+      date: user.taksit_son_odeme,
+      debt: formatDebt(user.taksit_borcu),
+    });
+  }
+
+  return entries;
+}
+
+function buildOverduePaymentEntries(user: Student) {
+  const entries: Array<{
+    key: string;
+    label: string;
+    date?: string;
+    debt?: string;
+  }> = [];
+
+  if (
+    hasDebtValue(getEsinavDebt(user)) &&
+    isOverduePaymentDate(user.esinav_borc_son_odeme || user.esinav_son_odeme)
+  ) {
+    entries.push({
+      key: `esinav:${user.esinav_borc_son_odeme || user.esinav_son_odeme}:${formatDebt(getEsinavDebt(user))}`,
+      label: "E-sınav harcı",
+      date: user.esinav_borc_son_odeme || user.esinav_son_odeme,
+      debt: formatDebt(getEsinavDebt(user)),
+    });
+  }
+
+  if (
+    hasDebtValue(getDireksiyonDebt(user)) &&
+    isOverduePaymentDate(
+      user.direksiyon_borc_son_odeme || user.direksiyon_son_odeme,
+    )
+  ) {
+    entries.push({
+      key: `direksiyon:${user.direksiyon_borc_son_odeme || user.direksiyon_son_odeme}:${formatDebt(getDireksiyonDebt(user))}`,
+      label: "Direksiyon harcı",
+      date: user.direksiyon_borc_son_odeme || user.direksiyon_son_odeme,
+      debt: formatDebt(getDireksiyonDebt(user)),
+    });
+  }
+
+  if (
+    hasDebtValue(user.taksit_borcu) &&
+    isOverduePaymentDate(user.taksit_son_odeme)
   ) {
     entries.push({
       key: `taksit:${user.taksit_son_odeme}:${formatDebt(user.taksit_borcu)}`,
@@ -324,7 +410,6 @@ async function pushNotification(item: AppNotificationItem) {
   const exists = items.some((entry) => entry.id === item.id);
 
   if (exists) return;
-
   await writeNotifications([item, ...items]);
 }
 
@@ -340,17 +425,19 @@ export async function syncStudentNotifications(
   user: Student,
 ): Promise<NotificationSummary> {
   const snapshots = await readSnapshots();
-  const hasPreviousSnapshot = Boolean(snapshots[user.tc]);
+
   const prev = snapshots[user.tc] || {
     missingDocumentsKey: "",
     paymentKey: "",
+    overduePaymentKey: "",
     tomorrowLessonKey: "",
     todayExamKey: "",
-    lessonCount: 0,
     lessonPlanKey: "",
+    lessonCount: 0,
   };
 
   const now = new Date().toISOString();
+
   const missingDocs = getMissingDocumentsList(user.eksik_evraklar);
   const currentMissingDocumentsKey = `${user.evrak_durumu}:${missingDocs.join("|")}`;
 
@@ -373,11 +460,17 @@ export async function syncStudentNotifications(
     }
   }
 
-  const paymentEntries = buildPaymentEntries(user);
-  const currentPaymentKey = paymentEntries.map((entry) => entry.key).join("|");
+  const upcomingPaymentEntries = buildUpcomingPaymentEntries(user);
+  const currentPaymentKey = upcomingPaymentEntries
+    .map((entry) => entry.key)
+    .join("|");
 
-  if (paymentEntries.length > 0 && prev.paymentKey !== currentPaymentKey) {
-    const firstEntry = paymentEntries[0];
+  if (
+    upcomingPaymentEntries.length > 0 &&
+    prev.paymentKey !== currentPaymentKey
+  ) {
+    const firstEntry = upcomingPaymentEntries[0];
+
     await pushNotification({
       id: buildNotificationId(user.tc, "payment-due", currentPaymentKey),
       studentTc: user.tc,
@@ -390,7 +483,34 @@ export async function syncStudentNotifications(
     });
   }
 
-  const tomorrowLesson = getNearestConfirmedTomorrowLesson(user);
+  const overduePaymentEntries = buildOverduePaymentEntries(user);
+  const currentOverduePaymentKey = overduePaymentEntries
+    .map((entry) => entry.key)
+    .join("|");
+
+  if (
+    overduePaymentEntries.length > 0 &&
+    prev.overduePaymentKey !== currentOverduePaymentKey
+  ) {
+    const firstEntry = overduePaymentEntries[0];
+
+    await pushNotification({
+      id: buildNotificationId(
+        user.tc,
+        "payment-overdue",
+        currentOverduePaymentKey,
+      ),
+      studentTc: user.tc,
+      type: "payment-overdue",
+      title: "Gecikmiş ödemeniz bulunmaktadır",
+      message: `${firstEntry.label} için son ödeme tarihi geçti: ${firstEntry.date}. Borç: ${firstEntry.debt}`,
+      createdAt: now,
+      read: false,
+      sourceKey: currentOverduePaymentKey,
+    });
+  }
+
+  const tomorrowLesson = getNearestTomorrowConfirmedLesson(user);
   const currentTomorrowLessonKey = tomorrowLesson
     ? `${tomorrowLesson.tarih || ""}:${tomorrowLesson.saat || ""}`
     : "";
@@ -432,22 +552,23 @@ export async function syncStudentNotifications(
   const lessons = getLessons(user);
   const currentLessonPlanKey = buildLessonPlanKey(user);
 
-  if (hasPreviousSnapshot && lessons.length > prev.lessonCount) {
+  if (lessons.length > prev.lessonCount && prev.lessonCount > 0) {
     const sourceKey = `${prev.lessonCount}->${lessons.length}:${currentLessonPlanKey}`;
+
     await pushNotification({
       id: buildNotificationId(user.tc, "new-lessons", sourceKey),
       studentTc: user.tc,
       type: "new-lessons",
       title: "Yeni ders planı yapıldı",
-      message: "Direksiyon ders planına yeni ders eklendi.",
+      message: `Direksiyon dersi sayın ${prev.lessonCount} iken ${lessons.length} oldu.`,
       createdAt: now,
       read: false,
       sourceKey,
     });
   } else if (
-    hasPreviousSnapshot &&
-    lessons.length > 0 &&
+    prev.lessonCount > 0 &&
     lessons.length === prev.lessonCount &&
+    prev.lessonPlanKey &&
     prev.lessonPlanKey !== currentLessonPlanKey
   ) {
     await pushNotification({
@@ -458,8 +579,9 @@ export async function syncStudentNotifications(
       ),
       studentTc: user.tc,
       type: "lesson-plan-changed",
-      title: "Ders planında değişiklik yapıldı",
-      message: "Direksiyon ders planın güncellendi. Takvimi kontrol et.",
+      title: "Ders planının güncellendi",
+      message:
+        "Direksiyon ders planındaki tarih, saat veya durum bilgileri güncellendi.",
       createdAt: now,
       read: false,
       sourceKey: currentLessonPlanKey,
@@ -469,13 +591,15 @@ export async function syncStudentNotifications(
   snapshots[user.tc] = {
     missingDocumentsKey: currentMissingDocumentsKey,
     paymentKey: currentPaymentKey,
+    overduePaymentKey: currentOverduePaymentKey,
     tomorrowLessonKey: currentTomorrowLessonKey,
     todayExamKey: currentTodayExamKey,
-    lessonCount: lessons.length,
     lessonPlanKey: currentLessonPlanKey,
+    lessonCount: lessons.length,
   };
 
   await writeSnapshots(snapshots);
+
   return getNotificationSummary(user.tc);
 }
 

@@ -397,19 +397,26 @@ function parseLessonText(value?: string): LessonItem[] {
 function getLessonStatusText(lesson?: LessonItem) {
   if (!lesson) return "Netleşmedi";
 
-  if (lesson.katilim === "katildi" || lesson.durum === "katildi") {
+  const durum = String(lesson.durum || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+  const katilim = String(lesson.katilim || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+
+  if (katilim === "katildi" || durum === "katildi") {
     return "Derse katıldı";
   }
 
-  if (lesson.katilim === "katilmadi" || lesson.durum === "katilmadi") {
+  if (katilim === "katilmadi" || durum === "katilmadi") {
     return "Derse katılmadı";
   }
 
-  if (lesson.teyitli_mi || lesson.durum === "teyitli") {
+  if (lesson.teyitli_mi || durum === "teyitli") {
     return "Onaylandı";
   }
 
-  if (lesson.durum === "planlandi") {
+  if (durum === "planlandi") {
     return "Planlandı";
   }
 
@@ -419,19 +426,26 @@ function getLessonStatusText(lesson?: LessonItem) {
 function getLessonStatusColor(lesson?: LessonItem) {
   if (!lesson) return "#6B7280";
 
-  if (lesson.katilim === "katildi" || lesson.durum === "katildi") {
+  const durum = String(lesson.durum || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+  const katilim = String(lesson.katilim || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR");
+
+  if (katilim === "katildi" || durum === "katildi") {
     return "#16A34A";
   }
 
-  if (lesson.katilim === "katilmadi" || lesson.durum === "katilmadi") {
+  if (katilim === "katilmadi" || durum === "katilmadi") {
     return "#DC2626";
   }
 
-  if (lesson.teyitli_mi || lesson.durum === "teyitli") {
+  if (lesson.teyitli_mi || durum === "teyitli") {
     return "#F59E0B";
   }
 
-  if (lesson.durum === "planlandi") {
+  if (durum === "planlandi") {
     return "#6B7280";
   }
 

@@ -42,6 +42,8 @@ function getTypeLabel(type: AppNotificationItem["type"]) {
       return "Evrak";
     case "payment-due":
       return "Ödeme";
+    case "payment-overdue":
+      return "Ödeme";
     case "lesson-tomorrow":
       return "Ders";
     case "exam-today":
