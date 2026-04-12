@@ -2168,52 +2168,21 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
-        <View
-          style={[
-            styles.infoCard,
-            { backgroundColor: colors.cardBg, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Evrak Durumu
-          </Text>
-
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
-              Durum
-            </Text>
-            <Text
-              style={[
-                styles.infoValue,
-                styles.infoValueRight,
-                { color: colors.text },
-              ]}
-            >
-              {user.evrak_durumu === "tamam"
-                ? "Tamamlandı"
-                : user.evrak_durumu === "eksik"
-                  ? "Eksik"
-                  : normalizeValue(user.evrak_durumu)}
-            </Text>
-          </View>
-
-          <View style={styles.infoRowNoBorder}>
-            <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
-              Eksik Evraklar
+        {user.evrak_durumu === "eksik" ? (
+          <View
+            style={[
+              styles.infoCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Evrak Durumu
             </Text>
 
-            {user.evrak_durumu === "eksik" && missingDocs.length ? (
-              <View style={styles.missingDocsList}>
-                {missingDocs.map((item, index) => (
-                  <Text
-                    key={`${item}-${index}`}
-                    style={[styles.missingDocItem, { color: colors.text }]}
-                  >
-                    • {item}
-                  </Text>
-                ))}
-              </View>
-            ) : (
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
+                Durum
+              </Text>
               <Text
                 style={[
                   styles.infoValue,
@@ -2221,11 +2190,40 @@ export default function Index() {
                   { color: colors.text },
                 ]}
               >
-                Eksik evrak görünmüyor
+                Eksik
               </Text>
-            )}
+            </View>
+
+            <View style={styles.infoRowNoBorder}>
+              <Text style={[styles.infoLabel, { color: colors.mutedText }]}>
+                Eksik Evraklar
+              </Text>
+
+              {missingDocs.length ? (
+                <View style={styles.missingDocsList}>
+                  {missingDocs.map((item, index) => (
+                    <Text
+                      key={`${item}-${index}`}
+                      style={[styles.missingDocItem, { color: colors.text }]}
+                    >
+                      • {item}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text
+                  style={[
+                    styles.infoValue,
+                    styles.infoValueRight,
+                    { color: colors.text },
+                  ]}
+                >
+                  Eksik evrak bilgisi henüz eklenmemiş
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
+        ) : null}
         {showEsinavPaymentCard || showDireksiyonPaymentCard ? (
           <View
             style={[
