@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useMemo, useRef } from "react";
 import {
   Alert,
   Animated,
-  Easing,
+  Dimensions,
+  PanResponder,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,6 +25,8 @@ type MenuItem = {
 };
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_CLOSE_THRESHOLD = Math.min(120, SCREEN_WIDTH * 0.28);
 
 const MENU_ITEMS: MenuItem[] = [
   {
@@ -42,7 +46,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "announcements",
     title: "Duyurular",
-    subtitle: "Güncel duyuruları görüntüle",
+    subtitle: "Güncel bilgilendirmeleri aç",
     icon: "megaphone-outline",
     route: "/duyurular",
   },
@@ -56,84 +60,71 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "faq",
     title: "SSS",
-    subtitle: "Sıkça sorulan sorular ",
+    subtitle: "Sık sorulan sorular ekranını aç",
     icon: "help-circle-outline",
     route: "/sss",
   },
 ];
 
-function ThemeToggle({
-  selectedTheme,
-  onToggle,
-  colors,
-}: {
-  selectedTheme: "dark" | "light";
-  onToggle: () => void;
-  colors: {
-    cardAltBg: string;
-    border: string;
-    accent: string;
-    accentContrast: string;
-    mutedText: string;
-  };
-}) {
-  const animatedValue = useRef(
-    new Animated.Value(selectedTheme === "light" ? 1 : 0),
-  ).current;
-
-  useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: selectedTheme === "light" ? 1 : 0,
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [animatedValue, selectedTheme]);
-
-  const translateX = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [3, 35],
-  });
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={onToggle}
-      style={[
-        styles.themeToggle,
-        {
-          borderColor: colors.border,
-          backgroundColor: colors.cardAltBg,
-        },
-      ]}
-    >
-      <View style={styles.themeToggleIcons}>
-        <Ionicons name="moon" size={15} color={colors.mutedText} />
-        <Ionicons name="sunny" size={16} color={colors.mutedText} />
-      </View>
-
-      <Animated.View
-        style={[
-          styles.themeToggleThumb,
-          {
-            backgroundColor: colors.accent,
-            transform: [{ translateX }],
-          },
-        ]}
-      >
-        <Ionicons
-          name={selectedTheme === "light" ? "sunny" : "moon"}
-          size={16}
-          color={colors.accentContrast}
-        />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-}
-
 export default function MenuScreen() {
   const router = useRouter();
-  const { theme, colors, themeReady, toggleTheme } = useAppTheme();
+  const { colors } = useAppTheme();
+  const translateX = useRef(new Animated.Value(0)).current;
+  const isWeb = Platform.OS === "web";
+
+  const closeMenu = () => {
+    Animated.timing(translateX, {
+      toValue: SCREEN_WIDTH,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      translateX.setValue(0);
+      router.back();
+    });
+  };
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (isWeb) return false;
+          const horizontal =
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+          return horizontal && gestureState.dx > 10;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (isWeb) return;
+          translateX.setValue(Math.max(0, gestureState.dx));
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (isWeb) return;
+          if (
+            gestureState.dx > SWIPE_CLOSE_THRESHOLD ||
+            gestureState.vx > 0.8
+          ) {
+            closeMenu();
+            return;
+          }
+
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 0,
+            speed: 20,
+          }).start();
+        },
+        onPanResponderTerminate: () => {
+          if (isWeb) return;
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 0,
+            speed: 20,
+          }).start();
+        },
+      }),
+    [router, translateX, isWeb],
+  );
 
   const handleLogout = async () => {
     try {
@@ -146,107 +137,138 @@ export default function MenuScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.screenBg }]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <Animated.View
+        style={[
+          styles.animatedWrap,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+        {...(!isWeb ? panResponder.panHandlers : {})}
       >
-        <View
-          style={[
-            styles.heroCard,
-            { backgroundColor: colors.cardBg, borderColor: colors.border },
-          ]}
-        >
-          <View style={styles.heroTopRow}>
-            <View
-              style={[styles.heroIconWrap, { backgroundColor: colors.accent }]}
-            >
-              <Ionicons
-                name="menu-outline"
-                size={28}
-                color={colors.accentContrast}
-              />
-            </View>
-
-            {themeReady ? (
-              <ThemeToggle
-                selectedTheme={theme}
-                onToggle={toggleTheme}
-                colors={colors}
-              />
-            ) : null}
-          </View>
-
-          <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
-          <Text style={[styles.heroText, { color: colors.subText }]}>
-            Buradan uygulamanın diğer ekranlarına geçebilirsin.
-          </Text>
-        </View>
-
-        <View style={styles.listWrap}>
-          {MENU_ITEMS.map((item) => (
-            <TouchableOpacity
-              key={item.key}
-              activeOpacity={0.9}
-              onPress={() => router.replace(item.route)}
-              style={[
-                styles.menuCard,
-                { backgroundColor: colors.cardBg, borderColor: colors.border },
-              ]}
-            >
-              <View
-                style={[styles.menuIcon, { backgroundColor: colors.cardAltBg }]}
-              >
-                <Ionicons name={item.icon} size={22} color={colors.text} />
-              </View>
-
-              <View style={styles.menuBody}>
-                <Text style={[styles.menuTitle, { color: colors.text }]}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
-                  {item.subtitle}
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.mutedText}
-              />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={handleLogout}
-          style={[
-            styles.logoutButton,
-            { backgroundColor: colors.cardBg, borderColor: colors.border },
-          ]}
+        <ScrollView
+          style={[styles.container, { backgroundColor: colors.screenBg }]}
+          contentContainerStyle={[styles.content, isWeb && styles.webContent]}
+          showsVerticalScrollIndicator={false}
         >
           <View
-            style={[styles.logoutIcon, { backgroundColor: colors.cardAltBg }]}
+            style={[
+              styles.heroCard,
+              styles.webCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
           >
-            <Ionicons name="log-out-outline" size={22} color={colors.text} />
-          </View>
-          <View style={styles.menuBody}>
-            <Text style={[styles.menuTitle, { color: colors.text }]}>
-              Çıkış Yap
+            <View style={styles.heroTopRow}>
+              <View
+                style={[
+                  styles.heroIconWrap,
+                  { backgroundColor: colors.accent },
+                ]}
+              >
+                <Ionicons
+                  name="menu-outline"
+                  size={28}
+                  color={colors.accentContrast}
+                />
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={closeMenu}
+                style={[
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.cardAltBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Ionicons name="close" size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
+            <Text style={[styles.heroText, { color: colors.subText }]}>
+              Bu ekranı kapatmak için kapat simgesine basabilirsin.
             </Text>
-            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
-              Öğrenci oturumunu kapat ve giriş ekranına dön
-            </Text>
           </View>
-        </TouchableOpacity>
-      </ScrollView>
+
+          <View style={[styles.listWrap, styles.webCard]}>
+            {MENU_ITEMS.map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                activeOpacity={0.9}
+                onPress={() => router.replace(item.route)}
+                style={[
+                  styles.menuCard,
+                  {
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.menuIcon,
+                    { backgroundColor: colors.cardAltBg },
+                  ]}
+                >
+                  <Ionicons name={item.icon} size={22} color={colors.text} />
+                </View>
+
+                <View style={styles.menuBody}>
+                  <Text style={[styles.menuTitle, { color: colors.text }]}>
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[styles.menuSubtitle, { color: colors.subText }]}
+                  >
+                    {item.subtitle}
+                  </Text>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.mutedText}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleLogout}
+            style={[
+              styles.logoutButton,
+              styles.webCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+          >
+            <View
+              style={[styles.logoutIcon, { backgroundColor: colors.cardAltBg }]}
+            >
+              <Ionicons name="log-out-outline" size={22} color={colors.text} />
+            </View>
+            <View style={styles.menuBody}>
+              <Text style={[styles.menuTitle, { color: colors.text }]}>
+                Çıkış Yap
+              </Text>
+              <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
+                Öğrenci oturumunu kapat ve giriş ekranına dön
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+  },
+  animatedWrap: {
     flex: 1,
   },
   container: {
@@ -256,6 +278,17 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
     gap: 14,
+  },
+  webContent: {
+    width: "100%",
+    maxWidth: 880,
+    alignSelf: "center",
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
+  webCard: {
+    width: "100%",
+    alignSelf: "center",
   },
   heroCard: {
     borderWidth: 1,
@@ -275,6 +308,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  closeButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   heroTitle: {
     fontSize: 22,
     fontWeight: "800",
@@ -282,7 +323,7 @@ const styles = StyleSheet.create({
   },
   heroText: {
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
   },
   listWrap: {
     gap: 12,
@@ -290,14 +331,14 @@ const styles = StyleSheet.create({
   menuCard: {
     borderWidth: 1,
     borderRadius: 22,
-    padding: 16,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
   },
   menuIcon: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -312,42 +353,21 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 20,
   },
   logoutButton: {
     borderWidth: 1,
     borderRadius: 22,
-    padding: 16,
+    padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
+    marginTop: 6,
   },
   logoutIcon: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  themeToggle: {
-    width: 68,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  themeToggleIcons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 9,
-  },
-  themeToggleThumb: {
-    position: "absolute",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
