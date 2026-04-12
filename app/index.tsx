@@ -2920,7 +2920,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dataSyncCard: {
-    marginTop: 14,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
