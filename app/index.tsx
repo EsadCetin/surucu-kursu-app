@@ -26,7 +26,7 @@ import {
 import { useAppTheme } from "../hooks/useAppTheme";
 import {
   getNotificationSummary,
-  syncStudentNotificationState,
+  syncStudentNotifications,
 } from "../utils/notification-center";
 
 type LessonItem = {
@@ -1200,7 +1200,7 @@ export default function Index() {
 
     const syncNotifications = async () => {
       try {
-        const summary = await syncStudentNotificationState(user);
+        const summary = await syncStudentNotifications(user);
         setNotificationUnreadCount(summary.unreadCount);
         setLatestNotificationText(summary.items[0]?.message || "");
       } catch (error) {
@@ -2377,17 +2377,7 @@ export default function Index() {
             );
           })}
         </View>
-        <TouchableOpacity
-          style={[
-            styles.logoutButton,
-            { backgroundColor: colors.cardAltBg, borderColor: colors.border },
-          ]}
-          onPress={handleLogout}
-        >
-          <Text style={[styles.logoutButtonText, { color: colors.text }]}>
-            Çıkış Yap
-          </Text>
-        </TouchableOpacity>
+
         <View
           style={[
             styles.dataSyncCard,
@@ -2956,7 +2946,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   profileCard: {
-    marginTop: 20,
     backgroundColor: "#151519",
     borderRadius: 24,
     padding: 18,
@@ -3218,13 +3207,7 @@ const styles = StyleSheet.create({
   stepTitle: { color: "#d0d0d6", fontSize: 15, fontWeight: "600" },
   stepTitleChecked: { color: "#ffffff" },
   stepTitleActive: { color: "#ffffff" },
-  logoutButton: {
-    backgroundColor: "#26262d",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  logoutButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.55)",

@@ -300,7 +300,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   content: {
-    marginTop: 30,
     paddingBottom: 28,
   },
   header: {

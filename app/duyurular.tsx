@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    marginTop: 30,
     padding: 16,
     paddingBottom: 28,
   },

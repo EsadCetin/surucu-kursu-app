@@ -67,6 +67,12 @@ type StudentNotificationSnapshot = {
   lessonCount: number;
 };
 
+export type NotificationSummary = {
+  unreadCount: number;
+  totalCount: number;
+  items: AppNotificationItem[];
+};
+
 const STORAGE_KEY = "app_notification_center_v1";
 const SNAPSHOT_STORAGE_KEY = "app_notification_snapshot_v1";
 const MAX_NOTIFICATIONS = 60;
@@ -266,180 +272,172 @@ async function readSnapshots() {
     >;
     return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
-    return {};
+    return {} as Record<string, StudentNotificationSnapshot>;
   }
 }
 
 async function writeSnapshots(
-  value: Record<string, StudentNotificationSnapshot>,
+  data: Record<string, StudentNotificationSnapshot>,
 ) {
-  await AsyncStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(value));
+  await AsyncStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(data));
 }
 
-async function addNotification(
-  item: Omit<AppNotificationItem, "id" | "createdAt" | "read">,
+async function pushNotification(item: AppNotificationItem) {
+  const items = await readNotifications();
+  const exists = items.some((entry) => entry.id === item.id);
+
+  if (exists) return;
+
+  await writeNotifications([item, ...items]);
+}
+
+function buildNotificationId(
+  studentTc: string,
+  type: AppNotificationType,
+  sourceKey: string,
 ) {
-  const existing = await readNotifications();
-  const duplicate = existing.find(
-    (entry) =>
-      entry.studentTc === item.studentTc && entry.sourceKey === item.sourceKey,
-  );
-
-  if (duplicate) {
-    return existing;
-  }
-
-  const created: AppNotificationItem = {
-    ...item,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: new Date().toISOString(),
-    read: false,
-  };
-
-  const nextItems = [created, ...existing].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-
-  await writeNotifications(nextItems);
-  return nextItems;
+  return `${studentTc}:${type}:${sourceKey}`;
 }
 
-function buildSnapshot(user: Student): StudentNotificationSnapshot {
-  const missingDocuments = getMissingDocumentsList(user.eksik_evraklar).join(
-    "|",
-  );
-  const paymentKey = buildPaymentEntries(user)
-    .map((entry) => entry.key)
-    .join("||");
-  const tomorrowLesson = getNearestTomorrowLesson(user);
-  const examKeys = [
-    isTodayDate(user.esinav_tarih)
-      ? `esinav:${user.esinav_tarih}:${normalizeValue(user.esinav_saati)}`
-      : "",
-    isTodayDate(user.direksiyon_tarih)
-      ? `direksiyon:${user.direksiyon_tarih}:${normalizeValue(user.direksiyon_saati)}`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("||");
-
-  return {
-    missingDocumentsKey:
-      user.evrak_durumu === "eksik" ? `eksik:${missingDocuments}` : "",
-    paymentKey,
-    tomorrowLessonKey: tomorrowLesson
-      ? `${tomorrowLesson.tarih || ""}:${normalizeValue(tomorrowLesson.saat)}:${normalizeValue(tomorrowLesson.not)}`
-      : "",
-    todayExamKey: examKeys,
-    lessonCount: getLessons(user).length,
-  };
-}
-
-export async function syncStudentNotificationState(user: Student) {
+export async function syncStudentNotifications(
+  user: Student,
+): Promise<NotificationSummary> {
   const snapshots = await readSnapshots();
-  const previous = snapshots[user.tc];
-  const nextSnapshot = buildSnapshot(user);
+  const prev = snapshots[user.tc] || {
+    missingDocumentsKey: "",
+    paymentKey: "",
+    tomorrowLessonKey: "",
+    todayExamKey: "",
+    lessonCount: 0,
+  };
 
-  if (
-    nextSnapshot.missingDocumentsKey &&
-    previous?.missingDocumentsKey !== nextSnapshot.missingDocumentsKey
-  ) {
-    const missingDocs = getMissingDocumentsList(user.eksik_evraklar);
-    await addNotification({
-      studentTc: user.tc,
-      type: "missing-documents",
-      title: "Eksik evrak uyarısı",
-      message: missingDocs.length
-        ? `Eksik evrakların: ${missingDocs.join(", ")}`
-        : "Eksik evrakların bulunuyor. Kursla iletişime geçmen gerekiyor.",
-      sourceKey: `missing:${nextSnapshot.missingDocumentsKey}`,
-    });
+  const now = new Date().toISOString();
+  const missingDocs = getMissingDocumentsList(user.eksik_evraklar);
+  const currentMissingDocumentsKey = `${user.evrak_durumu}:${missingDocs.join("|")}`;
+
+  if (user.evrak_durumu === "eksik" && missingDocs.length > 0) {
+    if (prev.missingDocumentsKey !== currentMissingDocumentsKey) {
+      await pushNotification({
+        id: buildNotificationId(
+          user.tc,
+          "missing-documents",
+          currentMissingDocumentsKey,
+        ),
+        studentTc: user.tc,
+        type: "missing-documents",
+        title: "Eksik evrakın var",
+        message: `Eksik evraklar: ${missingDocs.join(", ")}`,
+        createdAt: now,
+        read: false,
+        sourceKey: currentMissingDocumentsKey,
+      });
+    }
   }
 
   const paymentEntries = buildPaymentEntries(user);
-  for (const entry of paymentEntries) {
-    const sourceKey = `payment:${entry.key}`;
-    await addNotification({
+  const currentPaymentKey = paymentEntries.map((entry) => entry.key).join("|");
+
+  if (paymentEntries.length > 0 && prev.paymentKey !== currentPaymentKey) {
+    const firstEntry = paymentEntries[0];
+    await pushNotification({
+      id: buildNotificationId(user.tc, "payment-due", currentPaymentKey),
       studentTc: user.tc,
       type: "payment-due",
       title: "Yaklaşan ödeme var",
-      message: `${entry.label} için son ödeme tarihi ${entry.date}. Borç: ${entry.debt}.`,
+      message: `${firstEntry.label} için son ödeme tarihi ${firstEntry.date}. Borç: ${firstEntry.debt}`,
+      createdAt: now,
+      read: false,
+      sourceKey: currentPaymentKey,
+    });
+  }
+
+  const tomorrowLesson = getNearestTomorrowLesson(user);
+  const currentTomorrowLessonKey = tomorrowLesson
+    ? `${tomorrowLesson.tarih || ""}:${tomorrowLesson.saat || ""}`
+    : "";
+
+  if (tomorrowLesson && prev.tomorrowLessonKey !== currentTomorrowLessonKey) {
+    await pushNotification({
+      id: buildNotificationId(
+        user.tc,
+        "lesson-tomorrow",
+        currentTomorrowLessonKey,
+      ),
+      studentTc: user.tc,
+      type: "lesson-tomorrow",
+      title: "Yarın direksiyon dersin var",
+      message: `${tomorrowLesson.tarih || "Tarih bekleniyor"}${tomorrowLesson.saat ? ` / ${tomorrowLesson.saat}` : ""}`,
+      createdAt: now,
+      read: false,
+      sourceKey: currentTomorrowLessonKey,
+    });
+  }
+
+  const currentTodayExamKey = isTodayDate(user.esinav_tarih)
+    ? `${user.esinav_tarih}:${user.esinav_saati || ""}`
+    : "";
+
+  if (currentTodayExamKey && prev.todayExamKey !== currentTodayExamKey) {
+    await pushNotification({
+      id: buildNotificationId(user.tc, "exam-today", currentTodayExamKey),
+      studentTc: user.tc,
+      type: "exam-today",
+      title: "Bugün sınavın var",
+      message: `E-sınav bilgisi: ${user.esinav_tarih}${user.esinav_saati ? ` / ${user.esinav_saati}` : ""}`,
+      createdAt: now,
+      read: false,
+      sourceKey: currentTodayExamKey,
+    });
+  }
+
+  const lessons = getLessons(user);
+  if (lessons.length > prev.lessonCount && prev.lessonCount > 0) {
+    const sourceKey = `${prev.lessonCount}->${lessons.length}`;
+    await pushNotification({
+      id: buildNotificationId(user.tc, "new-lessons", sourceKey),
+      studentTc: user.tc,
+      type: "new-lessons",
+      title: "Yeni direksiyon dersi planlandı",
+      message: `Direksiyon dersi sayın ${prev.lessonCount} iken ${lessons.length} oldu.`,
+      createdAt: now,
+      read: false,
       sourceKey,
     });
   }
 
-  const tomorrowLesson = getNearestTomorrowLesson(user);
-  if (
-    tomorrowLesson &&
-    previous?.tomorrowLessonKey !== nextSnapshot.tomorrowLessonKey
-  ) {
-    await addNotification({
-      studentTc: user.tc,
-      type: "lesson-tomorrow",
-      title: "Yarın direksiyon dersin var",
-      message: `${tomorrowLesson.tarih} tarihinde${tomorrowLesson.saat ? ` ${tomorrowLesson.saat}` : ""} için direksiyon dersi planlandı.`,
-      sourceKey: `lesson-tomorrow:${nextSnapshot.tomorrowLessonKey}`,
-    });
-  }
+  snapshots[user.tc] = {
+    missingDocumentsKey: currentMissingDocumentsKey,
+    paymentKey: currentPaymentKey,
+    tomorrowLessonKey: currentTomorrowLessonKey,
+    todayExamKey: currentTodayExamKey,
+    lessonCount: lessons.length,
+  };
 
-  if (
-    nextSnapshot.todayExamKey &&
-    previous?.todayExamKey !== nextSnapshot.todayExamKey
-  ) {
-    const todayExamMessages: string[] = [];
+  await writeSnapshots(snapshots);
+  snapshots[user.tc] = {
+    missingDocumentsKey: currentMissingDocumentsKey,
+    paymentKey: currentPaymentKey,
+    tomorrowLessonKey: currentTomorrowLessonKey,
+    todayExamKey: currentTodayExamKey,
+    lessonCount: lessons.length,
+  };
 
-    if (isTodayDate(user.esinav_tarih)) {
-      todayExamMessages.push(
-        `Bugün e-sınavın var${user.esinav_saati ? ` (${user.esinav_saati})` : ""}.`,
-      );
-    }
-
-    if (isTodayDate(user.direksiyon_tarih)) {
-      todayExamMessages.push(
-        `Bugün direksiyon sınavın var${user.direksiyon_saati ? ` (${user.direksiyon_saati})` : ""}.`,
-      );
-    }
-
-    await addNotification({
-      studentTc: user.tc,
-      type: "exam-today",
-      title: "Bugünkü sınav bilgilendirmesi",
-      message: todayExamMessages.join(" "),
-      sourceKey: `exam-today:${nextSnapshot.todayExamKey}`,
-    });
-  }
-
-  if (
-    typeof previous?.lessonCount === "number" &&
-    nextSnapshot.lessonCount > previous.lessonCount
-  ) {
-    const newCount = nextSnapshot.lessonCount - previous.lessonCount;
-    await addNotification({
-      studentTc: user.tc,
-      type: "new-lessons",
-      title: "Yeni direksiyon dersi planlandı",
-      message:
-        newCount === 1
-          ? "Takvimine 1 yeni direksiyon dersi eklendi."
-          : `Takvimine ${newCount} yeni direksiyon dersi eklendi.`,
-      sourceKey: `new-lessons:${user.tc}:${nextSnapshot.lessonCount}`,
-    });
-  }
-
-  snapshots[user.tc] = nextSnapshot;
   await writeSnapshots(snapshots);
   return getNotificationSummary(user.tc);
 }
 
-export async function getNotificationSummary(studentTc?: string) {
+export async function getNotificationSummary(
+  studentTc?: string,
+): Promise<NotificationSummary> {
   const items = await readNotifications();
   const filtered = studentTc
     ? items.filter((item) => item.studentTc === studentTc)
     : items;
 
   return {
-    items: filtered,
     unreadCount: filtered.filter((item) => !item.read).length,
+    totalCount: filtered.length,
+    items: filtered,
   };
 }
 
@@ -449,7 +447,6 @@ export async function markNotificationAsRead(id: string) {
     item.id === id ? { ...item, read: true } : item,
   );
   await writeNotifications(nextItems);
-  return nextItems;
 }
 
 export async function markAllNotificationsAsRead(studentTc?: string) {
@@ -458,17 +455,12 @@ export async function markAllNotificationsAsRead(studentTc?: string) {
     !studentTc || item.studentTc === studentTc ? { ...item, read: true } : item,
   );
   await writeNotifications(nextItems);
-  return nextItems;
 }
 
 export async function clearNotificationCenter(studentTc?: string) {
-  if (!studentTc) {
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    return;
-  }
-
   const items = await readNotifications();
-  await writeNotifications(
-    items.filter((item) => item.studentTc !== studentTc),
-  );
+  const nextItems = studentTc
+    ? items.filter((item) => item.studentTc !== studentTc)
+    : [];
+  await writeNotifications(nextItems);
 }

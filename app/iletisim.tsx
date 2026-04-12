@@ -214,12 +214,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    marginTop: 21,
     padding: 16,
     paddingBottom: 120,
   },
   card: {
-    marginTop: 15,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
