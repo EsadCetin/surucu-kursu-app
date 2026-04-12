@@ -74,6 +74,7 @@ type StudentNotificationSnapshot = {
   tomorrowLessonKey: string;
   todayExamKey: string;
   lessonPlanKey: string;
+  plannedLessonScheduleKey: string;
   lessonCount: number;
 };
 
@@ -266,6 +267,33 @@ function buildLessonPlanKey(user: Student) {
     .join("|");
 }
 
+function isPendingPlannedLesson(lesson?: LessonItem) {
+  if (!lesson) return false;
+  if (
+    isLessonAttended(lesson) ||
+    isLessonMissed(lesson) ||
+    isLessonConfirmed(lesson)
+  ) {
+    return false;
+  }
+
+  return normalizeLower(lesson.durum) === "planlandi";
+}
+
+function buildPendingPlannedLessonScheduleKey(user: Student) {
+  return getLessons(user)
+    .map((lesson, index) => ({ lesson, index }))
+    .filter(({ lesson }) => isPendingPlannedLesson(lesson))
+    .map(({ lesson, index }) => {
+      return [
+        index,
+        normalizeValue(lesson.tarih),
+        normalizeValue(lesson.saat),
+      ].join(":");
+    })
+    .join("|");
+}
+
 function buildUpcomingPaymentEntries(user: Student) {
   const entries: Array<{
     key: string;
@@ -433,6 +461,7 @@ export async function syncStudentNotifications(
     tomorrowLessonKey: "",
     todayExamKey: "",
     lessonPlanKey: "",
+    plannedLessonScheduleKey: "",
     lessonCount: 0,
   };
 
@@ -551,6 +580,8 @@ export async function syncStudentNotifications(
 
   const lessons = getLessons(user);
   const currentLessonPlanKey = buildLessonPlanKey(user);
+  const currentPlannedLessonScheduleKey =
+    buildPendingPlannedLessonScheduleKey(user);
 
   if (lessons.length > prev.lessonCount && prev.lessonCount > 0) {
     const sourceKey = `${prev.lessonCount}->${lessons.length}:${currentLessonPlanKey}`;
@@ -568,6 +599,27 @@ export async function syncStudentNotifications(
   } else if (
     prev.lessonCount > 0 &&
     lessons.length === prev.lessonCount &&
+    prev.plannedLessonScheduleKey &&
+    prev.plannedLessonScheduleKey !== currentPlannedLessonScheduleKey
+  ) {
+    await pushNotification({
+      id: buildNotificationId(
+        user.tc,
+        "lesson-plan-changed",
+        `planned:${currentPlannedLessonScheduleKey}`,
+      ),
+      studentTc: user.tc,
+      type: "lesson-plan-changed",
+      title: "Ders planın güncellendi",
+      message:
+        "Planlanan direksiyon dersinin gün veya saat bilgisi güncellendi.",
+      createdAt: now,
+      read: false,
+      sourceKey: `planned:${currentPlannedLessonScheduleKey}`,
+    });
+  } else if (
+    prev.lessonCount > 0 &&
+    lessons.length === prev.lessonCount &&
     prev.lessonPlanKey &&
     prev.lessonPlanKey !== currentLessonPlanKey
   ) {
@@ -579,9 +631,8 @@ export async function syncStudentNotifications(
       ),
       studentTc: user.tc,
       type: "lesson-plan-changed",
-      title: "Ders planının güncellendi",
-      message:
-        "Direksiyon ders planındaki tarih, saat veya durum bilgileri güncellendi.",
+      title: "Ders planın güncellendi",
+      message: "Direksiyon ders planındaki bilgiler güncellendi.",
       createdAt: now,
       read: false,
       sourceKey: currentLessonPlanKey,
@@ -595,6 +646,7 @@ export async function syncStudentNotifications(
     tomorrowLessonKey: currentTomorrowLessonKey,
     todayExamKey: currentTodayExamKey,
     lessonPlanKey: currentLessonPlanKey,
+    plannedLessonScheduleKey: currentPlannedLessonScheduleKey,
     lessonCount: lessons.length,
   };
 

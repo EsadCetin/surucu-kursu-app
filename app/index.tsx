@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -1022,8 +1023,31 @@ export default function Index() {
   const [restoringSession, setRestoringSession] = useState(true);
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const [latestNotificationText, setLatestNotificationText] = useState("");
+  const [loginKeyboardInset, setLoginKeyboardInset] = useState(0);
   const { theme, colors } = useAppTheme();
   const router = useRouter();
+  const navigation = useNavigation<any>();
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: !loggedIn ? () => null : undefined,
+      headerTransparent: !loggedIn,
+      headerStyle: {
+        height: 80,
+        backgroundColor: !loggedIn ? "transparent" : colors.cardBg,
+      },
+    });
+
+    return () => {
+      navigation.setOptions({
+        headerTitle: undefined,
+        headerTransparent: false,
+        headerStyle: {
+          height: 80,
+          backgroundColor: colors.cardBg,
+        },
+      });
+    };
+  }, [navigation, loggedIn, colors.cardBg]);
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
@@ -1046,6 +1070,36 @@ export default function Index() {
   const goToNextMonth = () => {
     setMonthOffset((prev) => Math.min(prev + 1, 2));
   };
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      "keyboardDidShow",
+      (event) => {
+        const nextInset = Math.max(event.endCoordinates?.height || 0, 0);
+        setLoginKeyboardInset(nextInset);
+
+        setTimeout(() => {
+          loginScrollRef.current?.scrollTo({
+            y: Platform.OS === "android" ? 260 : 190,
+            animated: true,
+          });
+        }, 80);
+      },
+    );
+
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setLoginKeyboardInset(0);
+
+      if (!tc) {
+        resetLoginScroll();
+      }
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [tc]);
 
   const resetStudentSessionState = useCallback(() => {
     setSessionTc("");
@@ -1846,7 +1900,10 @@ export default function Index() {
 
   const handleTcInputFocus = () => {
     setTimeout(() => {
-      loginScrollRef.current?.scrollTo({ y: 160, animated: true });
+      loginScrollRef.current?.scrollTo({
+        y: Platform.OS === "android" ? 260 : 190,
+        animated: true,
+      });
     }, 180);
   };
 
@@ -1866,12 +1923,16 @@ export default function Index() {
         />
         <KeyboardAvoidingView
           style={[styles.container, { backgroundColor: colors.screenBg }]}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
         >
           <ScrollView
             ref={loginScrollRef}
             style={[styles.container, { backgroundColor: colors.screenBg }]}
-            contentContainerStyle={styles.loginContent}
+            contentContainerStyle={[
+              styles.loginContent,
+              { paddingBottom: 60 + loginKeyboardInset },
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             keyboardDismissMode="on-drag"
