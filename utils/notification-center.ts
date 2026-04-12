@@ -480,7 +480,7 @@ export async function syncStudentNotifications(
         ),
         studentTc: user.tc,
         type: "missing-documents",
-        title: "Eksik evrakın var",
+        title: "Eksik evrağın var",
         message: `Eksik evraklar: ${missingDocs.join(", ")}`,
         createdAt: now,
         read: false,

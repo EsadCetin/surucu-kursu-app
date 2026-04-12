@@ -1028,9 +1028,25 @@ export default function Index() {
   const router = useRouter();
   const navigation = useNavigation<any>();
   useEffect(() => {
+    const titleNode = () => (
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: "800",
+          color: colors.text,
+        }}
+      >
+        Ana Sayfa
+      </Text>
+    );
+
     navigation.setOptions({
-      headerTitle: !loggedIn ? () => null : undefined,
+      headerTitle: !loggedIn ? () => null : titleNode,
       headerTransparent: !loggedIn,
+      headerTintColor: colors.text,
+      headerTitleStyle: {
+        color: colors.text,
+      },
       headerStyle: {
         height: 80,
         backgroundColor: !loggedIn ? "transparent" : colors.cardBg,
@@ -1039,15 +1055,19 @@ export default function Index() {
 
     return () => {
       navigation.setOptions({
-        headerTitle: undefined,
+        headerTitle: titleNode,
         headerTransparent: false,
+        headerTintColor: colors.text,
+        headerTitleStyle: {
+          color: colors.text,
+        },
         headerStyle: {
           height: 80,
           backgroundColor: colors.cardBg,
         },
       });
     };
-  }, [navigation, loggedIn, colors.cardBg]);
+  }, [navigation, loggedIn, colors.cardBg, colors.text]);
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
   const scrollStartYRef = useRef(0);
@@ -1075,12 +1095,17 @@ export default function Index() {
     const showSubscription = Keyboard.addListener(
       "keyboardDidShow",
       (event) => {
-        const nextInset = Math.max(event.endCoordinates?.height || 0, 0);
+        const rawHeight = Math.max(event.endCoordinates?.height || 0, 0);
+        const nextInset =
+          Platform.OS === "ios"
+            ? Math.max(rawHeight - 140, 0)
+            : Math.min(rawHeight, 36);
+
         setLoginKeyboardInset(nextInset);
 
         setTimeout(() => {
           loginScrollRef.current?.scrollTo({
-            y: Platform.OS === "android" ? 260 : 190,
+            y: Platform.OS === "android" ? 110 : 80,
             animated: true,
           });
         }, 80);
@@ -1901,7 +1926,7 @@ export default function Index() {
   const handleTcInputFocus = () => {
     setTimeout(() => {
       loginScrollRef.current?.scrollTo({
-        y: Platform.OS === "android" ? 260 : 190,
+        y: Platform.OS === "android" ? 110 : 80,
         animated: true,
       });
     }, 180);
@@ -1923,15 +1948,20 @@ export default function Index() {
         />
         <KeyboardAvoidingView
           style={[styles.container, { backgroundColor: colors.screenBg }]}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
         >
           <ScrollView
             ref={loginScrollRef}
             style={[styles.container, { backgroundColor: colors.screenBg }]}
             contentContainerStyle={[
               styles.loginContent,
-              { paddingBottom: 60 + loginKeyboardInset },
+              {
+                paddingBottom:
+                  Platform.OS === "ios"
+                    ? 60 + loginKeyboardInset
+                    : 32 + loginKeyboardInset,
+              },
             ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
