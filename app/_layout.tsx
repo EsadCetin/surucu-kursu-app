@@ -134,6 +134,7 @@ export default function Layout() {
         headerShown: true,
         tabBarStyle: { display: "none" },
         headerStyle: {
+          height: 80,
           backgroundColor: colors.cardBg,
         },
         headerShadowVisible: false,
@@ -219,7 +220,6 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   iconButton: {
-    marginTop: 8,
     width: 42,
     height: 42,
     borderRadius: 14,

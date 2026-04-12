@@ -2,21 +2,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import {
-    AppNotificationItem,
-    getNotificationSummary,
-    markAllNotificationsAsRead,
-    markNotificationAsRead,
+  AppNotificationItem,
+  getNotificationSummary,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
 } from "../utils/notification-center";
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
@@ -47,6 +47,8 @@ function getTypeLabel(type: AppNotificationItem["type"]) {
     case "exam-today":
       return "Sınav";
     case "new-lessons":
+      return "Takvim";
+    case "lesson-plan-changed":
       return "Takvim";
     default:
       return "Bildirim";
@@ -259,69 +261,99 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 28 },
   heroCard: {
-    borderRadius: 22,
     borderWidth: 1,
+    borderRadius: 24,
     padding: 18,
     marginBottom: 14,
-  },
-  heroTitle: { fontSize: 22, fontWeight: "800", marginBottom: 8 },
-  heroText: { fontSize: 14, lineHeight: 22 },
-  heroMetaRow: {
-    marginTop: 16,
-    flexDirection: "row",
     gap: 10,
-    flexWrap: "wrap",
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  heroText: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  heroMetaRow: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
   },
   countBadge: {
+    borderWidth: 1,
     borderRadius: 999,
-    borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
-  countBadgeText: { fontSize: 13, fontWeight: "800" },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
   markAllButton: {
-    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    borderRadius: 999,
+    paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  markAllButtonText: { fontSize: 13, fontWeight: "800" },
-  emptyCard: {
-    borderRadius: 22,
-    borderWidth: 1,
-    padding: 18,
-    marginBottom: 14,
+  markAllButtonText: {
+    fontSize: 12,
+    fontWeight: "800",
   },
-  emptyTitle: { fontSize: 17, fontWeight: "800", marginBottom: 8 },
-  emptyText: { fontSize: 14, lineHeight: 22 },
-  notificationCard: {
-    borderRadius: 22,
+  emptyCard: {
     borderWidth: 1,
-    padding: 16,
+    borderRadius: 24,
+    padding: 20,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  notificationCard: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 18,
     marginBottom: 12,
+    gap: 10,
   },
   notificationHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
   },
   typeBadge: {
-    borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  typeBadgeText: { fontSize: 12, fontWeight: "800" },
-  unreadDot: {
-    width: 11,
-    height: 11,
     borderRadius: 999,
-    backgroundColor: "#c1121f",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  notificationTitle: { fontSize: 17, fontWeight: "800", marginBottom: 8 },
-  notificationText: { fontSize: 14, lineHeight: 22, marginBottom: 10 },
-  notificationDate: { fontSize: 12, fontWeight: "700" },
+  typeBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: "#ef4444",
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  notificationText: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  notificationDate: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
 });

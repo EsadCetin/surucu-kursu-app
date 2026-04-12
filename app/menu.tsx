@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
 import {
     Alert,
+    Animated,
+    Easing,
     ScrollView,
     StyleSheet,
     Text,
@@ -52,9 +55,78 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+function ThemeToggle({
+  selectedTheme,
+  onToggle,
+  colors,
+}: {
+  selectedTheme: "dark" | "light";
+  onToggle: () => void;
+  colors: {
+    cardAltBg: string;
+    border: string;
+    accent: string;
+    accentContrast: string;
+    mutedText: string;
+  };
+}) {
+  const animatedValue = useRef(
+    new Animated.Value(selectedTheme === "light" ? 1 : 0),
+  ).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: selectedTheme === "light" ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [animatedValue, selectedTheme]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 35],
+  });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onToggle}
+      style={[
+        styles.themeToggle,
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.cardAltBg,
+        },
+      ]}
+    >
+      <View style={styles.themeToggleIcons}>
+        <Ionicons name="moon" size={15} color={colors.mutedText} />
+        <Ionicons name="sunny" size={16} color={colors.mutedText} />
+      </View>
+
+      <Animated.View
+        style={[
+          styles.themeToggleThumb,
+          {
+            backgroundColor: colors.accent,
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <Ionicons
+          name={selectedTheme === "light" ? "sunny" : "moon"}
+          size={16}
+          color={colors.accentContrast}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export default function MenuScreen() {
   const router = useRouter();
-  const { colors } = useAppTheme();
+  const { theme, colors, themeReady, toggleTheme } = useAppTheme();
 
   const handleLogout = async () => {
     try {
@@ -88,6 +160,14 @@ export default function MenuScreen() {
                 color={colors.accentContrast}
               />
             </View>
+
+            {themeReady ? (
+              <ThemeToggle
+                selectedTheme={theme}
+                onToggle={toggleTheme}
+                colors={colors}
+              />
+            ) : null}
           </View>
 
           <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
@@ -239,6 +319,28 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  themeToggle: {
+    width: 68,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  themeToggleIcons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 9,
+  },
+  themeToggleThumb: {
+    position: "absolute",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -46,7 +46,8 @@ export type AppNotificationType =
   | "payment-due"
   | "lesson-tomorrow"
   | "exam-today"
-  | "new-lessons";
+  | "new-lessons"
+  | "lesson-plan-changed";
 
 export type AppNotificationItem = {
   id: string;
@@ -65,6 +66,7 @@ type StudentNotificationSnapshot = {
   tomorrowLessonKey: string;
   todayExamKey: string;
   lessonCount: number;
+  lessonPlanKey: string;
 };
 
 export type NotificationSummary = {
@@ -182,14 +184,49 @@ function isUpcomingPaymentDate(dateStr?: string, maxDays = 3) {
   return diff !== null ? diff >= 0 && diff <= maxDays : false;
 }
 
-function getNearestTomorrowLesson(user: Student) {
+function isLessonConfirmed(lesson?: LessonItem) {
+  if (!lesson) return false;
+
+  if (lesson.teyitli_mi === true) return true;
+
+  const durum = normalizeValue(lesson.durum).toLocaleLowerCase("tr-TR");
+  if (durum === "teyitli" || durum === "katildi") return true;
+
+  const katilim = normalizeValue(lesson.katilim).toLocaleLowerCase("tr-TR");
+  if (katilim === "katildi") return true;
+
+  return false;
+}
+
+function getNearestConfirmedTomorrowLesson(user: Student) {
   return getLessons(user)
-    .filter((lesson) => isTomorrowDate(lesson.tarih))
+    .filter(
+      (lesson) => isLessonConfirmed(lesson) && isTomorrowDate(lesson.tarih),
+    )
     .sort((a, b) => {
       const first = `${a.tarih || ""} ${a.saat || ""}`;
       const second = `${b.tarih || ""} ${b.saat || ""}`;
       return first.localeCompare(second, "tr");
     })[0];
+}
+
+function buildLessonPlanKey(user: Student) {
+  const lessons = getLessons(user);
+
+  return lessons
+    .map((lesson, index) => {
+      const tarih = normalizeValue(lesson.tarih);
+      const saat = normalizeValue(lesson.saat);
+      const notText = normalizeValue(lesson.not);
+      const egitmen = normalizeValue(lesson.egitmen);
+      const aracPlaka = normalizeValue(lesson.arac_plaka);
+      const telefon = normalizeValue(lesson.telefon);
+
+      return [index, tarih, saat, notText, egitmen, aracPlaka, telefon].join(
+        "~",
+      );
+    })
+    .join("|");
 }
 
 function buildPaymentEntries(user: Student) {
@@ -303,12 +340,14 @@ export async function syncStudentNotifications(
   user: Student,
 ): Promise<NotificationSummary> {
   const snapshots = await readSnapshots();
+  const hasPreviousSnapshot = Boolean(snapshots[user.tc]);
   const prev = snapshots[user.tc] || {
     missingDocumentsKey: "",
     paymentKey: "",
     tomorrowLessonKey: "",
     todayExamKey: "",
     lessonCount: 0,
+    lessonPlanKey: "",
   };
 
   const now = new Date().toISOString();
@@ -351,7 +390,7 @@ export async function syncStudentNotifications(
     });
   }
 
-  const tomorrowLesson = getNearestTomorrowLesson(user);
+  const tomorrowLesson = getNearestConfirmedTomorrowLesson(user);
   const currentTomorrowLessonKey = tomorrowLesson
     ? `${tomorrowLesson.tarih || ""}:${tomorrowLesson.saat || ""}`
     : "";
@@ -391,17 +430,39 @@ export async function syncStudentNotifications(
   }
 
   const lessons = getLessons(user);
-  if (lessons.length > prev.lessonCount && prev.lessonCount > 0) {
-    const sourceKey = `${prev.lessonCount}->${lessons.length}`;
+  const currentLessonPlanKey = buildLessonPlanKey(user);
+
+  if (hasPreviousSnapshot && lessons.length > prev.lessonCount) {
+    const sourceKey = `${prev.lessonCount}->${lessons.length}:${currentLessonPlanKey}`;
     await pushNotification({
       id: buildNotificationId(user.tc, "new-lessons", sourceKey),
       studentTc: user.tc,
       type: "new-lessons",
-      title: "Yeni direksiyon dersi planlandı",
-      message: `Direksiyon dersi sayın ${prev.lessonCount} iken ${lessons.length} oldu.`,
+      title: "Yeni ders planı yapıldı",
+      message: "Direksiyon ders planına yeni ders eklendi.",
       createdAt: now,
       read: false,
       sourceKey,
+    });
+  } else if (
+    hasPreviousSnapshot &&
+    lessons.length > 0 &&
+    lessons.length === prev.lessonCount &&
+    prev.lessonPlanKey !== currentLessonPlanKey
+  ) {
+    await pushNotification({
+      id: buildNotificationId(
+        user.tc,
+        "lesson-plan-changed",
+        currentLessonPlanKey,
+      ),
+      studentTc: user.tc,
+      type: "lesson-plan-changed",
+      title: "Ders planında değişiklik yapıldı",
+      message: "Direksiyon ders planın güncellendi. Takvimi kontrol et.",
+      createdAt: now,
+      read: false,
+      sourceKey: currentLessonPlanKey,
     });
   }
 
@@ -411,20 +472,14 @@ export async function syncStudentNotifications(
     tomorrowLessonKey: currentTomorrowLessonKey,
     todayExamKey: currentTodayExamKey,
     lessonCount: lessons.length,
-  };
-
-  await writeSnapshots(snapshots);
-  snapshots[user.tc] = {
-    missingDocumentsKey: currentMissingDocumentsKey,
-    paymentKey: currentPaymentKey,
-    tomorrowLessonKey: currentTomorrowLessonKey,
-    todayExamKey: currentTodayExamKey,
-    lessonCount: lessons.length,
+    lessonPlanKey: currentLessonPlanKey,
   };
 
   await writeSnapshots(snapshots);
   return getNotificationSummary(user.tc);
 }
+
+export const syncStudentNotificationState = syncStudentNotifications;
 
 export async function getNotificationSummary(
   studentTc?: string,

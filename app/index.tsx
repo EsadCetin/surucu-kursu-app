@@ -27,7 +27,7 @@ import {
 import { useAppTheme } from "../hooks/useAppTheme";
 import {
   getNotificationSummary,
-  syncStudentNotifications,
+  syncStudentNotificationState,
 } from "../utils/notification-center";
 
 type LessonItem = {
@@ -1008,7 +1008,7 @@ export default function Index() {
   const [restoringSession, setRestoringSession] = useState(true);
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const [latestNotificationText, setLatestNotificationText] = useState("");
-  const { theme, colors, themeReady, toggleTheme } = useAppTheme();
+  const { theme, colors } = useAppTheme();
   const router = useRouter();
   const calendarScrollRef = useRef<ScrollView | null>(null);
   const loginScrollRef = useRef<ScrollView | null>(null);
@@ -1247,7 +1247,7 @@ export default function Index() {
 
     const syncNotifications = async () => {
       try {
-        const summary = await syncStudentNotifications(user);
+        const summary = await syncStudentNotificationState(user);
         setNotificationUnreadCount(summary.unreadCount);
         setLatestNotificationText(summary.items[0]?.message || "");
       } catch (error) {
@@ -1867,16 +1867,6 @@ export default function Index() {
               }
             }}
           >
-            <View style={styles.loginThemeToggleWrap}>
-              {themeReady ? (
-                <ThemeToggle
-                  selectedTheme={theme}
-                  onToggle={toggleTheme}
-                  colors={colors}
-                />
-              ) : null}
-            </View>
-
             <View style={styles.loginHero}>
               <Image
                 source={LOGIN_LOGO}
@@ -2011,16 +2001,6 @@ export default function Index() {
                 </Text>
               </View>
             </View>
-
-            {themeReady ? (
-              <View style={styles.profileThemeToggleWrap}>
-                <ThemeToggle
-                  selectedTheme={theme}
-                  onToggle={toggleTheme}
-                  colors={colors}
-                />
-              </View>
-            ) : null}
           </View>
           <View style={styles.chipsRow}>
             <InfoChip label="TC" value={user.tc} colors={colors} />
@@ -2113,65 +2093,6 @@ export default function Index() {
             </TouchableOpacity>
           ) : null}
         </View>
-        <View
-          style={[
-            styles.notificationCard,
-            { backgroundColor: colors.cardBg, borderColor: colors.border },
-          ]}
-        >
-          <View style={styles.notificationCardHeader}>
-            <View style={styles.notificationCardTitleWrap}>
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  styles.notificationSectionTitle,
-                  { color: colors.text },
-                ]}
-              >
-                Bildirim Merkezi
-              </Text>
-              <Text
-                style={[styles.notificationSubtitle, { color: colors.subText }]}
-              >
-                Evrak, ödeme, ders ve sınav uyarıların burada toplanır.
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.notificationCountBadge,
-                {
-                  backgroundColor: colors.cardAltBg,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.notificationCountBadgeText,
-                  { color: colors.text },
-                ]}
-              >
-                {notificationUnreadCount} yeni
-              </Text>
-            </View>
-          </View>
-
-          <Text style={[styles.notificationPreview, { color: colors.subText }]}>
-            {latestNotificationText ||
-              "Şu an yeni bir uyarı görünmüyor. Yeni bildirimler oluştuğunda burada özetleri göreceksiniz."}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.notificationOpenButton}
-            onPress={openNotificationCenter}
-          >
-            <Text style={styles.notificationOpenButtonText}>
-              Bildirim Merkezini Aç
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <View
           style={[
             styles.infoCard,
