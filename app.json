@@ -9,16 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.esadcetin.surucukursuapp",
-      "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
-      },
-      "entitlements": {
-        "aps-environment": "development",
-        "com.apple.security.application-groups": [
-          "group.com.esadcetin.surucukursuapp"
-        ]
-      }
+      "bundleIdentifier": "com.esadcetin.surucukursuapp"
     },
     "android": {
       "package": "com.esadcetin.surucukursuapp",
@@ -44,8 +35,7 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "expo-notifications"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,6 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
 
 export type LessonItem = {
   tarih?: string;
@@ -72,16 +70,6 @@ type StudentNotificationSnapshot = {
 const STORAGE_KEY = "app_notification_center_v1";
 const SNAPSHOT_STORAGE_KEY = "app_notification_snapshot_v1";
 const MAX_NOTIFICATIONS = 60;
-const ANDROID_CHANNEL_ID = "student-alerts";
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 function normalizeValue(value?: string | null) {
   if (!value) return "";
@@ -247,33 +235,6 @@ function buildPaymentEntries(user: Student) {
   return entries;
 }
 
-async function ensureNotificationPermissions() {
-  const permissions = await Notifications.getPermissionsAsync();
-  let granted =
-    permissions.granted ||
-    permissions.ios?.status ===
-      Notifications.IosAuthorizationStatus.PROVISIONAL;
-
-  if (!granted) {
-    const requested = await Notifications.requestPermissionsAsync();
-    granted =
-      requested.granted ||
-      requested.ios?.status ===
-        Notifications.IosAuthorizationStatus.PROVISIONAL;
-  }
-
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-      name: "Öğrenci Bildirimleri",
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 150, 250],
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-    });
-  }
-
-  return granted;
-}
-
 async function readNotifications() {
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
   if (!raw) return [] as AppNotificationItem[];
@@ -317,7 +278,6 @@ async function writeSnapshots(
 
 async function addNotification(
   item: Omit<AppNotificationItem, "id" | "createdAt" | "read">,
-  allowLocalPush = true,
 ) {
   const existing = await readNotifications();
   const duplicate = existing.find(
@@ -341,24 +301,6 @@ async function addNotification(
   );
 
   await writeNotifications(nextItems);
-
-  if (allowLocalPush) {
-    const granted = await ensureNotificationPermissions();
-    if (granted) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: created.title,
-          body: created.message,
-          sound: true,
-        },
-        trigger:
-          Platform.OS === "android"
-            ? { channelId: ANDROID_CHANNEL_ID, seconds: 1 }
-            : null,
-      });
-    }
-  }
-
   return nextItems;
 }
 
