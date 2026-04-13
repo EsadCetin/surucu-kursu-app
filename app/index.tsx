@@ -2626,18 +2626,9 @@ export default function Index() {
                       ),
                     ),
                   );
-                  const previewText = hasEvents
-                    ? cell.events
-                        .slice(0, 2)
-                        .map((event) =>
-                          event.type === "lesson"
-                            ? event.time || ""
-                            : event.time
-                              ? `${event.title} ${event.time}`
-                              : event.title,
-                        )
-                        .filter(Boolean)
-                        .join("\n")
+                  const primaryEvent = hasEvents ? cell.events[0] : null;
+                  const previewText = primaryEvent
+                    ? primaryEvent.time || primaryEvent.title
                     : "";
 
                   return (
@@ -2652,74 +2643,77 @@ export default function Index() {
                       onPress={() => handleCalendarCellPress(cell)}
                       disabled={!hasEvents}
                     >
-                      <View
-                        style={[
-                          styles.calendarCellDayBadge,
-                          cell.isToday
-                            ? [
-                                styles.calendarCellDayBadgeToday,
-                                {
-                                  backgroundColor:
-                                    theme === "light"
-                                      ? colors.accentSoft
-                                      : "#686868",
-                                },
-                              ]
-                            : null,
-                        ]}
-                      >
-                        <Text
+                      <View style={styles.calendarCellInner}>
+                        <View
                           style={[
-                            styles.calendarCellDayText,
-                            { color: colors.text },
-                            !cell.isCurrentMonth
-                              ? [
-                                  styles.calendarCellDayTextMuted,
-                                  { color: colors.mutedText },
-                                ]
-                              : null,
+                            styles.calendarCellDayBadge,
                             cell.isToday
-                              ? styles.calendarCellDayTextToday
+                              ? [
+                                  styles.calendarCellDayBadgeToday,
+                                  {
+                                    backgroundColor:
+                                      theme === "light"
+                                        ? colors.accentSoft
+                                        : "#686868",
+                                  },
+                                ]
                               : null,
                           ]}
                         >
-                          {cell.dayNumber}
+                          <Text
+                            style={[
+                              styles.calendarCellDayText,
+                              { color: colors.text },
+                              !cell.isCurrentMonth
+                                ? [
+                                    styles.calendarCellDayTextMuted,
+                                    { color: colors.mutedText },
+                                  ]
+                                : null,
+                              cell.isToday
+                                ? styles.calendarCellDayTextToday
+                                : null,
+                            ]}
+                          >
+                            {cell.dayNumber}
+                          </Text>
+                        </View>
+
+                        <View style={styles.cellDotsRow}>
+                          {eventTones.slice(0, 3).map((tone, idx) => (
+                            <View
+                              key={`${cell.key}-${tone}-${idx}`}
+                              style={[
+                                styles.cellDot,
+                                tone === "red"
+                                  ? styles.eventDotRed
+                                  : tone === "blue"
+                                    ? styles.eventDotBlue
+                                    : tone === "orange"
+                                      ? styles.eventDotOrange
+                                      : styles.eventDotGreen,
+                              ]}
+                            />
+                          ))}
+                        </View>
+
+                        <Text
+                          style={[
+                            styles.calendarCellPreview,
+                            { color: colors.subText },
+                            !cell.isCurrentMonth
+                              ? [
+                                  styles.calendarCellPreviewMuted,
+                                  { color: colors.mutedText },
+                                ]
+                              : null,
+                          ]}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {previewText}
                         </Text>
                       </View>
-
-                      <View style={styles.cellDotsRow}>
-                        {eventTones.slice(0, 3).map((tone, idx) => (
-                          <View
-                            key={`${cell.key}-${tone}-${idx}`}
-                            style={[
-                              styles.cellDot,
-                              tone === "red"
-                                ? styles.eventDotRed
-                                : tone === "blue"
-                                  ? styles.eventDotBlue
-                                  : tone === "orange"
-                                    ? styles.eventDotOrange
-                                    : styles.eventDotGreen,
-                            ]}
-                          />
-                        ))}
-                      </View>
-
-                      <Text
-                        style={[
-                          styles.calendarCellPreview,
-                          { color: colors.subText },
-                          !cell.isCurrentMonth
-                            ? [
-                                styles.calendarCellPreviewMuted,
-                                { color: colors.mutedText },
-                              ]
-                            : null,
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {previewText}
-                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -3311,8 +3305,24 @@ const styles = StyleSheet.create({
   legendText: { color: "#cfd0d6", fontSize: 12, fontWeight: "600" },
   calendarPageScroll: { flex: 1 },
   calendarPageContent: { paddingHorizontal: 8, paddingBottom: 32 },
-  monthGrid: { flexDirection: "row", flexWrap: "wrap" },
-  calendarCell: { width: "14.2857%", aspectRatio: 0.82, padding: 4 },
+  monthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+  },
+  calendarCell: {
+    width: "14.2857%",
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+  },
+  calendarCellInner: {
+    minHeight: 92,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    overflow: "hidden",
+  },
+
   calendarCellMuted: { opacity: 0.38 },
   calendarCellToday: { opacity: 1 },
   calendarCellDayBadge: {
@@ -3322,17 +3332,21 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 6,
   },
+
   calendarCellDayBadgeToday: { backgroundColor: "#686868" },
   calendarCellDayText: { color: "#ffffff", fontSize: 22, fontWeight: "500" },
   calendarCellDayTextMuted: { color: "#8a8a90" },
   calendarCellDayTextToday: { color: "#ffffff", fontWeight: "800" },
   cellDotsRow: {
-    minHeight: 18,
+    height: 12,
+    minHeight: 12,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 5,
-    marginBottom: 5,
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 6,
   },
   cellDot: { width: 9, height: 9, borderRadius: 5 },
   eventDotRed: { backgroundColor: "#c1121f" },
@@ -3340,12 +3354,15 @@ const styles = StyleSheet.create({
   eventDotOrange: { backgroundColor: "#c98819" },
   eventDotGreen: { backgroundColor: "#1f8f55" },
   calendarCellPreview: {
+    width: "100%",
+    minHeight: 24,
     color: "#f2f2f5",
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
     textAlign: "center",
-    paddingHorizontal: 1,
+    paddingHorizontal: 2,
     fontWeight: "800",
+    flexShrink: 1,
   },
   calendarCellPreviewMuted: { color: "#707078" },
 });

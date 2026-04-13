@@ -1,13 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Alert,
   Animated,
-  Dimensions,
-  PanResponder,
-  Platform,
+  Easing,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,12 +19,10 @@ type MenuItem = {
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
-  route: "/" | "/duyurular" | "/iletisim" | "/sss" | "/bilgilendirme";
+  route: "/" | "/duyurular" | "/iletisim" | "/sss";
 };
 
 const STUDENT_SESSION_TC_KEY = "student_session_tc";
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const SWIPE_CLOSE_THRESHOLD = Math.min(120, SCREEN_WIDTH * 0.28);
 
 const MENU_ITEMS: MenuItem[] = [
   {
@@ -37,16 +33,9 @@ const MENU_ITEMS: MenuItem[] = [
     route: "/",
   },
   {
-    key: "info",
-    title: "Bilgilendirme",
-    subtitle: "Kayıt ve süreç detaylarını görüntüle",
-    icon: "document-text-outline",
-    route: "/bilgilendirme",
-  },
-  {
     key: "announcements",
     title: "Duyurular",
-    subtitle: "Güncel bilgilendirmeleri aç",
+    subtitle: "Güncel duyuruları görüntüle",
     icon: "megaphone-outline",
     route: "/duyurular",
   },
@@ -60,71 +49,84 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "faq",
     title: "SSS",
-    subtitle: "Sık sorulan sorular ekranını aç",
+    subtitle: "Sıkça sorulan sorular",
     icon: "help-circle-outline",
     route: "/sss",
   },
 ];
 
+function ThemeToggle({
+  selectedTheme,
+  onToggle,
+  colors,
+}: {
+  selectedTheme: "dark" | "light";
+  onToggle: () => void;
+  colors: {
+    cardAltBg: string;
+    border: string;
+    accent: string;
+    accentContrast: string;
+    mutedText: string;
+  };
+}) {
+  const animatedValue = useRef(
+    new Animated.Value(selectedTheme === "light" ? 1 : 0),
+  ).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: selectedTheme === "light" ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [animatedValue, selectedTheme]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 35],
+  });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onToggle}
+      style={[
+        styles.themeToggle,
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.cardAltBg,
+        },
+      ]}
+    >
+      <View style={styles.themeToggleIcons}>
+        <Ionicons name="moon" size={15} color={colors.mutedText} />
+        <Ionicons name="sunny" size={16} color={colors.mutedText} />
+      </View>
+
+      <Animated.View
+        style={[
+          styles.themeToggleThumb,
+          {
+            backgroundColor: colors.accent,
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <Ionicons
+          name={selectedTheme === "light" ? "sunny" : "moon"}
+          size={16}
+          color={colors.accentContrast}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export default function MenuScreen() {
   const router = useRouter();
-  const { colors } = useAppTheme();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const isWeb = Platform.OS === "web";
-
-  const closeMenu = () => {
-    Animated.timing(translateX, {
-      toValue: SCREEN_WIDTH,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => {
-      translateX.setValue(0);
-      router.back();
-    });
-  };
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (isWeb) return false;
-          const horizontal =
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-          return horizontal && gestureState.dx > 10;
-        },
-        onPanResponderMove: (_, gestureState) => {
-          if (isWeb) return;
-          translateX.setValue(Math.max(0, gestureState.dx));
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (isWeb) return;
-          if (
-            gestureState.dx > SWIPE_CLOSE_THRESHOLD ||
-            gestureState.vx > 0.8
-          ) {
-            closeMenu();
-            return;
-          }
-
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 0,
-            speed: 20,
-          }).start();
-        },
-        onPanResponderTerminate: () => {
-          if (isWeb) return;
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 0,
-            speed: 20,
-          }).start();
-        },
-      }),
-    [router, translateX, isWeb],
-  );
+  const { theme, colors, themeReady, toggleTheme } = useAppTheme();
 
   const handleLogout = async () => {
     try {
@@ -137,138 +139,116 @@ export default function MenuScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screenBg }]}>
-      <Animated.View
-        style={[
-          styles.animatedWrap,
-          {
-            transform: [{ translateX }],
-          },
-        ]}
-        {...(!isWeb ? panResponder.panHandlers : {})}
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          style={[styles.container, { backgroundColor: colors.screenBg }]}
-          contentContainerStyle={[styles.content, isWeb && styles.webContent]}
-          showsVerticalScrollIndicator={false}
+        <View
+          style={[
+            styles.heroCard,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
         >
-          <View
-            style={[
-              styles.heroCard,
-              styles.webCard,
-              { backgroundColor: colors.cardBg, borderColor: colors.border },
-            ]}
-          >
-            <View style={styles.heroTopRow}>
-              <View
-                style={[
-                  styles.heroIconWrap,
-                  { backgroundColor: colors.accent },
-                ]}
-              >
-                <Ionicons
-                  name="menu-outline"
-                  size={28}
-                  color={colors.accentContrast}
-                />
-              </View>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={closeMenu}
-                style={[
-                  styles.closeButton,
-                  {
-                    backgroundColor: colors.cardAltBg,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Ionicons name="close" size={20} color={colors.text} />
-              </TouchableOpacity>
+          <View style={styles.heroTopRow}>
+            <View
+              style={[styles.heroIconWrap, { backgroundColor: colors.accent }]}
+            >
+              <Ionicons
+                name="menu-outline"
+                size={28}
+                color={colors.accentContrast}
+              />
             </View>
 
-            <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
-            <Text style={[styles.heroText, { color: colors.subText }]}>
-              Bu ekranı kapatmak için kapat simgesine basabilirsin.
+            {themeReady ? (
+              <ThemeToggle
+                selectedTheme={theme}
+                onToggle={toggleTheme}
+                colors={colors}
+              />
+            ) : null}
+          </View>
+
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
+          <Text style={[styles.heroText, { color: colors.subText }]}> 
+            Buradan uygulamanın diğer ekranlarına geçebilirsin.
+          </Text>
+        </View>
+
+        <View style={styles.listWrap}>
+          {MENU_ITEMS.map((item) => (
+            <TouchableOpacity
+              key={item.key}
+              activeOpacity={0.9}
+              onPress={() => router.replace(item.route)}
+              style={[
+                styles.menuCard,
+                { backgroundColor: colors.cardBg, borderColor: colors.border },
+              ]}
+            >
+              <View
+                style={[styles.menuIcon, { backgroundColor: colors.cardAltBg }]}
+              >
+                <Ionicons name={item.icon} size={22} color={colors.text} />
+              </View>
+
+              <View style={styles.menuBody}>
+                <Text style={[styles.menuTitle, { color: colors.text }]}> 
+                  {item.title}
+                </Text>
+                <Text
+                  style={[styles.menuSubtitle, { color: colors.subText }]}
+                >
+                  {item.subtitle}
+                </Text>
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.mutedText}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleLogout}
+          style={[
+            styles.logoutButton,
+            { backgroundColor: colors.cardBg, borderColor: colors.border },
+          ]}
+        >
+          <View
+            style={[styles.logoutIcon, { backgroundColor: colors.cardAltBg }]}
+          >
+            <Ionicons name="log-out-outline" size={22} color={colors.text} />
+          </View>
+
+          <View style={styles.menuBody}>
+            <Text style={[styles.menuTitle, { color: colors.text }]}> 
+              Çıkış Yap
+            </Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}> 
+              Öğrenci oturumunu kapat ve giriş ekranına dön
             </Text>
           </View>
 
-          <View style={[styles.listWrap, styles.webCard]}>
-            {MENU_ITEMS.map((item) => (
-              <TouchableOpacity
-                key={item.key}
-                activeOpacity={0.9}
-                onPress={() => router.replace(item.route)}
-                style={[
-                  styles.menuCard,
-                  {
-                    backgroundColor: colors.cardBg,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.menuIcon,
-                    { backgroundColor: colors.cardAltBg },
-                  ]}
-                >
-                  <Ionicons name={item.icon} size={22} color={colors.text} />
-                </View>
-
-                <View style={styles.menuBody}>
-                  <Text style={[styles.menuTitle, { color: colors.text }]}>
-                    {item.title}
-                  </Text>
-                  <Text
-                    style={[styles.menuSubtitle, { color: colors.subText }]}
-                  >
-                    {item.subtitle}
-                  </Text>
-                </View>
-
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={colors.mutedText}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={handleLogout}
-            style={[
-              styles.logoutButton,
-              styles.webCard,
-              { backgroundColor: colors.cardBg, borderColor: colors.border },
-            ]}
-          >
-            <View
-              style={[styles.logoutIcon, { backgroundColor: colors.cardAltBg }]}
-            >
-              <Ionicons name="log-out-outline" size={22} color={colors.text} />
-            </View>
-            <View style={styles.menuBody}>
-              <Text style={[styles.menuTitle, { color: colors.text }]}>
-                Çıkış Yap
-              </Text>
-              <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
-                Öğrenci oturumunu kapat ve giriş ekranına dön
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
-      </Animated.View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={colors.mutedText}
+          />
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
-  },
-  animatedWrap: {
     flex: 1,
   },
   container: {
@@ -278,17 +258,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 32,
     gap: 14,
-  },
-  webContent: {
-    width: "100%",
-    maxWidth: 880,
-    alignSelf: "center",
-    paddingTop: 24,
-    paddingBottom: 40,
-  },
-  webCard: {
-    width: "100%",
-    alignSelf: "center",
   },
   heroCard: {
     borderWidth: 1,
@@ -308,14 +277,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   heroTitle: {
     fontSize: 22,
     fontWeight: "800",
@@ -324,6 +285,31 @@ const styles = StyleSheet.create({
   heroText: {
     fontSize: 14,
     lineHeight: 22,
+  },
+  themeToggle: {
+    width: 68,
+    height: 34,
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: "center",
+    overflow: "hidden",
+    position: "relative",
+  },
+  themeToggleIcons: {
+    width: "100%",
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  themeToggleThumb: {
+    position: "absolute",
+    top: 3,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   listWrap: {
     gap: 12,
@@ -362,6 +348,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginTop: 6,
   },
   logoutIcon: {
     width: 46,
