@@ -182,6 +182,15 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="bilgilendirme"
+        options={{
+          title: "Bilgilendirme",
+          headerLeft: () => <MenuCloseButton />,
+          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
+          headerRight: () => null,
+        }}
+      />
+      <Tabs.Screen
         name="duyurular"
         options={{
           title: "Duyurular",
@@ -216,7 +225,7 @@ export default function Layout() {
         options={{
           title: "Menü",
           href: null,
-          headerLeft: () => <MenuCloseButton />,
+          headerLeft: () => null,
           headerRight: () => null,
           headerTitle: () => <HeaderTitle title="Menü" />,
         }}
@@ -229,6 +238,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
+  },
+  headerLeftInset: {
+    paddingLeft: 20,
+  },
+  headerRightInset: {
+    paddingRight: 20,
   },
   iconButton: {
     width: 42,
@@ -244,21 +259,15 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     paddingHorizontal: 4,
-    position: "absolute",
-    top: -5,
-    right: -4,
     alignItems: "center",
     justifyContent: "center",
+    position: "absolute",
+    top: -4,
+    right: -4,
   },
   badgeText: {
-    color: "#ffffff",
+    color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
-  },
-  headerLeftInset: {
-    paddingLeft: 14,
-  },
-  headerRightInset: {
-    paddingRight: 14,
   },
 });
