@@ -138,7 +138,6 @@ type CalendarCell = {
   events: CalendarEvent[];
 };
 
-const { colors, theme, themeMode } = useAppTheme();
 const isWeb = Platform.OS === "web";
 
 const DATA_URL =
