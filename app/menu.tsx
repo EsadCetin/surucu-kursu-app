@@ -12,7 +12,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { AppThemeMode, useAppTheme } from "../hooks/useAppTheme";
@@ -79,7 +78,7 @@ const THEME_OPTIONS: Array<{
 
 export default function MenuScreen() {
   const router = useRouter();
-  const { colors, theme, themeMode, setTheme } = useAppTheme();
+  const { colors, themeMode, setTheme } = useAppTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const isWeb = Platform.OS === "web";
 
@@ -90,7 +89,13 @@ export default function MenuScreen() {
       useNativeDriver: true,
     }).start(() => {
       translateX.setValue(0);
-      router.back();
+
+      if (router.canGoBack()) {
+        router.back();
+        return;
+      }
+
+      router.replace("/");
     });
   };
 
@@ -178,25 +183,25 @@ export default function MenuScreen() {
                 ]}
               >
                 <Ionicons
-                  name="grid-outline"
-                  size={26}
+                  name="menu-outline"
+                  size={28}
                   color={colors.accentContrast}
                 />
               </View>
 
-              <TouchableOpacity
-                activeOpacity={0.9}
+              <Pressable
                 onPress={closeMenu}
-                style={[
+                style={({ pressed }) => [
                   styles.closeButton,
                   {
                     backgroundColor: colors.cardAltBg,
                     borderColor: colors.border,
+                    opacity: pressed ? 0.86 : 1,
                   },
                 ]}
               >
                 <Ionicons name="close" size={20} color={colors.text} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
@@ -221,7 +226,7 @@ export default function MenuScreen() {
                 ]}
               >
                 <Ionicons
-                  name={theme === "dark" ? "moon-outline" : "sunny-outline"}
+                  name="color-palette-outline"
                   size={20}
                   color={colors.text}
                 />
@@ -259,13 +264,14 @@ export default function MenuScreen() {
                         console.log("Tema değiştirilemedi:", error);
                       });
                     }}
-                    style={[
+                    style={({ pressed }) => [
                       styles.themeSegmentButton,
                       {
                         backgroundColor: selected
                           ? colors.accent
                           : "transparent",
-                        borderColor: selected ? colors.accent : "transparent",
+                        borderColor: selected ? colors.accent : colors.border,
+                        opacity: pressed ? 0.88 : 1,
                       },
                     ]}
                   >
@@ -292,15 +298,15 @@ export default function MenuScreen() {
 
           <View style={[styles.listWrap, styles.webCard]}>
             {MENU_ITEMS.map((item) => (
-              <TouchableOpacity
+              <Pressable
                 key={item.key}
-                activeOpacity={0.92}
                 onPress={() => router.replace(item.route)}
-                style={[
+                style={({ pressed }) => [
                   styles.menuCard,
                   {
                     backgroundColor: colors.cardBg,
                     borderColor: colors.border,
+                    opacity: pressed ? 0.9 : 1,
                   },
                 ]}
               >
@@ -329,17 +335,20 @@ export default function MenuScreen() {
                   size={20}
                   color={colors.mutedText}
                 />
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
 
-          <TouchableOpacity
-            activeOpacity={0.92}
+          <Pressable
             onPress={handleLogout}
-            style={[
+            style={({ pressed }) => [
               styles.logoutButton,
               styles.webCard,
-              { backgroundColor: colors.cardBg, borderColor: colors.border },
+              {
+                backgroundColor: colors.cardBg,
+                borderColor: colors.border,
+                opacity: pressed ? 0.9 : 1,
+              },
             ]}
           >
             <View
@@ -347,6 +356,7 @@ export default function MenuScreen() {
             >
               <Ionicons name="log-out-outline" size={22} color={colors.text} />
             </View>
+
             <View style={styles.menuBody}>
               <Text style={[styles.menuTitle, { color: colors.text }]}>
                 Çıkış Yap
@@ -355,7 +365,7 @@ export default function MenuScreen() {
                 Öğrenci oturumunu kapat ve giriş ekranına dön.
               </Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </ScrollView>
       </Animated.View>
     </View>

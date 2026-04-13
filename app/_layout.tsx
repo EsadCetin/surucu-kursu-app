@@ -22,7 +22,6 @@ type HeaderButtonProps = {
     cardAltBg: string;
     border: string;
     accent: string;
-    accentContrast?: string;
   };
 };
 
@@ -36,16 +35,18 @@ function HeaderIconButton({
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={10}
-      style={[
+      style={({ pressed }) => [
         styles.iconButton,
         {
           backgroundColor: colors.cardAltBg,
           borderColor: colors.border,
+          opacity: pressed ? 0.86 : 1,
         },
       ]}
+      hitSlop={8}
     >
-      <Ionicons name={icon} size={22} color={colors.text} />
+      <Ionicons name={icon} size={20} color={colors.text} />
+
       {showBadge ? (
         <View style={[styles.badge, { backgroundColor: colors.accent }]}>
           <Text style={styles.badgeText}>
@@ -155,13 +156,14 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        tabBarStyle: { display: "none" },
+        tabBarStyle: {
+          display: "none",
+        },
         headerStyle: {
-          height: 80,
-          backgroundColor: colors.cardBg,
+          backgroundColor: colors.screenBg,
         },
         headerShadowVisible: false,
+        headerTintColor: colors.text,
         headerTitleAlign: "center",
         headerLeft: () => <MenuButton />,
         headerRight: () => <NotificationButton />,
@@ -181,12 +183,22 @@ export default function Layout() {
       />
 
       <Tabs.Screen
+        name="menu"
+        options={{
+          title: "Menü",
+          headerTitle: () => <HeaderTitle title="Menü" />,
+          headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
+        }}
+      />
+
+      <Tabs.Screen
         name="bildirimler"
         options={{
           title: "Bildirimler",
+          headerTitle: () => <HeaderTitle title="Bildirimler" />,
           headerLeft: () => <MenuCloseButton />,
           headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="Bildirimler" />,
         }}
       />
 
@@ -194,10 +206,9 @@ export default function Layout() {
         name="duyurular"
         options={{
           title: "Duyurular",
-          href: null,
+          headerTitle: () => <HeaderTitle title="Duyurular" />,
           headerLeft: () => <MenuCloseButton />,
           headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="Duyurular" />,
         }}
       />
 
@@ -205,21 +216,19 @@ export default function Layout() {
         name="iletisim"
         options={{
           title: "İletişim",
-          href: null,
+          headerTitle: () => <HeaderTitle title="İletişim" />,
           headerLeft: () => <MenuCloseButton />,
           headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="İletişim" />,
         }}
       />
 
       <Tabs.Screen
         name="sss"
         options={{
-          title: "SSS",
-          href: null,
+          title: "Sık Sorulan Sorular",
+          headerTitle: () => <HeaderTitle title="SSS" />,
           headerLeft: () => <MenuCloseButton />,
           headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="Sıkça Sorulan Sorular" />,
         }}
       />
 
@@ -227,19 +236,9 @@ export default function Layout() {
         name="bilgilendirme"
         options={{
           title: "Bilgilendirme",
-          href: null,
+          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
           headerLeft: () => <MenuCloseButton />,
           headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="menu"
-        options={{
-          title: "Menü",
-          href: null,
-          headerShown: false,
         }}
       />
     </Tabs>
