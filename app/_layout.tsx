@@ -84,7 +84,14 @@ function MenuCloseButton() {
 
   return (
     <HeaderIconButton
-      onPress={() => router.navigate("/")}
+      onPress={() => {
+        if (router.canGoBack()) {
+          router.back();
+          return;
+        }
+
+        router.replace("/");
+      }}
       icon="close"
       colors={colors}
     />
@@ -172,24 +179,17 @@ export default function Layout() {
           headerTitle: () => <HeaderTitle title="Ana Sayfa" />,
         }}
       />
+
       <Tabs.Screen
         name="bildirimler"
         options={{
           title: "Bildirimler",
           headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
           headerTitle: () => <HeaderTitle title="Bildirimler" />,
-          headerRight: () => null,
         }}
       />
-      <Tabs.Screen
-        name="bilgilendirme"
-        options={{
-          title: "Bilgilendirme",
-          headerLeft: () => <MenuCloseButton />,
-          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
-          headerRight: () => null,
-        }}
-      />
+
       <Tabs.Screen
         name="duyurular"
         options={{
@@ -200,6 +200,7 @@ export default function Layout() {
           headerTitle: () => <HeaderTitle title="Duyurular" />,
         }}
       />
+
       <Tabs.Screen
         name="iletisim"
         options={{
@@ -210,6 +211,7 @@ export default function Layout() {
           headerTitle: () => <HeaderTitle title="İletişim" />,
         }}
       />
+
       <Tabs.Screen
         name="sss"
         options={{
@@ -220,14 +222,24 @@ export default function Layout() {
           headerTitle: () => <HeaderTitle title="Sıkça Sorulan Sorular" />,
         }}
       />
+
+      <Tabs.Screen
+        name="bilgilendirme"
+        options={{
+          title: "Bilgilendirme",
+          href: null,
+          headerLeft: () => <MenuCloseButton />,
+          headerRight: () => null,
+          headerTitle: () => <HeaderTitle title="Bilgilendirme" />,
+        }}
+      />
+
       <Tabs.Screen
         name="menu"
         options={{
           title: "Menü",
           href: null,
-          headerLeft: () => null,
-          headerRight: () => null,
-          headerTitle: () => <HeaderTitle title="Menü" />,
+          headerShown: false,
         }}
       />
     </Tabs>
@@ -235,16 +247,6 @@ export default function Layout() {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  headerLeftInset: {
-    paddingLeft: 20,
-  },
-  headerRightInset: {
-    paddingRight: 20,
-  },
   iconButton: {
     width: 42,
     height: 42,
@@ -252,22 +254,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
   badge: {
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
     position: "absolute",
     top: -4,
     right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
   badgeText: {
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  headerLeftInset: {
+    paddingLeft: 14,
+  },
+  headerRightInset: {
+    paddingRight: 14,
   },
 });

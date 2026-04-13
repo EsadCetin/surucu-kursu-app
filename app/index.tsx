@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Easing,
@@ -138,6 +137,9 @@ type CalendarCell = {
   isToday: boolean;
   events: CalendarEvent[];
 };
+
+const { colors, theme, themeMode } = useAppTheme();
+const isWeb = Platform.OS === "web";
 
 const DATA_URL =
   "https://raw.githubusercontent.com/EsadCetin/surucu-kursu-app/main/docs/students.json";
@@ -1867,153 +1869,137 @@ export default function Index() {
   };
 
   const handleTcInputFocus = () => {
+    if (Platform.OS === "web") {
+      return;
+    }
+
     setTimeout(() => {
-      loginScrollRef.current?.scrollTo({
-        y: Platform.OS === "android" ? 110 : 80,
-        animated: true,
-      });
+      loginScrollRef.current?.scrollTo({ y: 160, animated: true });
     }, 180);
   };
 
   const resetLoginScroll = () => {
+    if (Platform.OS === "web") {
+      return;
+    }
+
     loginScrollRef.current?.scrollTo({ y: 0, animated: true });
   };
 
   const visibleMonthLabel = `${MONTH_NAMES[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`;
 
   if (!loggedIn || !user) {
-    return (
-      <>
-        <StatusBar
-          translucent={false}
-          backgroundColor={colors.screenBg}
-          barStyle={theme === "dark" ? "light-content" : "dark-content"}
-        />
-        <KeyboardAvoidingView
-          style={[styles.container, { backgroundColor: colors.screenBg }]}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
-        >
-          <ScrollView
-            ref={loginScrollRef}
-            style={[styles.container, { backgroundColor: colors.screenBg }]}
-            contentContainerStyle={[
-              styles.loginContent,
-              {
-                paddingBottom:
-                  Platform.OS === "ios"
-                    ? 60 + loginKeyboardInset
-                    : 32 + loginKeyboardInset,
-              },
-            ]}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            keyboardDismissMode="on-drag"
-            onContentSizeChange={() => {
-              if (!tc) {
-                resetLoginScroll();
-              }
-            }}
-          >
-            <View style={styles.loginHero}>
-              <Image
-                source={LOGIN_LOGO}
-                style={styles.loginLogo}
-                resizeMode="contain"
-              />
+    const loginBody = (
+      <ScrollView
+        ref={loginScrollRef}
+        style={styles.container}
+        contentContainerStyle={[
+          styles.loginContent,
+          isWeb ? styles.loginContentWeb : null,
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        bounces={false}
+        alwaysBounceVertical={false}
+        onContentSizeChange={() => {
+          if (!tc) {
+            resetLoginScroll();
+          }
+        }}
+      >
+        <View style={{ alignItems: "center", marginTop: 100 }}>
+          <Image
+            source={LOGIN_LOGO}
+            style={styles.loginLogo}
+            resizeMode="contain"
+          />
+        </View>
 
-              {loadingStudents ? (
-                <View style={{ marginTop: 10, alignItems: "center" }}>
-                  <ActivityIndicator size="small" color={colors.accent} />
-                  <Text
-                    style={{
-                      marginTop: 8,
-                      color: colors.mutedText,
-                      fontSize: 13,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Öğrenci bilgileri yükleniyor...
-                  </Text>
-                </View>
-              ) : null}
-            </View>
+        <View style={styles.loginBox}>
+          <Text style={[styles.loginTitle, { color: colors.text }]}>
+            Öğrenci Girişi
+          </Text>
+          <Text style={[styles.loginSub, { color: colors.subText }]}>
+            TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
+            görüntüleyebilirsiniz.
+          </Text>
+
+          {visibleLoginFeedback ? (
             <View
               style={[
-                styles.loginBox,
-                {
-                  backgroundColor: colors.cardBg,
-                  borderColor: colors.border,
-                },
+                styles.loginStatusCard,
+                visibleLoginFeedback.type === "success"
+                  ? styles.loginStatusSuccess
+                  : visibleLoginFeedback.type === "error"
+                    ? styles.loginStatusError
+                    : visibleLoginFeedback.type === "warning"
+                      ? styles.loginStatusWarning
+                      : styles.loginStatusInfo,
               ]}
             >
-              <Text style={[styles.loginTitle, { color: colors.text }]}>
-                Öğrenci Girişi
+              <Text style={styles.loginStatusTitle}>
+                {visibleLoginFeedback.title}
               </Text>
-              <Text style={[styles.loginSub, { color: colors.subText }]}>
-                TC kimlik numaranız ile giriş yaparak süreç bilgilerinizi
-                görüntüleyebilirsiniz.
+              <Text style={styles.loginStatusText}>
+                {visibleLoginFeedback.message}
               </Text>
-
-              {visibleLoginFeedback ? (
-                <View
-                  style={[
-                    styles.loginStatusCard,
-                    visibleLoginFeedback.type === "success"
-                      ? styles.loginStatusSuccess
-                      : visibleLoginFeedback.type === "error"
-                        ? styles.loginStatusError
-                        : visibleLoginFeedback.type === "warning"
-                          ? styles.loginStatusWarning
-                          : styles.loginStatusInfo,
-                  ]}
-                >
-                  <Text style={styles.loginStatusTitle}>
-                    {visibleLoginFeedback.title}
-                  </Text>
-                  <Text style={styles.loginStatusText}>
-                    {visibleLoginFeedback.message}
-                  </Text>
-                </View>
-              ) : null}
-
-              <TextInput
-                placeholder="TC kimlik numaranız"
-                placeholderTextColor={colors.mutedText}
-                inputMode="numeric"
-                keyboardType="numeric"
-                showSoftInputOnFocus={true}
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="none"
-                maxLength={11}
-                value={tc}
-                onChangeText={handleTcChange}
-                onFocus={handleTcInputFocus}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBg,
-                    borderColor: colors.inputBorder,
-                    color: colors.inputText,
-                  },
-                ]}
-              />
-
-              <TouchableOpacity
-                style={[
-                  styles.loginButton,
-                  isLoginDisabled ? styles.loginButtonDisabled : null,
-                ]}
-                onPress={handleLogin}
-                disabled={isLoginDisabled}
-              >
-                <Text style={styles.loginButtonText}>Giriş Yap</Text>
-              </TouchableOpacity>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </>
+          ) : null}
+
+          <TextInput
+            placeholder="TC kimlik numaranız"
+            placeholderTextColor={theme === "dark" ? "#7E8AA5" : "#6B7280"}
+            inputMode="numeric"
+            keyboardType={Platform.OS === "android" ? "numeric" : "number-pad"}
+            showSoftInputOnFocus={true}
+            autoCorrect={false}
+            autoComplete="off"
+            textContentType="none"
+            maxLength={11}
+            value={tc}
+            onChangeText={handleTcChange}
+            onFocus={handleTcInputFocus}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+                color: colors.text,
+              },
+            ]}
+          />
+
+          <TouchableOpacity
+            style={[
+              styles.loginButton,
+              isLoginDisabled ? styles.loginButtonDisabled : null,
+            ]}
+            onPress={handleLogin}
+            disabled={isLoginDisabled}
+          >
+            <Text style={styles.loginButtonText}>Giriş Yap</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+
+    if (isWeb) {
+      return (
+        <View style={[styles.container, { backgroundColor: colors.screenBg }]}>
+          {loginBody}
+        </View>
+      );
+    }
+
+    return (
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
+        {loginBody}
+      </KeyboardAvoidingView>
     );
   }
 
@@ -2653,7 +2639,7 @@ export default function Index() {
                                   {
                                     backgroundColor:
                                       theme === "light"
-                                        ? colors.accentSoft
+                                        ? colors.accent
                                         : "#686868",
                                   },
                                 ]
@@ -2848,7 +2834,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 12,
   },
-  loginLogo: { marginTop: 55, width: 270, height: 270 },
+  loginLogo: {
+    width: 270,
+    height: 270,
+  },
+  loginContentWeb: {
+    minHeight: 400,
+  },
+
   loginStatusText: { color: "#d8d8dd", fontSize: 14, lineHeight: 22 },
   loginStatusSuccess: { borderColor: "#1f8f55" },
   loginStatusError: { borderColor: "#a62d2d" },

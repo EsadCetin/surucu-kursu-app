@@ -8,13 +8,14 @@ import {
   Dimensions,
   PanResponder,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAppTheme } from "../hooks/useAppTheme";
+import { AppThemeMode, useAppTheme } from "../hooks/useAppTheme";
 
 type MenuItem = {
   key: string;
@@ -39,7 +40,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: "info",
     title: "Bilgilendirme",
-    subtitle: "Kayıt ve süreç detaylarını görüntüle",
+    subtitle: "Kayıt ve devam sürecini görüntüle",
     icon: "document-text-outline",
     route: "/bilgilendirme",
   },
@@ -66,9 +67,19 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+const THEME_OPTIONS: Array<{
+  key: AppThemeMode;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}> = [
+  { key: "light", label: "Açık", icon: "sunny-outline" },
+  { key: "system", label: "Sistem", icon: "phone-portrait-outline" },
+  { key: "dark", label: "Koyu", icon: "moon-outline" },
+];
+
 export default function MenuScreen() {
   const router = useRouter();
-  const { colors } = useAppTheme();
+  const { colors, theme, themeMode, setTheme } = useAppTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const isWeb = Platform.OS === "web";
 
@@ -98,6 +109,7 @@ export default function MenuScreen() {
         },
         onPanResponderRelease: (_, gestureState) => {
           if (isWeb) return;
+
           if (
             gestureState.dx > SWIPE_CLOSE_THRESHOLD ||
             gestureState.vx > 0.8
@@ -123,7 +135,7 @@ export default function MenuScreen() {
           }).start();
         },
       }),
-    [router, translateX, isWeb],
+    [isWeb, router, translateX],
   );
 
   const handleLogout = async () => {
@@ -166,11 +178,12 @@ export default function MenuScreen() {
                 ]}
               >
                 <Ionicons
-                  name="menu-outline"
-                  size={28}
+                  name="grid-outline"
+                  size={26}
                   color={colors.accentContrast}
                 />
               </View>
+
               <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={closeMenu}
@@ -188,15 +201,100 @@ export default function MenuScreen() {
 
             <Text style={[styles.heroTitle, { color: colors.text }]}>Menü</Text>
             <Text style={[styles.heroText, { color: colors.subText }]}>
-              Bu ekranı kapatmak için kapat simgesine basabilirsin.
+              Tema ayarını burada değiştirebilir, diğer sayfalara geçebilir ve
+              oturumunu kapatabilirsin.
             </Text>
+          </View>
+
+          <View
+            style={[
+              styles.themeCard,
+              styles.webCard,
+              { backgroundColor: colors.cardBg, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.themeHeaderRow}>
+              <View
+                style={[
+                  styles.themeIconWrap,
+                  { backgroundColor: colors.cardAltBg },
+                ]}
+              >
+                <Ionicons
+                  name={theme === "dark" ? "moon-outline" : "sunny-outline"}
+                  size={20}
+                  color={colors.text}
+                />
+              </View>
+
+              <View style={styles.themeTextWrap}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  Tema
+                </Text>
+                <Text
+                  style={[styles.sectionSubtitle, { color: colors.subText }]}
+                >
+                  Açık, koyu veya telefonun sistem temasını kullan.
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.themeSegment,
+                {
+                  backgroundColor: colors.cardAltBg,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              {THEME_OPTIONS.map((option) => {
+                const selected = themeMode === option.key;
+
+                return (
+                  <Pressable
+                    key={option.key}
+                    onPress={() => {
+                      setTheme(option.key).catch((error) => {
+                        console.log("Tema değiştirilemedi:", error);
+                      });
+                    }}
+                    style={[
+                      styles.themeSegmentButton,
+                      {
+                        backgroundColor: selected
+                          ? colors.accent
+                          : "transparent",
+                        borderColor: selected ? colors.accent : "transparent",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={option.icon}
+                      size={16}
+                      color={selected ? colors.accentContrast : colors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.themeSegmentText,
+                        {
+                          color: selected ? colors.accentContrast : colors.text,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
 
           <View style={[styles.listWrap, styles.webCard]}>
             {MENU_ITEMS.map((item) => (
               <TouchableOpacity
                 key={item.key}
-                activeOpacity={0.9}
+                activeOpacity={0.92}
                 onPress={() => router.replace(item.route)}
                 style={[
                   styles.menuCard,
@@ -236,7 +334,7 @@ export default function MenuScreen() {
           </View>
 
           <TouchableOpacity
-            activeOpacity={0.9}
+            activeOpacity={0.92}
             onPress={handleLogout}
             style={[
               styles.logoutButton,
@@ -254,7 +352,7 @@ export default function MenuScreen() {
                 Çıkış Yap
               </Text>
               <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
-                Öğrenci oturumunu kapat ve giriş ekranına dön
+                Öğrenci oturumunu kapat ve giriş ekranına dön.
               </Text>
             </View>
           </TouchableOpacity>
@@ -325,6 +423,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
   },
+  themeCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 16,
+    gap: 14,
+  },
+  themeHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  themeIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  themeTextWrap: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  themeSegment: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 6,
+    flexDirection: "row",
+    gap: 6,
+  },
+  themeSegmentButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    borderWidth: 1,
+  },
+  themeSegmentText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
   listWrap: {
     gap: 12,
   },
@@ -362,6 +511,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginTop: 6,
   },
   logoutIcon: {
     width: 46,

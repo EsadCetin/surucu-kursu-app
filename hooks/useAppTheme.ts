@@ -1,96 +1,110 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useColorScheme } from "react-native";
 
-export type AppTheme = "dark" | "light";
+export type AppThemeMode = "system" | "light" | "dark";
+export type ResolvedAppTheme = "light" | "dark";
 
-export type AppThemeColors = {
+type ThemeColors = {
+  bg: string;
   screenBg: string;
   cardBg: string;
   cardAltBg: string;
   border: string;
+  borderStrong: string;
   text: string;
   subText: string;
   mutedText: string;
-  inputBg: string;
-  inputBorder: string;
-  inputText: string;
   accent: string;
   accentContrast: string;
-  accentSoft: string;
+  success: string;
+  warning: string;
+  danger: string;
+  info: string;
   overlay: string;
   tabBarBg: string;
   tabBarInactive: string;
+  inputBg: string;
+  inputBorder: string;
+  shadow: string;
 };
 
-const THEME_KEY = "app_theme_preference";
-const listeners = new Set<(theme: AppTheme) => void>();
-
-let cachedTheme: AppTheme = "dark";
-let hasLoadedTheme = false;
-
-const themeColorsMap: Record<AppTheme, AppThemeColors> = {
-  dark: {
-    screenBg: "#0d0d10",
-    cardBg: "#0d0d10",
-    cardAltBg: "#1d1d23",
-    border: "#2a2a31",
-    text: "#ffffff",
-    subText: "#d8d8dd",
-    mutedText: "#8d8d95",
-    inputBg: "#111114",
-    inputBorder: "#2a2a31",
-    inputText: "#ffffff",
-    accent: "#c1121f",
-    accentContrast: "#ffffff",
-    accentSoft: "rgba(193,18,31,0.12)",
-    overlay: "rgba(0,0,0,0.55)",
-    tabBarBg: "#1d1d23",
-    tabBarInactive: "#6B7280",
-  },
-  light: {
-    screenBg: "#f5f7fb",
-    cardBg: "#f5f7fb",
-    cardAltBg: "#eef2f7",
-    border: "#d8dee8",
-    text: "#111827",
-    subText: "#374151",
-    mutedText: "#6b7280",
-    inputBg: "#ffffff",
-    inputBorder: "#cfd8e3",
-    inputText: "#111827",
-    accent: "#c1121f",
-    accentContrast: "#ffffff",
-    accentSoft: "rgba(193,18,31,0.08)",
-    overlay: "rgba(15,23,42,0.32)",
-    tabBarBg: "#ffffff",
-    tabBarInactive: "#667085",
-  },
+type UseAppThemeResult = {
+  theme: ResolvedAppTheme;
+  resolvedTheme: ResolvedAppTheme;
+  themeMode: AppThemeMode;
+  isDark: boolean;
+  themeReady: boolean;
+  colors: ThemeColors;
+  setTheme: (nextTheme: AppThemeMode) => Promise<void>;
+  toggleTheme: () => Promise<void>;
 };
 
-async function loadStoredTheme(): Promise<AppTheme> {
-  if (hasLoadedTheme) {
-    return cachedTheme;
-  }
+const THEME_KEY = "app_theme_mode_v2";
 
+const lightColors: ThemeColors = {
+  bg: "#F3F6FB",
+  screenBg: "#F3F6FB",
+  cardBg: "#FFFFFF",
+  cardAltBg: "#EEF3FB",
+  border: "#D5DFEC",
+  borderStrong: "#B7C7DD",
+  text: "#0F172A",
+  subText: "#475569",
+  mutedText: "#64748B",
+  accent: "#0F6CBD",
+  accentContrast: "#FFFFFF",
+  success: "#16A34A",
+  warning: "#D97706",
+  danger: "#DC2626",
+  info: "#2563EB",
+  overlay: "rgba(15, 23, 42, 0.10)",
+  tabBarBg: "#FFFFFF",
+  tabBarInactive: "#64748B",
+  inputBg: "#FFFFFF",
+  inputBorder: "#C7D3E3",
+  shadow: "rgba(15, 23, 42, 0.08)",
+};
+
+const darkColors: ThemeColors = {
+  bg: "#050816",
+  screenBg: "#050816",
+  cardBg: "#0B1120",
+  cardAltBg: "#131C30",
+  border: "#1F2A44",
+  borderStrong: "#31405F",
+  text: "#F8FAFC",
+  subText: "#CBD5E1",
+  mutedText: "#94A3B8",
+  accent: "#0F6CBD",
+  accentContrast: "#FFFFFF",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  danger: "#EF4444",
+  info: "#60A5FA",
+  overlay: "rgba(2, 6, 23, 0.55)",
+  tabBarBg: "#0B1120",
+  tabBarInactive: "#94A3B8",
+  inputBg: "#090D1A",
+  inputBorder: "#1F4F88",
+  shadow: "rgba(2, 6, 23, 0.45)",
+};
+
+async function readStoredThemeMode(): Promise<AppThemeMode> {
   try {
-    const storedTheme = await AsyncStorage.getItem(THEME_KEY);
-    if (storedTheme === "light" || storedTheme === "dark") {
-      cachedTheme = storedTheme;
+    const stored = await AsyncStorage.getItem(THEME_KEY);
+
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      return stored;
     }
   } catch (error) {
     console.log("Tema tercihi okunamadı:", error);
   }
 
-  hasLoadedTheme = true;
-  return cachedTheme;
+  return "system";
 }
 
-async function persistTheme(nextTheme: AppTheme) {
-  cachedTheme = nextTheme;
-  hasLoadedTheme = true;
-
-  listeners.forEach((listener) => listener(nextTheme));
-
+async function writeStoredThemeMode(nextTheme: AppThemeMode) {
   try {
     await AsyncStorage.setItem(THEME_KEY, nextTheme);
   } catch (error) {
@@ -98,50 +112,63 @@ async function persistTheme(nextTheme: AppTheme) {
   }
 }
 
-export function useAppTheme() {
-  const [theme, setThemeState] = useState<AppTheme>(cachedTheme);
-  const [themeReady, setThemeReady] = useState(hasLoadedTheme);
+function resolveTheme(
+  themeMode: AppThemeMode,
+  systemScheme: ReturnType<typeof useColorScheme>,
+): ResolvedAppTheme {
+  if (themeMode === "light") return "light";
+  if (themeMode === "dark") return "dark";
+  return systemScheme === "dark" ? "dark" : "light";
+}
+
+export function useAppTheme(): UseAppThemeResult {
+  const systemScheme = useColorScheme();
+  const [themeMode, setThemeMode] = useState<AppThemeMode>("system");
+  const [themeReady, setThemeReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
-    loadStoredTheme().then((storedTheme) => {
+    readStoredThemeMode().then((storedTheme) => {
       if (!mounted) return;
-      setThemeState(storedTheme);
+      setThemeMode(storedTheme);
       setThemeReady(true);
     });
 
-    const listener = (nextTheme: AppTheme) => {
-      if (!mounted) return;
-      setThemeState(nextTheme);
-    };
-
-    listeners.add(listener);
-
     return () => {
       mounted = false;
-      listeners.delete(listener);
     };
   }, []);
 
-  const setTheme = useCallback(async (nextTheme: AppTheme) => {
-    setThemeState(nextTheme);
-    await persistTheme(nextTheme);
+  const resolvedTheme = resolveTheme(themeMode, systemScheme);
+  const isDark = resolvedTheme === "dark";
+
+  const colors = useMemo(() => (isDark ? darkColors : lightColors), [isDark]);
+
+  const setTheme = useCallback(async (nextTheme: AppThemeMode) => {
+    setThemeMode(nextTheme);
+    await writeStoredThemeMode(nextTheme);
   }, []);
 
   const toggleTheme = useCallback(async () => {
-    const nextTheme: AppTheme = theme === "dark" ? "light" : "dark";
-    await setTheme(nextTheme);
-  }, [setTheme, theme]);
+    const nextTheme: AppThemeMode =
+      themeMode === "system"
+        ? "dark"
+        : themeMode === "dark"
+          ? "light"
+          : "system";
 
-  const colors = useMemo(() => themeColorsMap[theme], [theme]);
+    setThemeMode(nextTheme);
+    await writeStoredThemeMode(nextTheme);
+  }, [themeMode]);
 
   return {
-    theme,
+    theme: resolvedTheme,
+    resolvedTheme,
+    themeMode,
+    isDark,
     themeReady,
     colors,
-    isDarkTheme: theme === "dark",
-    isLightTheme: theme === "light",
     setTheme,
     toggleTheme,
   };
