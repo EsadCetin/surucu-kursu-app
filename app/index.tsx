@@ -1042,14 +1042,14 @@ export default function Index() {
 
     navigation.setOptions({
       headerTitle: !loggedIn ? () => null : titleNode,
-      headerTransparent: !loggedIn,
+      headerTransparent: false,
       headerTintColor: colors.text,
       headerTitleStyle: {
         color: colors.text,
       },
       headerStyle: {
         height: 80,
-        backgroundColor: !loggedIn ? "transparent" : colors.cardBg,
+        backgroundColor: !loggedIn ? colors.screenBg : colors.cardBg,
       },
     });
 
@@ -1067,7 +1067,7 @@ export default function Index() {
         },
       });
     };
-  }, [navigation, loggedIn, colors.cardBg, colors.text]);
+  }, [navigation, loggedIn, colors.cardBg, colors.screenBg, colors.text]);
   const loginScrollRef = useRef<ScrollView | null>(null);
 
   const baseMonth = useMemo(() => new Date(2026, 3, 1), []);
@@ -1891,7 +1891,7 @@ export default function Index() {
     const loginBody = (
       <ScrollView
         ref={loginScrollRef}
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
         contentContainerStyle={[
           styles.loginContent,
           isWeb ? styles.loginContentWeb : null,
@@ -1928,6 +1928,17 @@ export default function Index() {
             <View
               style={[
                 styles.loginStatusCard,
+                {
+                  backgroundColor: colors.cardBg,
+                  borderColor:
+                    visibleLoginFeedback.type === "success"
+                      ? colors.success
+                      : visibleLoginFeedback.type === "error"
+                        ? colors.danger
+                        : visibleLoginFeedback.type === "warning"
+                          ? colors.warning
+                          : colors.info,
+                },
                 visibleLoginFeedback.type === "success"
                   ? styles.loginStatusSuccess
                   : visibleLoginFeedback.type === "error"
@@ -1937,10 +1948,10 @@ export default function Index() {
                       : styles.loginStatusInfo,
               ]}
             >
-              <Text style={styles.loginStatusTitle}>
+              <Text style={[styles.loginStatusTitle, { color: colors.text }]}>
                 {visibleLoginFeedback.title}
               </Text>
-              <Text style={styles.loginStatusText}>
+              <Text style={[styles.loginStatusText, { color: colors.subText }]}>
                 {visibleLoginFeedback.message}
               </Text>
             </View>
@@ -1986,6 +1997,11 @@ export default function Index() {
     if (isWeb) {
       return (
         <View style={[styles.container, { backgroundColor: colors.screenBg }]}>
+          <StatusBar
+            translucent={false}
+            backgroundColor={colors.screenBg}
+            barStyle={theme === "dark" ? "light-content" : "dark-content"}
+          />
           {loginBody}
         </View>
       );
@@ -1997,6 +2013,11 @@ export default function Index() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
+        <StatusBar
+          translucent={false}
+          backgroundColor={colors.screenBg}
+          barStyle={theme === "dark" ? "light-content" : "dark-content"}
+        />
         {loginBody}
       </KeyboardAvoidingView>
     );

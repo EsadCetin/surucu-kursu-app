@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useColorScheme } from "react-native";
+import { Appearance, Platform, useColorScheme } from "react-native";
 
 export type AppThemeMode = "system" | "light" | "dark";
 export type ResolvedAppTheme = "light" | "dark";
@@ -90,6 +90,12 @@ const darkColors: ThemeColors = {
   shadow: "rgba(2, 6, 23, 0.45)",
 };
 
+type ThemeSubscriber = (nextTheme: AppThemeMode) => void;
+
+const themeSubscribers = new Set<ThemeSubscriber>();
+let currentThemeMode: AppThemeMode = "system";
+let hasHydratedStoredTheme = false;
+
 async function readStoredThemeMode(): Promise<AppThemeMode> {
   try {
     const stored = await AsyncStorage.getItem(THEME_KEY);
@@ -112,6 +118,19 @@ async function writeStoredThemeMode(nextTheme: AppThemeMode) {
   }
 }
 
+function subscribeThemeChanges(listener: ThemeSubscriber) {
+  themeSubscribers.add(listener);
+
+  return () => {
+    themeSubscribers.delete(listener);
+  };
+}
+
+function notifyThemeChange(nextTheme: AppThemeMode) {
+  currentThemeMode = nextTheme;
+  themeSubscribers.forEach((listener) => listener(nextTheme));
+}
+
 function resolveTheme(
   themeMode: AppThemeMode,
   systemScheme: ReturnType<typeof useColorScheme>,
@@ -121,18 +140,73 @@ function resolveTheme(
   return systemScheme === "dark" ? "dark" : "light";
 }
 
+function getThemeColorMetaTag() {
+  if (typeof document === "undefined") return null;
+
+  let tag = document.querySelector('meta[name="theme-color"]');
+
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute("name", "theme-color");
+    document.head.appendChild(tag);
+  }
+
+  return tag as HTMLMetaElement;
+}
+
+function applyWebThemeDocumentSide(
+  theme: ResolvedAppTheme,
+  colors: ThemeColors,
+) {
+  if (Platform.OS !== "web" || typeof document === "undefined") {
+    return;
+  }
+
+  const root = document.documentElement;
+  const body = document.body;
+  const themeColor = colors.screenBg;
+
+  root.style.backgroundColor = colors.screenBg;
+  body.style.backgroundColor = colors.screenBg;
+  root.style.colorScheme = theme;
+  body.style.colorScheme = theme;
+
+  const meta = getThemeColorMetaTag();
+  meta?.setAttribute("content", themeColor);
+}
+
 export function useAppTheme(): UseAppThemeResult {
   const systemScheme = useColorScheme();
-  const [themeMode, setThemeMode] = useState<AppThemeMode>("system");
-  const [themeReady, setThemeReady] = useState(false);
+  const [themeMode, setThemeMode] = useState<AppThemeMode>(currentThemeMode);
+  const [themeReady, setThemeReady] = useState(hasHydratedStoredTheme);
+
+  useEffect(() => {
+    const unsubscribe = subscribeThemeChanges((nextTheme) => {
+      setThemeMode(nextTheme);
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
+    if (hasHydratedStoredTheme) {
+      setThemeMode(currentThemeMode);
+      setThemeReady(true);
+      return () => {
+        mounted = false;
+      };
+    }
+
     readStoredThemeMode().then((storedTheme) => {
       if (!mounted) return;
+
+      currentThemeMode = storedTheme;
+      hasHydratedStoredTheme = true;
       setThemeMode(storedTheme);
       setThemeReady(true);
+      notifyThemeChange(storedTheme);
     });
 
     return () => {
@@ -140,27 +214,45 @@ export function useAppTheme(): UseAppThemeResult {
     };
   }, []);
 
+  useEffect(() => {
+    if (themeMode !== "system") {
+      return;
+    }
+
+    const subscription = Appearance.addChangeListener(() => {
+      notifyThemeChange(currentThemeMode);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [themeMode]);
+
   const resolvedTheme = resolveTheme(themeMode, systemScheme);
   const isDark = resolvedTheme === "dark";
 
   const colors = useMemo(() => (isDark ? darkColors : lightColors), [isDark]);
 
+  useEffect(() => {
+    applyWebThemeDocumentSide(resolvedTheme, colors);
+  }, [resolvedTheme, colors]);
+
   const setTheme = useCallback(async (nextTheme: AppThemeMode) => {
-    setThemeMode(nextTheme);
+    notifyThemeChange(nextTheme);
     await writeStoredThemeMode(nextTheme);
   }, []);
 
   const toggleTheme = useCallback(async () => {
     const nextTheme: AppThemeMode =
-      themeMode === "system"
+      currentThemeMode === "system"
         ? "dark"
-        : themeMode === "dark"
+        : currentThemeMode === "dark"
           ? "light"
           : "system";
 
-    setThemeMode(nextTheme);
+    notifyThemeChange(nextTheme);
     await writeStoredThemeMode(nextTheme);
-  }, [themeMode]);
+  }, []);
 
   return {
     theme: resolvedTheme,
