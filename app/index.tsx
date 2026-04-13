@@ -3322,7 +3322,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
   },
   calendarCellDayBadgeToday: { backgroundColor: "#686868" },
   calendarCellDayText: { color: "#ffffff", fontSize: 22, fontWeight: "500" },
